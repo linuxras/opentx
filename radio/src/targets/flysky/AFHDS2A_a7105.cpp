@@ -76,24 +76,27 @@ Noi.1: -97dBm
 SNR1:   39dB
 
 packet[0] - type
-packet[1] - len
+packet[1] - len (>= 28)
+
+0xFF - AFHDS2A_ID_END
 */
 
 void AFHDS2A_update_telemetry() {
-  if (packet[0] == 0xAA && packet[9] == 0xFD)
+  uint8_t type = packet[0];
+  if (type == 0xAA && packet[9] == 0xFD)
     return;  // ignore packets which contain the RX configuration: FD FF 32 00 01 00 FF FF FF 05 DC 05 DE FA FF FF FF FF FF FF FF FF FF FF FF FF FF FF
 
 #if defined(AUX_SERIAL)
-  uint8_t len = packet[1];
   if (g_eeGeneral.auxSerialMode == UART_MODE_TELEMETRY_MIRROR) {
-    auxSerialPutc(packet[0]);
-    auxSerialPutc(packet[1]);
+    uint8_t len = packet[1];
+    auxSerialPutc(type);
+    auxSerialPutc(len);
     for (uint8_t c = 0 + 8; c < len + 8; c++)
       auxSerialPutc(packet[c]);
   }
 #endif
 
-  if (packet[0] == 0xAA) {
+  if (type == 0xAA) {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
     if (tx_rssi < 0)
       tx_rssi = 0;
@@ -101,7 +104,7 @@ void AFHDS2A_update_telemetry() {
       tx_rssi = 255;
     packet[8] = tx_rssi;
     processFlySkyPacket(packet + 8);
-  } else if (packet[0] == 0xAC) {
+  } else if (type == 0xAC) {
     processFlySkyPacketAC(packet + 8);
   }
 }
