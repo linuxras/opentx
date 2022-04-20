@@ -73,19 +73,12 @@ enum MenuRadioIndexes
 #if defined(RADIO_TOOLS)
   MENU_RADIO_TOOLS,
 #endif
-  MENU_RADIO_SETUP,
   CASE_SDCARD(MENU_RADIO_SD_MANAGER)
+  MENU_RADIO_SETUP,
   MENU_RADIO_SPECIAL_FUNCTIONS,
   MENU_RADIO_TRAINER,
-  MENU_RADIO_VERSION,
-#if defined(MENU_DIAGKEYS)
-  MENU_RADIO_SWITCHES_TEST,
-#endif
-#if defined(MENU_DIAGANAS)
-  MENU_RADIO_ANALOGS_TEST,
-#endif
   MENU_RADIO_HARDWARE,
-  MENU_RADIO_CALIBRATION,
+  MENU_RADIO_VERSION,
   MENU_RADIO_PAGES_COUNT
 };
 
@@ -108,15 +101,8 @@ static const MenuHandlerFunc menuTabGeneral[]  = {
   CASE_SDCARD(menuRadioSdManager)
   menuRadioSpecialFunctions,
   menuRadioTrainer,
-  menuRadioVersion,
-#if defined(MENU_DIAGKEYS)
-  menuRadioDiagKeys,
-#endif
-#if defined(MENU_DIAGANAS)
-  menuRadioDiagAnalogs,
-#endif
   menuRadioHardware,
-  menuRadioCalibration
+  menuRadioVersion
 };
 
 enum MenuModelIndexes {

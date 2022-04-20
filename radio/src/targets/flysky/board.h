@@ -184,7 +184,7 @@ uint32_t isBootloaderStart(const uint8_t * buffer);
 #define EXTERNAL_MODULE_ON()            EXTMODULE_PWR_GPIO->BSRR = EXTMODULE_PWR_GPIO_PIN // GPIO_SetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN)
 #define EXTERNAL_MODULE_OFF()           EXTMODULE_PWR_GPIO->BRR = EXTMODULE_PWR_GPIO_PIN // GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN)
 #define IS_INTERNAL_MODULE_ON()         (false)
-#define IS_EXTERNAL_MODULE_ON()         (false)
+#define IS_EXTERNAL_MODULE_ON()         (GPIO_ReadInputDataBit(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN) == Bit_SET)
 #if defined(INTMODULE_USART)
   #define IS_UART_MODULE(port)          (port == INTERNAL_MODULE)
 #else
@@ -291,6 +291,7 @@ enum EnumSwitchesPositions
 };
 #define IS_3POS(x)            ((x) == SW_SC)
 #define IS_TOGGLE(x)					false
+#define NUM_SWITCHES          4
 
 void keysInit(void);
 uint8_t keyState(uint8_t index);
@@ -311,7 +312,6 @@ uint32_t readTrims(void);
 
 // WDT driver
 #define WDTO_500MS                      500
-#define WDTO_1000MS                     1000
 #if defined(WATCHDOG_DISABLED) || defined(SIMU)
   #define wdt_enable(x)
   #define wdt_reset()
@@ -401,27 +401,20 @@ void backlightEnable();
 #if !defined(SIMU)
   void usbJoystickUpdate();
 #endif
-#define USB_NAME                        "FS i6X"
+#define USB_NAME                        "FS-i6X"
 #define USB_MANUFACTURER                'F', 'l', 'y', 'S', 'k', 'y', ' ', ' '  /* 8 bytes */
-#define USB_PRODUCT                     'i', '6', 'X', ' ', ' ', ' ', ' ', ' '  /* 8 Bytes */
+#define USB_PRODUCT                     'F', 'S', '-', 'i', '6', 'X', ' ', ' '  /* 8 Bytes */
 
 #if defined(__cplusplus) && !defined(SIMU)
 }
 #endif
 
 // I2C driver: EEPROM
-#define I2C_ADDRESS_EEPROM    0x50
-#define EEPROM_SIZE           (16*1024)
-#define EEPROM_PAGE_SIZE      (64)
-#define EEPROM_BLOCK_SIZE     (64)
-//#define EEPROM_VERIFY_WRITES
+#define EEPROM_SIZE                   (16*1024)
 
 void i2cInit(void);
-void eepromInit();
 void eepromReadBlock(uint8_t * buffer, size_t address, size_t size);
 void eepromWriteBlock(uint8_t * buffer, size_t address, size_t size);
-void eepromBlockErase(uint32_t address);
-uint8_t eepromReadStatus();
 uint8_t eepromIsTransferComplete();
 void i2c_test();
 

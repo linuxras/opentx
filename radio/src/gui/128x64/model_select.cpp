@@ -22,7 +22,6 @@
 
 #define MODELSEL_W                     LCD_W
 
-#if defined(NAVIGATION_MENUS)
 void onModelSelectMenu(const char * result)
 {
   int8_t sub = menuVerticalPosition;
@@ -66,7 +65,6 @@ void onModelSelectMenu(const char * result)
   }
 #endif
 }
-#endif
 
 void menuModelSelect(event_t event)
 {
@@ -199,7 +197,6 @@ void menuModelSelect(event_t event)
       else if (event == EVT_KEY_LONG(KEY_ENTER) || IS_ROTARY_BREAK(event)) {
         s_copyMode = 0;
         killEvents(event);
-#if defined(NAVIGATION_MENUS)
         if (g_eeGeneral.currModel != sub) {
           if (eeModelExists(sub)) {
             POPUP_MENU_ADD_ITEM(STR_SELECT_MODEL);
@@ -223,11 +220,6 @@ void menuModelSelect(event_t event)
           POPUP_MENU_ADD_ITEM(STR_MOVE_MODEL);
         }
         POPUP_MENU_START(onModelSelectMenu);
-#else
-        if (g_eeGeneral.currModel != sub) {
-          selectModel(sub);
-        }
-#endif
       }
       else if (eeModelExists(sub)) {
         s_copyMode = (s_copyMode == COPY_MODE ? MOVE_MODE : COPY_MODE);
@@ -250,13 +242,21 @@ void menuModelSelect(event_t event)
     case EVT_ROTARY_LEFT:
     case EVT_ROTARY_RIGHT:
 #endif
+#if defined(PCBI6X)
+    case EVT_KEY_BREAK(KEY_RIGHT):
+    case EVT_KEY_LONG(KEY_RIGHT):
+#else
     case EVT_KEY_FIRST(KEY_LEFT):
     case EVT_KEY_FIRST(KEY_RIGHT):
+#endif
 #if defined(ROTARY_ENCODER_NAVIGATION)
       if ((!IS_ROTARY_RIGHT(event) && !IS_ROTARY_LEFT(event)) || s_editMode < 0) {
 #endif
       if (sub == g_eeGeneral.currModel) {
-        chainMenu((IS_ROTARY_RIGHT(event) || event == EVT_KEY_FIRST(KEY_RIGHT)) ? menuModelSetup : menuTabModel[DIM(menuTabModel)-1]);
+        chainMenu((IS_ROTARY_RIGHT(event) || event == EVT_KEY_BREAK(KEY_RIGHT)) ? menuModelSetup : menuTabModel[DIM(menuTabModel)-1]);
+        if (event == EVT_KEY_LONG(KEY_RIGHT)) {
+          killEvents(event);
+        }
       }
       else {
         AUDIO_WARNING2();

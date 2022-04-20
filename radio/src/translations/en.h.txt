@@ -40,8 +40,6 @@
  *  \0               -ends current string
  */
 
-
-
 // NON ZERO TERMINATED STRINGS
 #define LEN_OFFON                      "\003"
 #define TR_OFFON                       "OFF""ON\0"
@@ -71,18 +69,18 @@
 #define TR_TRNCHN                      "CH1CH2CH3CH4"
 
 #if defined(PCBI6X)
-#define LEN_AUX_SERIALMODES                 "\014"
+#define LEN_AUX_SERIAL_MODES                 "\014"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIALMODES                  "Debug\0      ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror"
 #else
-#define TR_AUX_SERIALMODES                  "OFF\0        ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror"
 #endif
 #else
-#define LEN_AUX_SERIALMODES                 "\015"
+#define LEN_AUX_SERIAL_MODES           "\015"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIALMODES            "Debug\0       ""Telem Mirror\0""Telemetry In\0""SBUS Trainer\0""LUA\0         "
+#define TR_AUX_SERIAL_MODES            "Debug\0       ""Telem Mirror\0""Telemetry In\0""SBUS Trainer\0""LUA\0         "
 #else
-#define TR_AUX_SERIALMODES            "OFF\0         ""Telem Mirror\0""Telemetry In\0""SBUS Trainer\0""LUA\0         "
+#define TR_AUX_SERIAL_MODES            "OFF\0         ""Telem Mirror\0""Telemetry In\0""SBUS Trainer\0""LUA\0         "
 #endif
 #endif
 
@@ -250,7 +248,7 @@
   #define TR_VVARIO                    "[Vario]\0  "
 #endif
 
-#if defined(AUDIO) || defined(BUZZER)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND                     "Play Sound"
 #else
   #define TR_SOUND                     "Beep\0     "
@@ -383,8 +381,13 @@
   #define TR_VARIOSRC                  "Alt\0""Alt+""VSpd""A1\0 ""A2\0"
 #endif
 
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\004"
+  #define TR_VTELEMSCREENTYPE          "None""Nums""Bars"
+#else
   #define LEN_VTELEMSCREENTYPE         "\006"
   #define TR_VTELEMSCREENTYPE          "None\0 ""Nums\0 ""Bars\0 ""Script"
+#endif
 
 #define LEN_GPSFORMAT                  "\004"
 #define TR_GPSFORMAT                   "DMS\0""NMEA"
@@ -834,7 +837,7 @@
 #define TR_POWEROFF                    "\027Power OFF..."
 #define TR_SHUTDOWN                    "SHUTTING DOWN"
 #define TR_SAVEMODEL                   "Saving model settings"
-#define TR_BATT_CALIB                  TR("Battery calib", "Battery calibration")
+#define TR_BATT_CALIB                  TR("Batt. calib", "Battery calibration")
 #define TR_CURRENT_CALIB               "Current calib"
 #define TR_VOLTAGE                     TR(INDENT "Voltage", INDENT "Voltage source")
 #define TR_CURRENT                     TR(INDENT "Current", INDENT "Current source")
@@ -994,6 +997,10 @@
 #define TR_MODULE_BIND                 BUTTON(TR("Bnd", "Bind"))
 #define TR_MODULE_RANGE                BUTTON(TR("Rng", "Range"))
 #define TR_RESET_BTN                   BUTTON("Reset")
+#define TR_DEBUG                       "Debug"
+#define TR_KEYS_BTN                    BUTTON(TR("Keys", "Switches"))
+#define TR_ANALOGS_BTN                 BUTTON(TR("Anas", "Analogs"))
+#define TR_CALIB_BTN                   BUTTON("Calibration")
 #define TR_SET                         BUTTON("Set")
 #define TR_TRAINER                     "Trainer"
 #define TR_ANTENNAPROBLEM              CENTER "TX antenna problem!"
@@ -1045,7 +1052,7 @@
 #define TR_PREFLIGHT                   "Preflight Checks"
 #define TR_CHECKLIST                   TR(INDENT "Checklist", INDENT "Display checklist")
 #define TR_FAS_OFFSET                  TR(INDENT "FAS Ofs", INDENT "FAS offset")
-#define TR_AUX_SERIALMODE                   "Serial port"
+#define TR_AUX_SERIAL_MODE                   "Serial port"
 #define TR_SCRIPT                      "Script"
 #define TR_INPUTS                      "Inputs"
 #define TR_OUTPUTS                     "Outputs"
@@ -1182,7 +1189,7 @@
 #define TR_AUTOOFFSET                  "Auto Offset"
 #define TR_ONLYPOSITIVE                "Positive"
 #define TR_FILTER                      "Filter"
-#define TR_TELEMETRYFULL               "All telemetry slots full!"
+#define TR_TELEMETRYFULL               TR("All slots full!", "All telemetry slots full!")
 #define TR_SERVOS_OK                   "Servos OK"
 #define TR_SERVOS_KO                   "Servos KO"
 #define TR_INVERTED_SERIAL             INDENT "Invert"

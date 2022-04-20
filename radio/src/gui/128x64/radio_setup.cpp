@@ -26,14 +26,14 @@ const unsigned char sticks[]  = {
 #include "sticks.lbm"
 };
 
-#define RADIO_SETUP_2ND_COLUMN  (LCD_W-6*FW-3)
+#define RADIO_SETUP_2ND_COLUMN  (LCD_W-7*FW-3)
 #define RADIO_SETUP_DATE_COLUMN (FW*15+7)
-#define RADIO_SETUP_TIME_COLUMN (FW*15+9)
+#define RADIO_SETUP_TIME_COLUMN (RADIO_SETUP_2ND_COLUMN + 2 * FWNUM)
 
   #define SLIDER_5POS(y, value, label, event, attr) { \
     int8_t tmp = value; \
     drawSlider(RADIO_SETUP_2ND_COLUMN, y, 2+tmp, 4, attr); \
-    value = editChoice(RADIO_SETUP_2ND_COLUMN, y, label, NULL, tmp, -2, +2, attr, event); \
+    value = editChoice(RADIO_SETUP_2ND_COLUMN, y, label, nullptr, tmp, -2, +2, attr, event); \
   }
 
 #if defined(SPLASH)
@@ -88,6 +88,9 @@ enum MenuRadioSetupItems {
   CASE_PWM_BACKLIGHT(ITEM_SETUP_BACKLIGHT_BRIGHTNESS_ON)
   ITEM_SETUP_FLASH_BEEP,
   CASE_SPLASH_PARAM(ITEM_SETUP_DISABLE_SPLASH)
+  #if defined(PXX2)
+    ITEM_RADIO_OWNER_ID,
+  #endif
   CASE_GPS(ITEM_SETUP_TIMEZONE)
   // ITEM_SETUP_ADJUST_RTC,
   CASE_GPS(ITEM_SETUP_GPSFORMAT)
@@ -136,11 +139,35 @@ void menuRadioSetup(event_t event)
 
   MENU(STR_MENURADIOSETUP, menuTabGeneral, MENU_RADIO_SETUP, HEADER_LINE+ITEM_SETUP_MAX, { 
     HEADER_LINE_COLUMNS CASE_RTCLOCK(2) CASE_RTCLOCK(2) CASE_BATTGRAPH(1) 
-    LABEL(SOUND), CASE_AUDIO(0) CASE_BUZZER(0) /*0,*/ 0, 0, 0, /*0,*/ CASE_AUDIO(0) 
-    CASE_VARIO(LABEL(VARIO)) CASE_VARIO(0) CASE_VARIO(0) CASE_VARIO(0) CASE_VARIO(0) 
-    CASE_HAPTIC(LABEL(HAPTIC)) CASE_HAPTIC(0) CASE_HAPTIC(0) CASE_HAPTIC(0) 0, 
-    LABEL(ALARMS), 0, CASE_CAPACITY(0) CASE_PCBSKY9X(0) 0, 0, 0, 0, IF_ROTARY_ENCODERS(0) 
-    LABEL(BACKLIGHT), 0, 0, /*0,*/ CASE_PWM_BACKLIGHT(0) CASE_PWM_BACKLIGHT(0) 0, CASE_SPLASH_PARAM(0) CASE_GPS(0) 0, CASE_GPS(0) CASE_PXX(0) 0, 0, IF_FAI_CHOICE(0) 0, CASE_STM32(0) 0, COL_TX_MODE, 0, 1/*to force edit mode*/});
+    LABEL(SOUND), CASE_AUDIO(0)
+    CASE_BUZZER(0)
+    /*0,*/ 0, 0, 0, /*0,*/ CASE_AUDIO(0)
+    CASE_VARIO(LABEL(VARIO))
+    CASE_VARIO(0)
+    CASE_VARIO(0)
+    CASE_VARIO(0)
+    CASE_VARIO(0)
+    CASE_HAPTIC(LABEL(HAPTIC))
+    CASE_HAPTIC(0)
+    CASE_HAPTIC(0)
+    CASE_HAPTIC(0)
+    0, LABEL(ALARMS), 0, CASE_CAPACITY(0)
+    CASE_PCBSKY9X(0)
+    0, 0, 0, 0, IF_ROTARY_ENCODERS(0)
+    LABEL(BACKLIGHT), 0, 0, /*0,*/ CASE_PWM_BACKLIGHT(0)
+    CASE_PWM_BACKLIGHT(0)
+    0,
+    CASE_SPLASH_PARAM(0)
+#if defined(PXX2)
+    0 /* owner registration ID */,
+#endif
+    CASE_GPS(0)
+    0, CASE_GPS(0)
+    CASE_PXX(0)
+    0, 0, IF_FAI_CHOICE(0)
+    0,
+    CASE_STM32(0) // USB mode
+    0, COL_TX_MODE, 0, 1/*to force edit mode*/});
 
   if (event == EVT_ENTRY) {
     reusableBuffer.generalSettings.stickMode = g_eeGeneral.stickMode;
@@ -236,25 +263,16 @@ void menuRadioSetup(event_t event)
 #if defined(AUDIO)
       case ITEM_SETUP_BEEP_MODE:
         g_eeGeneral.beepMode = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_SPEAKER, STR_VBEEPMODE, g_eeGeneral.beepMode, -2, 1, attr, event);
-#if defined(TELEMETRY_FRSKY)
-        if (attr && checkIncDec_Ret) frskySendAlarms();
-#endif
         break;
 
 #if defined(BUZZER) // AUDIO + BUZZER
       case ITEM_SETUP_BUZZER_MODE:
         g_eeGeneral.buzzerMode = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_BUZZER, STR_VBEEPMODE, g_eeGeneral.buzzerMode, -2, 1, attr, event);
-#if defined(TELEMETRY_FRSKY)
-        if (attr && checkIncDec_Ret) frskySendAlarms();
-#endif
         break;
 #endif
 #elif defined(BUZZER) // BUZZER only
       case ITEM_SETUP_BUZZER_MODE:
         g_eeGeneral.beepMode = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_SPEAKER, STR_VBEEPMODE, g_eeGeneral.beepMode, -2, 1, attr, event);
-#if defined(TELEMETRY_FRSKY)
-        if (attr && checkIncDec_Ret) frskySendAlarms();
-#endif
         break;
 #endif
 
@@ -474,6 +492,12 @@ void menuRadioSetup(event_t event)
       }
 #endif
 
+#if defined(PXX2)
+      case ITEM_RADIO_OWNER_ID:
+        editSingleName(RADIO_SETUP_2ND_COLUMN, y, STR_OWNER_ID, g_eeGeneral.ownerRegistrationID, PXX2_LEN_REGISTRATION_ID, event, attr);
+        break;
+#endif
+
 #if defined(TELEMETRY_FRSKY) && defined(GPS)
       case ITEM_SETUP_TIMEZONE:
         lcdDrawTextAlignedLeft(y, STR_TIMEZONE);
@@ -581,11 +605,10 @@ void menuRadioSetup(event_t event)
         else if (reusableBuffer.generalSettings.stickMode != g_eeGeneral.stickMode) {
           pausePulses();
           g_eeGeneral.stickMode = reusableBuffer.generalSettings.stickMode;
-          checkTHR();
+          checkThrottleStick();
           resumePulses();
           clearKeyEvents();
         }
-        MOVE_CURSOR_FROM_HERE();
         break;
     }
   }

@@ -33,7 +33,7 @@ const unsigned char sticks[]  = {
 #define SLIDER_5POS(y, value, label, event, attr) { \
   int8_t tmp = value; \
   drawSlider(RADIO_SETUP_2ND_COLUMN, y, 2+tmp, 4, attr); \
-  value = editChoice(RADIO_SETUP_2ND_COLUMN, y, label, NULL, tmp, -2, +2, attr, event); \
+  value = editChoice(RADIO_SETUP_2ND_COLUMN, y, label, nullptr, tmp, -2, +2, attr, event); \
 }
 
 #if defined(SPLASH)
@@ -217,9 +217,6 @@ void menuRadioSetup(event_t event)
 
       case ITEM_SETUP_BEEP_MODE:
         g_eeGeneral.beepMode = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_SPEAKER, STR_VBEEPMODE, g_eeGeneral.beepMode, -2, 1, attr, event);
-#if defined(TELEMETRY_FRSKY)
-        if (attr && checkIncDec_Ret) frskySendAlarms();
-#endif
         break;
 
       case ITEM_SETUP_GENERAL_VOLUME:
@@ -504,7 +501,7 @@ void menuRadioSetup(event_t event)
         else if (reusableBuffer.generalSettings.stickMode != g_eeGeneral.stickMode) {
           pausePulses();
           g_eeGeneral.stickMode = reusableBuffer.generalSettings.stickMode;
-          checkTHR();
+          checkThrottleStick();
           resumePulses();
           clearKeyEvents();
         }

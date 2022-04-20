@@ -79,11 +79,7 @@
   #define MAX_SPECIAL_FUNCTIONS        11 // number of functions assigned to switches
   #define MAX_TRAINER_CHANNELS         8
   #define MAX_INPUTS                   16
-#if defined(PCBI6X_ELRSV2)
   #define MAX_TELEMETRY_SENSORS        26 // 48b each
-#else
-  #define MAX_TELEMETRY_SENSORS        30
-#endif
   #define MAX_SCRIPTS				           0
 #else
   #define MAX_MODELS                   16
@@ -341,17 +337,17 @@ enum TelemetryUnit {
 enum TelemetryScreenType {
   TELEMETRY_SCREEN_TYPE_NONE,
   TELEMETRY_SCREEN_TYPE_VALUES,
-  TELEMETRY_SCREEN_TYPE_GAUGES,
-#if defined(LUA)
+  TELEMETRY_SCREEN_TYPE_BARS,
   TELEMETRY_SCREEN_TYPE_SCRIPT,
+#if defined(LUA)
   TELEMETRY_SCREEN_TYPE_MAX = TELEMETRY_SCREEN_TYPE_SCRIPT
 #else
-  TELEMETRY_SCREEN_TYPE_MAX = TELEMETRY_SCREEN_TYPE_GAUGES
+  TELEMETRY_SCREEN_TYPE_MAX = TELEMETRY_SCREEN_TYPE_BARS
 #endif
 };
 #define MAX_TELEMETRY_SCREENS 4
 #define TELEMETRY_SCREEN_TYPE(screenIndex) TelemetryScreenType((g_model.frsky.screensType >> (2*(screenIndex))) & 0x03)
-#define IS_BARS_SCREEN(screenIndex)        (TELEMETRY_SCREEN_TYPE(screenIndex) == TELEMETRY_SCREEN_TYPE_GAUGES)
+#define IS_BARS_SCREEN(screenIndex)        (TELEMETRY_SCREEN_TYPE(screenIndex) == TELEMETRY_SCREEN_TYPE_BARS)
 
 #define FAILSAFE_CHANNEL_HOLD          2000
 #define FAILSAFE_CHANNEL_NOPULSE       2001

@@ -70,11 +70,11 @@
 #define LEN_TRNCHN             "\003"
 #define TR_TRNCHN              "CH1CH2CH3CH4"
 
-#define LEN_AUX_SERIALMODES         "\015"
+#define LEN_AUX_SERIAL_MODES   "\015"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIALMODES          "Debug\0       ""S-Port Pelik\0""Telemetry\0   ""SBUS Trainer\0""LUA\0         "
+#define TR_AUX_SERIAL_MODES          "Debug\0       ""S-Port Pelik\0""Telemetry\0   ""SBUS Trainer\0""LUA\0         "
 #else
-#define TR_AUX_SERIALMODES          "POIS\0        ""S-Port Pelik\0""Telemetry\0   ""SBUS Trainer\0""LUA\0         "
+#define TR_AUX_SERIAL_MODES          "POIS\0        ""S-Port Pelik\0""Telemetry\0   ""SBUS Trainer\0""LUA\0         "
 #endif
 
 #define LEN_SWTYPES            "\006"
@@ -968,6 +968,10 @@
 #define TR_MODULE_BIND         "[Bind]"
 #define TR_MODULE_RANGE        "[Range]"
 #define TR_RESET_BTN           "[Reset]"
+#define TR_DEBUG                       "Debug"
+#define TR_KEYS_BTN                BUTTON(TR("SW","Switches"))
+#define TR_ANALOGS_BTN                 BUTTON(TR("Ana","Analogs"))
+#define TR_CALIB_BTN                   BUTTON("Calibration")
 #define TR_SET                 "[Set]"
 #define TR_TRAINER             "Trainer"
 #define TR_ANTENNAPROBLEM      CENTER "TX Antenna problem!"
@@ -1015,7 +1019,7 @@
 #define TR_PREFLIGHT           "Preflight Checks"
 #define TR_CHECKLIST           INDENT "Display Checklist"
 #define TR_FAS_OFFSET          TR(INDENT "FAS Ofs", INDENT "FAS Offset")
-#define TR_AUX_SERIALMODE           "Serial port"
+#define TR_AUX_SERIAL_MODE           "Serial port"
 #define TR_SCRIPT              "Script"
 #define TR_INPUTS              "Inputs"
 #define TR_OUTPUTS             "Outputs"
@@ -1152,7 +1156,7 @@
 #define TR_AUTOOFFSET          "Auto Offset"
 #define TR_ONLYPOSITIVE        "Positive"
 #define TR_FILTER              "Filter"
-#define TR_TELEMETRYFULL       "All telemetry slots full!"
+#define TR_TELEMETRYFULL       TR("All slots full!", "All telemetry slots full!")
 #define TR_SERVOS_OK           "Servos OK"
 #define TR_SERVOS_KO           "Servos KO"
 #define TR_INVERTED_SERIAL     INDENT "Invert"

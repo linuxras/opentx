@@ -127,8 +127,8 @@ extern const char STR_OPEN9X[];
 #endif
 #define OFS_TRNCHN             (OFS_TRNMODE + sizeof(TR_TRNMODE))
 #if defined(PCBTARANIS) || defined(PCBHORUS) || defined(PCBI6X)
-  #define OFS_AUX_SERIALMODES       (OFS_TRNCHN + sizeof(TR_TRNCHN))
-  #define OFS_SWTYPES          (OFS_AUX_SERIALMODES + sizeof(TR_AUX_SERIALMODES))
+  #define OFS_AUX_SERIAL_MODES       (OFS_TRNCHN + sizeof(TR_TRNCHN))
+  #define OFS_SWTYPES          (OFS_AUX_SERIAL_MODES + sizeof(TR_AUX_SERIAL_MODES))
   #define OFS_POTTYPES         (OFS_SWTYPES + sizeof(TR_SWTYPES))
   #define OFS_SLIDERTYPES      (OFS_POTTYPES + sizeof(TR_POTTYPES))
   #define OFS_VTRIMINC         (OFS_SLIDERTYPES + sizeof(TR_SLIDERTYPES))
@@ -225,7 +225,7 @@ extern const char STR_OPEN9X[];
 #define STR_VBEEPMODE           (STR_OPEN9X + OFS_VBEEPMODE)
 #define STR_TRNMODE             (STR_OPEN9X + OFS_TRNMODE)
 #define STR_TRNCHN              (STR_OPEN9X + OFS_TRNCHN)
-#define STR_AUX_SERIALMODES      (STR_OPEN9X + OFS_AUX_SERIALMODES)
+#define STR_AUX_SERIAL_MODES      (STR_OPEN9X + OFS_AUX_SERIAL_MODES)
 #define STR_SWTYPES             (STR_OPEN9X + OFS_SWTYPES)
 #define STR_POTTYPES            (STR_OPEN9X + OFS_POTTYPES)
 #define STR_SLIDERTYPES         (STR_OPEN9X + OFS_SLIDERTYPES)
@@ -619,7 +619,6 @@ extern const char STR_PERSISTENT_MAH[];
 #define LEN_CALIB_FIELDS               PSIZE(TR_BATT_CALIB)
 #endif
 
-#if defined(NAVIGATION_MENUS)
   extern const char STR_SELECT_MODEL[];
   extern const char STR_CREATE_CATEGORY[];
   extern const char STR_RENAME_CATEGORY[];
@@ -649,9 +648,12 @@ extern const char STR_PERSISTENT_MAH[];
   extern const char STR_USB_SERIAL[];
   extern const char STR_SETUP_SCREENS[];
   extern const char STR_MONITOR_SCREENS[];
-#endif
 
 extern const char STR_RESET_BTN[];
+extern const char STR_DEBUG[];
+extern const char STR_KEYS_BTN[];
+extern const char STR_ANALOGS_BTN[];
+extern const char STR_CALIB_BTN[];
 
 #if defined(SDCARD)
   extern const char STR_BACKUP_MODEL[];
@@ -930,7 +932,7 @@ extern const char STR_BLCOLOR[];
   extern const char STR_SCALE[];
   extern const char STR_VIEW_CHANNELS[];
   extern const char STR_POTWARNING[];
-  extern const char STR_AUX_SERIALMODE[];
+  extern const char STR_AUX_SERIAL_MODE[];
   extern const char STR_THROTTLE_LABEL[];
   extern const char STR_SCRIPT[];
   extern const char STR_INPUTS[];
