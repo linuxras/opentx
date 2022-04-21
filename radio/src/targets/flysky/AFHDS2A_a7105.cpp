@@ -76,11 +76,9 @@ Noi.1: -97dBm
 SNR1:   39dB
 
 packet[0] - type
-packet[1] - len (>= 28)
-
-0xFF - AFHDS2A_ID_END
+packet[1-4] - rx_tx_addr
+packet[5-8] - rx_id
 */
-
 void AFHDS2A_update_telemetry() {
   uint8_t type = packet[0];
   if (type == 0xAA && packet[9] == 0xFD)
@@ -88,11 +86,21 @@ void AFHDS2A_update_telemetry() {
 
 #if defined(AUX_SERIAL)
   if (g_eeGeneral.auxSerialMode == UART_MODE_TELEMETRY_MIRROR) {
-    uint8_t len = packet[1];
-    auxSerialPutc(type);
-    auxSerialPutc(len);
-    for (uint8_t c = 0 + 8; c < len + 8; c++)
-      auxSerialPutc(packet[c]);
+    static uint8_t throttle = 0;
+    if (throttle++ == 10) {
+      throttle = 0;
+      // auxSerialPutc('M');
+      // auxSerialPutc('P');
+      uint8_t len = 0;
+      while (packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
+        len++;
+      }
+      auxSerialPutc(type);
+      auxSerialPutc(len);
+      for (uint8_t c = 0 + 8; c < len + 8; c++) {
+        auxSerialPutc(packet[c]);
+      }
+    }
   }
 #endif
 
