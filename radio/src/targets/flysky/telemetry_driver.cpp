@@ -185,7 +185,6 @@ extern "C" void TELEMETRY_DMA_TX_IRQHandler(void) {
   }
 }
 
-#define USART_FLAG_ERRORS (USART_FLAG_ORE | USART_FLAG_PE) // | USART_FLAG_FE, USART_FLAG_NE
 extern "C" void TELEMETRY_USART_IRQHandler(void) {
   DEBUG_INTERRUPT(INT_TELEM_USART);
   uint32_t status = TELEMETRY_USART->ISR;

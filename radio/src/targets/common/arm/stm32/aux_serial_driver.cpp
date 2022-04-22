@@ -81,9 +81,9 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
-#if !defined(PCBI6X)
+// #if !defined(PCBI6X)
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
-#endif
+// #endif
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
     NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
     NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
@@ -194,5 +194,29 @@ extern "C" void AUX_SERIAL_USART_IRQHandler(void)
     }
   }
 #endif
+  // Receive
+#if defined(STM32F0)
+  uint32_t status = AUX_SERIAL_USART->ISR;
+#else
+  uint32_t status = AUX_SERIAL_USART->SR;
+#endif
+  while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
+#if defined(STM32F0)
+    uint8_t data = AUX_SERIAL_USART->RDR;
+#else
+    uint8_t data = AUX_SERIAL_USART->DR;
+#endif
+    if (!(status & USART_FLAG_ERRORS)) {
+#if defined(LUA) & !defined(CLI)
+      if (luaRxFifo && auxSerialMode == UART_MODE_LUA)
+        luaRxFifo->push(data);
+#endif
+    }
+#if defined(STM32F0)
+    status = AUX_SERIAL_USART->ISR;
+#else
+    status = AUX_SERIAL_USART->SR;
+#endif
+  }
 }
 #endif // AUX_SERIAL
