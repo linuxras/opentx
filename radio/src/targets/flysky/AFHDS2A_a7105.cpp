@@ -86,20 +86,22 @@ void AFHDS2A_update_telemetry() {
 
 #if defined(AUX_SERIAL)
   if (g_eeGeneral.auxSerialMode == UART_MODE_TELEMETRY_MIRROR) {
-    static uint8_t throttle = 0;
-    if (throttle++ == 10) {
-      throttle = 0;
-      // auxSerialPutc('M');
-      // auxSerialPutc('P');
-      uint8_t len = 0;
-      while (packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
+    // auxSerialPutc('M');
+    // auxSerialPutc('P');
+    uint8_t len = 0;
+    if (type == 0xAA) {
+      while (len < 7 && packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
         len++;
       }
-      auxSerialPutc(type);
-      auxSerialPutc(len);
-      for (uint8_t c = 0 + 8; c < len + 8; c++) {
-        auxSerialPutc(packet[c]);
+    } else if (type == 0xAC) {
+      while (len < 26 && packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
+        len++;
       }
+    }
+    auxSerialPutc(type);
+    auxSerialPutc(len);
+    for (uint8_t c = 0 + 8; c < len + 8; c++) {
+      auxSerialPutc(packet[c]);
     }
   }
 #endif
