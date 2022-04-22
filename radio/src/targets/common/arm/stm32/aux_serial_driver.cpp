@@ -20,14 +20,17 @@
 
 #include "opentx.h"
 
-uint8_t auxSerialMode = 0;
+#if defined(AUX_SERIAL)
+uint8_t auxSerialMode = UART_MODE_COUNT;  // Prevent debug output before port is setup
+#if defined(PCBI6X)
+Fifo<uint8_t, 128> auxSerialTxFifo;
+#else
 Fifo<uint8_t, 512> auxSerialTxFifo;
-#if !defined(STM32F0)
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Stream_RX);
 #endif
+
 void auxSerialSetup(unsigned int baudrate, bool dma)
 {
-//#if !defined(STM32F0)
   USART_InitTypeDef USART_InitStructure;
   GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -50,7 +53,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   if (dma) {
-#if !defined(STM32F0)    
+#if !defined(PCBI6X)
     DMA_InitTypeDef DMA_InitStructure;
     auxSerialRxFifo.clear();
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, DISABLE);
@@ -74,11 +77,11 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
     USART_DMACmd(AUX_SERIAL_USART, USART_DMAReq_Rx, ENABLE);
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
     DMA_Cmd(AUX_SERIAL_DMA_Stream_RX, ENABLE);
-#endif    
+#endif
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
-    USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
+    // USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
     NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
     NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
@@ -93,9 +96,13 @@ void auxSerialInit(unsigned int mode, unsigned int protocol)
 
   switch (mode) {
     case UART_MODE_TELEMETRY_MIRROR:
-#if !defined(STM32F0)
-      auxSerialSetup(FRSKY_SPORT_BAUDRATE, false);
+#if defined(CROSSFIRE)
+      if (protocol == PROTOCOL_PULSES_CROSSFIRE) { // PROTOCOL_TELEMETRY_CROSSFIRE
+        auxSerialSetup(CROSSFIRE_TELEM_MIRROR_BAUDRATE, false);
+        break;
+      }
 #endif
+      auxSerialSetup(FRSKY_SPORT_BAUDRATE, false);
       break;
 
 #if defined(DEBUG) || defined(CLI)
@@ -104,16 +111,16 @@ void auxSerialInit(unsigned int mode, unsigned int protocol)
       break;
 #endif
 
+#if !defined(PCBI6X)
     case UART_MODE_TELEMETRY:
-#if !defined(STM32F0)    
       if (protocol == PROTOCOL_FRSKY_D_SECONDARY) {
         auxSerialSetup(FRSKY_D_BAUDRATE, true);
       }
-#endif      
       break;
 
     case UART_MODE_LUA:
       auxSerialSetup(DEBUG_BAUDRATE, false);
+#endif
   }
 }
 
@@ -138,7 +145,7 @@ void auxSerialSbusInit()
 
 void auxSerialStop()
 {
-#if !defined(STM32F0)
+#if !defined(PCBI6X)
   DMA_DeInit(AUX_SERIAL_DMA_Stream_RX);
 #endif
   USART_DeInit(AUX_SERIAL_USART);
@@ -185,4 +192,29 @@ extern "C" void AUX_SERIAL_USART_IRQHandler(void)
     }
   }
 #endif
+  // Receive
+// #if defined(STM32F0)
+//   uint32_t status = AUX_SERIAL_USART->ISR;
+// #else
+//   uint32_t status = AUX_SERIAL_USART->SR;
+// #endif
+//   while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
+// #if defined(STM32F0)
+//     uint8_t data = AUX_SERIAL_USART->RDR;
+// #else
+//     uint8_t data = AUX_SERIAL_USART->DR;
+// #endif
+//     if (!(status & USART_FLAG_ERRORS)) {
+// #if defined(LUA) & !defined(CLI)
+//       if (luaRxFifo && auxSerialMode == UART_MODE_LUA)
+//         luaRxFifo->push(data);
+// #endif
+//     }
+// #if defined(STM32F0)
+//     status = AUX_SERIAL_USART->ISR;
+// #else
+//     status = AUX_SERIAL_USART->SR;
+// #endif
+//   }
 }
+#endif // AUX_SERIAL
