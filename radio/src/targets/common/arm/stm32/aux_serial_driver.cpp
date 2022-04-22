@@ -24,7 +24,7 @@
 uint8_t auxSerialMode = UART_MODE_COUNT;  // Prevent debug output before port is setup
 #if defined(PCBI6X)
 Fifo<uint8_t, 128> auxSerialTxFifo;
-Fifo<uint8_t, 32> auxSerialRxFifo __DMA;
+DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Channel_RX);
 #else
 Fifo<uint8_t, 512> auxSerialTxFifo;
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Stream_RX);
@@ -54,7 +54,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   if (dma) {
-// #if !defined(PCBI6Xxx)
+// #if !defined(PCBI6X)
     DMA_InitTypeDef DMA_InitStructure;
     auxSerialRxFifo.clear();
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, DISABLE);
@@ -70,6 +70,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(AUX_SERIAL_DMA_Channel_RX, &DMA_InitStructure);
     USART_DMACmd(AUX_SERIAL_USART, USART_DMAReq_Rx, ENABLE);
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
@@ -99,7 +100,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
-    // USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
+//    USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
     NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
     NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
