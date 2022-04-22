@@ -467,7 +467,7 @@ void hapticOff(void);
 extern uint8_t auxSerialMode;
 void auxSerialInit(unsigned int mode, unsigned int protocol);
 void auxSerialPutc(char c);
-#define auxSerialTelemetryInit(protocol) auxSerialInit(UART_MODE_TELEMETRY, protocol)
+#define auxSerialTelemetryInit(protocol) //auxSerialInit(UART_MODE_TELEMETRY, protocol)
 void auxSerialSbusInit(void);
 void auxSerialStop(void);
 #endif
