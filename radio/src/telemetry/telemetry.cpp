@@ -227,7 +227,7 @@ void telemetryInit(uint8_t protocol)
 	  telemetryPortInit(FRSKY_D_BAUDRATE, TELEMETRY_SERIAL_DEFAULT);
 	  break;
 #endif
-#if defined(AUX_SERIAL) || defined(PCBSKY9X)
+#if (defined(AUX_SERIAL) || defined(PCBSKY9X)) && !defined(PCBI6X)
   case PROTOCOL_FRSKY_D_SECONDARY:
 	  telemetryPortInit(0, TELEMETRY_SERIAL_DEFAULT);
 	  auxSerialTelemetryInit(PROTOCOL_FRSKY_D_SECONDARY);

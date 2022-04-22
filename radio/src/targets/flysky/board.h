@@ -509,8 +509,8 @@ extern uint8_t currentTrainerMode;
 void checkTrainerSettings(void);
 
 #if defined(__cplusplus)
-//#include "fifo.h"
-//#include "dmafifo.h"
+#include "fifo.h"
+// #include "dmafifo.h"
 
 #if defined(CROSSFIRE)
 #define TELEMETRY_FIFO_SIZE             128
@@ -518,8 +518,9 @@ void checkTrainerSettings(void);
 #define TELEMETRY_FIFO_SIZE             64
 #endif
 
-//extern Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryFifo;
-//extern DMAFifo<32> auxSerialRxFifo;
+// extern Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryFifo;
+// extern DMAFifo<32> auxSerialRxFifo;
+extern Fifo<uint8_t, 32> auxSerialRxFifo;
 #endif
 
 

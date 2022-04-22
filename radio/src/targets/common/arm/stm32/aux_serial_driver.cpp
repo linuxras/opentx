@@ -24,6 +24,7 @@
 uint8_t auxSerialMode = UART_MODE_COUNT;  // Prevent debug output before port is setup
 #if defined(PCBI6X)
 Fifo<uint8_t, 128> auxSerialTxFifo;
+Fifo<uint8_t, 32> auxSerialRxFifo __DMA;
 #else
 Fifo<uint8_t, 512> auxSerialTxFifo;
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Stream_RX);
@@ -53,11 +54,27 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   if (dma) {
-#if !defined(PCBI6X)
+// #if !defined(PCBI6Xxx)
     DMA_InitTypeDef DMA_InitStructure;
     auxSerialRxFifo.clear();
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, DISABLE);
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
+#if defined(STM32F0)
+    DMA_InitStructure.DMA_PeripheralBaseAddr = CONVERT_PTR_UINT(&AUX_SERIAL_USART->RDR);
+    DMA_InitStructure.DMA_MemoryBaseAddr = CONVERT_PTR_UINT(auxSerialRxFifo.buffer());
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+    DMA_InitStructure.DMA_BufferSize = auxSerialRxFifo.size();
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_Low;
+    DMA_Init(AUX_SERIAL_DMA_Channel_RX, &DMA_InitStructure);
+    USART_DMACmd(AUX_SERIAL_USART, USART_DMAReq_Rx, ENABLE);
+    USART_Cmd(AUX_SERIAL_USART, ENABLE);
+    DMA_Cmd(AUX_SERIAL_DMA_Channel_RX, ENABLE);
+#else
     DMA_InitStructure.DMA_Channel = AUX_SERIAL_DMA_Channel_RX;
     DMA_InitStructure.DMA_PeripheralBaseAddr = CONVERT_PTR_UINT(&AUX_SERIAL_USART->DR);
     DMA_InitStructure.DMA_Memory0BaseAddr = CONVERT_PTR_UINT(auxSerialRxFifo.buffer());
@@ -77,7 +94,8 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
     USART_DMACmd(AUX_SERIAL_USART, USART_DMAReq_Rx, ENABLE);
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
     DMA_Cmd(AUX_SERIAL_DMA_Stream_RX, ENABLE);
-#endif
+#endif // STM32F0
+// #endif // PCBI6X
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
@@ -193,28 +211,30 @@ extern "C" void AUX_SERIAL_USART_IRQHandler(void)
   }
 #endif
   // Receive
-// #if defined(STM32F0)
-//   uint32_t status = AUX_SERIAL_USART->ISR;
-// #else
-//   uint32_t status = AUX_SERIAL_USART->SR;
-// #endif
-//   while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
-// #if defined(STM32F0)
-//     uint8_t data = AUX_SERIAL_USART->RDR;
-// #else
-//     uint8_t data = AUX_SERIAL_USART->DR;
-// #endif
-//     if (!(status & USART_FLAG_ERRORS)) {
-// #if defined(LUA) & !defined(CLI)
-//       if (luaRxFifo && auxSerialMode == UART_MODE_LUA)
-//         luaRxFifo->push(data);
-// #endif
-//     }
-// #if defined(STM32F0)
-//     status = AUX_SERIAL_USART->ISR;
-// #else
-//     status = AUX_SERIAL_USART->SR;
-// #endif
-//   }
+#if !defined(PCBI6X) // works but not needed
+#if defined(STM32F0)
+  uint32_t status = AUX_SERIAL_USART->ISR;
+#else
+  uint32_t status = AUX_SERIAL_USART->SR;
+#endif
+  while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
+#if defined(STM32F0)
+    uint8_t data = AUX_SERIAL_USART->RDR;
+#else
+    uint8_t data = AUX_SERIAL_USART->DR;
+#endif
+    if (!(status & USART_FLAG_ERRORS)) {
+#if defined(LUA) & !defined(CLI)
+      if (luaRxFifo && auxSerialMode == UART_MODE_LUA)
+        luaRxFifo->push(data);
+#endif
+    }
+#if defined(STM32F0)
+    status = AUX_SERIAL_USART->ISR;
+#else
+    status = AUX_SERIAL_USART->SR;
+#endif
+  }
+#endif // PCBI6X
 }
 #endif // AUX_SERIAL

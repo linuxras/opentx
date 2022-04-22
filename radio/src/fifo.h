@@ -96,6 +96,11 @@ class Fifo
       }
     }
 
+    uint8_t * buffer()
+    {
+      return fifo;
+    }
+
   protected:
     T fifo[N];
     volatile uint32_t widx;
