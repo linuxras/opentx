@@ -22,6 +22,9 @@
 #include <stdio.h>
 
 uint8_t auxSerialMode = 0;
+Fifo<uint8_t, 128> auxSerialTxFifo;
+
+
 
 void auxSerialSetup(unsigned int baudrate, bool dma)
 {
@@ -50,6 +53,10 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   USART_Cmd(AUX_SERIAL_USART, ENABLE);
+  // USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
+  USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
+  NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
+  NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
 }
 
 void auxSerialInit(unsigned int mode, unsigned int protocol)
@@ -73,6 +80,7 @@ void auxSerialInit(unsigned int mode, unsigned int protocol)
     auxSerialSetup(DEBUG_BAUDRATE, false);
     break;
 #endif
+
 #if !defined(PCBI6X)
   case UART_MODE_TELEMETRY:
     if (protocol == PROTOCOL_FRSKY_D_SECONDARY)
@@ -89,8 +97,13 @@ void auxSerialInit(unsigned int mode, unsigned int protocol)
 void auxSerialPutc(char c)
 {
 #if !defined(SIMU)
-  while (USART_GetFlagStatus(AUX_SERIAL_USART, USART_FLAG_TXE) == RESET);
-  USART_SendData(AUX_SERIAL_USART, c);
+  int n = 0;
+  while (auxSerialTxFifo.isFull()) {
+    delay_ms(1);
+    if (++n > 100) return;
+  }
+  auxSerialTxFifo.push(c);
+  USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, ENABLE);
 #endif
 }
 
@@ -114,36 +127,36 @@ uint8_t auxSerialTracesEnabled()
 #endif
 }
 
-// extern "C" void SERIAL_USART_IRQHandler(void)
-// {
-//   DEBUG_INTERRUPT(INT_SER2);
-//   // Send
-//   if (USART_GetITStatus(SERIAL_USART, USART_IT_TXE) != RESET) {
-//     uint8_t txchar;
-//     if (auxSerialTxFifo.pop(txchar)) {
-//       /* Write one byte to the transmit data register */
-//       USART_SendData(SERIAL_USART, txchar);
-//     }
-//     else {
-//       USART_ITConfig(SERIAL_USART, USART_IT_TXE, DISABLE);
-//     }
-//   }
+extern "C" void AUX_SERIAL_USART_IRQHandler(void)
+{
+  DEBUG_INTERRUPT(INT_SER2);
+  // Send
+  if (USART_GetITStatus(AUX_SERIAL_USART, USART_IT_TXE) != RESET) {
+    uint8_t txchar;
+    if (auxSerialTxFifo.pop(txchar)) {
+      /* Write one byte to the transmit data register */
+      USART_SendData(AUX_SERIAL_USART, txchar);
+    }
+    else {
+      USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
+    }
+  }
 
-// #if defined(CLI)
-//   if (!(getSelectedUsbMode() == USB_SERIAL_MODE)) {
-//     // Receive
-//     uint32_t status = SERIAL_USART->SR;
-//     while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
-//       uint8_t data = SERIAL_USART->DR;
-//       if (!(status & USART_FLAG_ERRORS)) {
-//         switch (auxSerialMode) {
-//           case UART_MODE_DEBUG:
-//             cliRxFifo.push(data);
-//             break;
-//         }
-//       }
-//       status = SERIAL_USART->SR;
-//     }
-//   }
-// #endif
-// }
+#if defined(CLI)
+  if (!(getSelectedUsbMode() == USB_SERIAL_MODE)) {
+    // Receive
+    uint32_t status = AUX_SERIAL_USART->SR;
+    while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
+      uint8_t data = AUX_SERIAL_USART->DR;
+      if (!(status & USART_FLAG_ERRORS)) {
+        switch (auxSerialMode) {
+          case UART_MODE_DEBUG:
+            cliRxFifo.push(data);
+            break;
+        }
+      }
+      status = AUX_SERIAL_USART->SR;
+    }
+  }
+#endif
+}
