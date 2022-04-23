@@ -24,7 +24,9 @@
 uint8_t auxSerialMode = UART_MODE_COUNT;  // Prevent debug output before port is setup
 #if defined(PCBI6X)
 Fifo<uint8_t, 128> auxSerialTxFifo;
+#if defined(PCBI6X_SERIAL_RX)
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Channel_RX);
+#endif
 #else
 Fifo<uint8_t, 512> auxSerialTxFifo;
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Stream_RX);
@@ -54,7 +56,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   if (dma) {
-// #if !defined(PCBI6X)
+#if defined(PCBI6X_SERIAL_RX)
     DMA_InitTypeDef DMA_InitStructure;
     auxSerialRxFifo.clear();
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, DISABLE);
@@ -96,7 +98,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma)
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
     DMA_Cmd(AUX_SERIAL_DMA_Stream_RX, ENABLE);
 #endif // STM32F0
-// #endif // PCBI6X
+#endif // PCBI6X_SERIAL_RX
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
