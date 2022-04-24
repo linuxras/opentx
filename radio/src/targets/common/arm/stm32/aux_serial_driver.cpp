@@ -102,7 +102,9 @@ void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t lenght = USART_Wor
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
+#if !defined(PCBI6X)
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
+#endif
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
     NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
     NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
@@ -158,7 +160,7 @@ void auxSerialPutc(char c)
   int n = 0;
   while (auxSerialTxFifo.isFull()) {
     delay_ms(1);
-    if (++n > 100) return;
+    if (++n > 10) return;
   }
   auxSerialTxFifo.push(c);
   USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, ENABLE);
@@ -251,6 +253,6 @@ extern "C" void AUX_SERIAL_USART_IRQHandler(void)
     status = AUX_SERIAL_USART->SR;
 #endif // STM32F0
   }
-#endif // SBUS
+#endif // PCBI6X
 }
 #endif // AUX_SERIAL
