@@ -24,10 +24,6 @@ int16_t ppmInput[MAX_TRAINER_CHANNELS];
 uint8_t ppmInputValidityTimer;
 uint8_t currentTrainerMode = 0xff;
 
-#if defined(STM32F0)
-void checkTrainerSignalWarning() {}
-#else
-#include "audio.h"
 void checkTrainerSignalWarning()
 {
   enum PpmInValidState_t {
@@ -50,7 +46,6 @@ void checkTrainerSignalWarning()
     AUDIO_TRAINER_BACK();
   }
 }
-#endif // STM32F0
 
 void checkTrainerSettings()
 {
