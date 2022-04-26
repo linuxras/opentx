@@ -50,7 +50,7 @@ class DMAFifo
     uint8_t last(int index)
     {
 #if defined(STM32F0)
-      return fifo[(2*N - stream->CNDTR - index) & (N-1)];
+      return fifo[(2*N - (AUX_SERIAL_DMA_Channel_RX->CNDTR & 0xFFFFUL) - index) & (N-1)];
 #else
       return fifo[(2*N - stream->NDTR - index) & (N-1)];
 #endif
@@ -62,7 +62,7 @@ class DMAFifo
       return true;
 #endif
 #if defined(STM32F0)
-      return (ridx == N - stream->CNDTR);
+      return (ridx == N - (AUX_SERIAL_DMA_Channel_RX->CNDTR & 0xFFFFUL));
 #else
       return (ridx == N - stream->NDTR);
 #endif

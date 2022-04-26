@@ -540,7 +540,7 @@ bool isTelemetryProtocolAvailable(int protocol) {
   return true;
 }
 
-#if defined(PCBHORUS)
+#if defined(PCBHORUS) || defined(PCBI6X)
 bool isTrainerModeAvailable(int mode) {
   return true;
 }

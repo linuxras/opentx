@@ -50,6 +50,12 @@ set(TARGET_SRC
   trainer_driver.cpp
   )
 
+add_definitions(-DSBUS)
+set(PULSES_SRC
+  ${PULSES_SRC}
+  ../sbus.cpp
+  )
+
 set(HSE_VALUE 8000000)
 set(SDCARD NO) # ~24kB FLASH
 set(EEPROM EEPROM_RLC)
