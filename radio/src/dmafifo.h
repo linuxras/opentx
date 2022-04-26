@@ -28,9 +28,9 @@ class DMAFifo
 {
   public:
 #if defined(STM32F0)
-    DMAFifo(DMA_Channel_TypeDef * stream):
+    explicit DMAFifo(DMA_Channel_TypeDef * stream):
 #else
-    DMAFifo(DMA_Stream_TypeDef * stream):
+    explicit DMAFifo(DMA_Stream_TypeDef * stream):
 #endif
       stream(stream),
       ridx(0)
@@ -50,7 +50,7 @@ class DMAFifo
     uint8_t last(int index)
     {
 #if defined(STM32F0)
-      return fifo[(2*N - AUX_SERIAL_DMA_Channel_RX->CNDTR - index) & (N-1)];
+      return fifo[(2*N - stream->CNDTR - index) & (N-1)];
 #else
       return fifo[(2*N - stream->NDTR - index) & (N-1)];
 #endif
@@ -62,7 +62,7 @@ class DMAFifo
       return true;
 #endif
 #if defined(STM32F0)
-      return (ridx == N - AUX_SERIAL_DMA_Channel_RX->CNDTR);
+      return (ridx == N - stream->CNDTR);
 #else
       return (ridx == N - stream->NDTR);
 #endif
@@ -85,13 +85,13 @@ class DMAFifo
       return fifo;
     }
 
-  protected:
-    uint8_t fifo[N];
 #if defined(STM32F0)
     DMA_Channel_TypeDef * stream;
 #else
     DMA_Stream_TypeDef * stream;
 #endif
+  protected:
+    uint8_t fifo[N];
     volatile uint32_t ridx;
 };
 
