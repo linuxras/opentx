@@ -957,6 +957,7 @@
 #define TR_MENUSENSOR                  "CAPTEUR"
 #define TR_SENSOR                      "SENSOR"
 #define TR_COUNTRYCODE                 TR("Zone géo.", "Zone géographique")
+#define TR_USBDETECT                   "USB Detect"
 #define TR_USBMODE                     "USB Mode"
 #define TR_VOICELANG                   TR("Langue voix", "Langue annonces vocales")
 #define TR_UNITSSYSTEM                 "Unités"
@@ -975,9 +976,9 @@
 #define TR_RESET_TELEMETRY             TR("Réinit. Télém.", "Réinit. Télémétrie")
 #define TR_STATISTICS                  "Statistiques"
 #define TR_ABOUT_US                    "A propos"
-#define TR_USB_JOYSTICK                "USB Joystick (HID)"
-#define TR_USB_MASS_STORAGE            "Stockage USB (SD)"
-#define TR_USB_SERIAL                  "Port série (Debug)"
+#define TR_USB_JOYSTICK                "USB Joystick"
+#define TR_USB_MASS_STORAGE            "Stockage USB"
+#define TR_USB_SERIAL                  "Port série"
 #define TR_SETUP_SCREENS               "Configuration écrans"
 #define TR_MONITOR_SCREENS             "Moniteurs"
 #define TR_AND_SWITCH                  "ET suppl."
@@ -1249,6 +1250,7 @@
 #define ZSTR_CURR                      "Curr"
 #define ZSTR_CAPACITY                  "Capa"
 #define ZSTR_VFAS                      "VFAS"
+#define ZSTR_BATT_PERCENT              "Bat%"
 #define ZSTR_ASPD                      "ASpd"
 #define ZSTR_GSPD                      "GSpd"
 #define ZSTR_HDG                       "Hdg"

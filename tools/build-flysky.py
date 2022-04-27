@@ -32,7 +32,12 @@ translations = [
     "CZ",
     "DE",
     "ES",
-    "PT"
+    "PT",
+    # "NL",
+    # "SE",
+    "FI",
+    # "IT",
+    # "FR"
 ]
 
 common_options = {

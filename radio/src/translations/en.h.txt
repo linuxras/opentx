@@ -106,8 +106,8 @@
 #define TR_COUNTRYCODES                TR("US""JP""EU", "America""Japan\0 ""Europe\0")
 
 #if defined(PCBI6X)
-#define LEN_USBDETECTMODES             TR("\004", "\004")
-#define TR_USBDETECTMODES              TR("Auto""Once", "Auto""Once")
+#define LEN_USBDETECTMODES             "\004"
+#define TR_USBDETECTMODES              "Auto""Once"
 #endif
 
 #define LEN_USBMODES                   TR("\006", "\010")
@@ -582,6 +582,7 @@
   #define OFS_EXIT                     sizeof(TR_ENTER)
 #endif
 
+#define TR_MENUWHENDONE        CENTER "\006" TR_ENTER " WHEN DONE"
 #define TR_FREE                        "free"
 #define TR_DELETEMODEL                 "DELETE" BREAKSPACE "MODEL"
 #define TR_COPYINGMODEL                "Copying model..."

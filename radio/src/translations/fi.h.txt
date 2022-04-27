@@ -107,8 +107,17 @@
 #define LEN_COUNTRYCODES       TR("\002", "\007")
 #define TR_COUNTRYCODES        TR("US""JP""EU", "Amerikk""Japani\0""Euroopp")
 
+#if defined(PCBI6X)
+#define LEN_USBDETECTMODES     "\004"
+#define TR_USBDETECTMODES      "Auto""Once"
+#endif
+
 #define LEN_USBMODES           TR("\006", "\010")
+#if defined(PCBI6X)
+#define TR_USBMODES            TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
+#else
 #define TR_USBMODES            TR("Ask\0  ""Joyst\0""Storag""Serial", "Ask\0    ""Joystick""Storage\0""Serial\0 ")
+#endif
 
 #define LEN_TARANIS_PROTOCOLS  "\004"
 #if defined(PCBI6X)
@@ -241,7 +250,7 @@
   #define TR_VVARIO            "[Vario]\0  "
 #endif
 
-#if defined(AUDIO)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND             "Play Sound"
 #else
   #define TR_SOUND             "Beep\0     "
@@ -389,8 +398,13 @@
   #define TR_VARIOSRC          "Alti\0""Alti+""Vario""A1\0  ""A2\0"
 #endif
 
-#define LEN_VTELEMSCREENTYPE   "\004"
-#define TR_VTELEMSCREENTYPE    "Nums""Bars"
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\004"
+  #define TR_VTELEMSCREENTYPE          "None""Nums""Bars"
+#else
+#define LEN_VTELEMSCREENTYPE   "\006"
+#define TR_VTELEMSCREENTYPE    "None\0 ""Nums\0 ""Bars\0 ""Script"
+#endif
 
 #define LEN_GPSFORMAT          "\004"
 #define TR_GPSFORMAT           "HMS NMEA"
@@ -435,7 +449,10 @@
 #elif defined(PCBX9E)
   #define TR_POTS_VSRCRAW              "\310F1\0""\310F2\0""\310F3\0""\310F4\0""\311S1\0""\311S2\0""\311LS\0""\311RS\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0""\312SE\0""\312SF\0""\312SG\0""\312SH\0""\312SI\0""\312SJ\0""\312SK\0""\312SL\0""\312SM\0""\312SN\0""\312SO\0""\312SP\0""\312SQ\0""\312SR\0"
-#elif defined(PCBXLITE) || defined(PCBI6X)
+#elif defined(PCBI6X)
+  #define TR_POTS_VSRCRAW              "\310P1\0""\310P2\0"
+  #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
+#elif defined(PCBXLITE)
   #define TR_POTS_VSRCRAW              "\310S1\0""\310S2\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
 #elif defined(PCBX7)
@@ -538,12 +555,16 @@
 
 #if defined(PCBTARANIS)
   #define TR_ENTER             "[ENTER]"
+#elif defined(PCBI6X)
+  #define TR_ENTER                     "[ OK ]"
 #else
   #define TR_ENTER             "[MENU]"
 #endif
 
 #if defined(PCBHORUS)
   #define TR_EXIT              "[RTN]"
+#elif defined(PCBI6X)
+  #define TR_EXIT                      "[CANCEL]"
 #else
   #define TR_EXIT              "[EXIT]"
 #endif
@@ -679,7 +700,7 @@
 #define TR_STICKS              "Sticks"
 #define TR_POTS                "Pots"
 #define TR_SWITCHES            "Switches"
-#define TR_SWITCHES_DELAY      "Switches Delay"
+#define TR_SWITCHES_DELAY      "Play Delay"
 #define TR_SLAVE               "Slave"
 #define TR_MODESRC             "Mode\006% Source"
 #define TR_MULTIPLIER          "Multiplier"
@@ -945,6 +966,7 @@
 #define TR_MENUSENSOR          "SENSOR"
 #define TR_SENSOR              "SENSOR"
 #define TR_COUNTRYCODE         "Country Code"
+#define TR_USBDETECT           "USB Detect"
 #define TR_USBMODE             "USB Mode"
 #define TR_VOICELANG           "Voice Language"
 #define TR_UNITSSYSTEM         "Units"
@@ -963,9 +985,9 @@
 #define TR_RESET_TELEMETRY     "Reset Telemetry"
 #define TR_STATISTICS          "Statistics"
 #define TR_ABOUT_US            "About"
-#define TR_USB_JOYSTICK        "USB Joystick (HID)"
-#define TR_USB_MASS_STORAGE    "USB Storage (SD)"
-#define TR_USB_SERIAL          "USB Serial (Debug)"
+#define TR_USB_JOYSTICK        "USB Joystick"
+#define TR_USB_MASS_STORAGE    "USB Storage"
+#define TR_USB_SERIAL          "USB Serial"
 #define TR_SETUP_SCREENS       "Setup screens"
 #define TR_MONITOR_SCREENS     "Monitors"
 #define TR_AND_SWITCH          "AND Switch"
@@ -974,19 +996,19 @@
 #define TR_SPEAKER             INDENT"Speaker"
 #define TR_BUZZER              INDENT"Buzzer"
 #define TR_BYTES               "bytes"
-#define TR_MODULE_BIND         "[Bind]"
-#define TR_MODULE_RANGE        "[Range]"
-#define TR_RESET_BTN           "[Reset]"
+#define TR_MODULE_BIND                 BUTTON(TR("Bnd", "Bind"))
+#define TR_MODULE_RANGE                BUTTON(TR("Rng", "Range"))
+#define TR_RESET_BTN                   BUTTON("Reset")
 #define TR_DEBUG                       "Debug"
-#define TR_KEYS_BTN                BUTTON(TR("SW","Switches"))
-#define TR_ANALOGS_BTN                 BUTTON(TR("Ana","Analogs"))
+#define TR_KEYS_BTN                BUTTON(TR("Keys","Switches"))
+#define TR_ANALOGS_BTN                 BUTTON(TR("Anas","Analogs"))
 #define TR_CALIB_BTN                   BUTTON("Calibration")
-#define TR_SET                 "[Set]"
+#define TR_SET                         BUTTON("Set")
 #define TR_TRAINER             "Trainer"
 #define TR_ANTENNAPROBLEM      CENTER "TX Antenna problem!"
 #define TR_MODELIDUSED         TR("ID used in:", "Receiver ID used in:")
 #define TR_MODULE              INDENT "Module"
-#define TR_TELEMETRY_TYPE      TR("Type", "Telemetry Type")
+#define TR_TELEMETRY_TYPE      TR("Type", "Telemetry type")
 #define TR_TELEMETRY_SENSORS   "Sensors"
 #define TR_VALUE               "Value"
 #define TR_TOPLCDTIMER         "Top LCD Timer"
@@ -1026,15 +1048,15 @@
 #define TR_CONSTANT            "Constant"
 #define TR_PERSISTENT_MAH      INDENT "Store mAh"
 #define TR_PREFLIGHT           "Preflight Checks"
-#define TR_CHECKLIST           INDENT "Display Checklist"
+#define TR_CHECKLIST           TR(INDENT "Checklist", INDENT "Display checklist")
 #define TR_FAS_OFFSET          TR(INDENT "FAS Ofs", INDENT "FAS Offset")
 #define TR_AUX_SERIAL_MODE           "Serial port"
 #define TR_SCRIPT              "Script"
 #define TR_INPUTS              "Inputs"
 #define TR_OUTPUTS             "Outputs"
-#define TR_EEBACKUP            "\004[ENTER Long] to backup the EEPROM"
-#define TR_FACTORYRESET        "\012[MENU Long]: Factory reset"
-#define TR_CONFIRMRESET        "Erase ALL models and settings?"
+#define TR_EEBACKUP            "EEPROM backup"
+#define TR_FACTORYRESET        "Factory reset"
+#define TR_CONFIRMRESET        TR("Erase ALL", "Erase ALL models and settings?")
 #define TR_TO_MANY_LUA_SCRIPTS "Too many Lua scripts!"
 
 
@@ -1169,7 +1191,7 @@
 #define TR_SERVOS_OK           "Servos OK"
 #define TR_SERVOS_KO           "Servos KO"
 #define TR_INVERTED_SERIAL     INDENT "Invert"
-#define TR_IGNORE_INSTANCE     INDENT "Ignore instance"
+#define TR_IGNORE_INSTANCE     TR(INDENT "No inst.", INDENT "Ignore instances")
 #define TR_DISCOVER_SENSORS    INDENT "Discover new sensors"
 #define TR_STOP_DISCOVER_SENSORS INDENT "Stop discovery"
 #define TR_DELETE_ALL_SENSORS  INDENT "Delete all sensors"
@@ -1223,6 +1245,7 @@
 #define ZSTR_CURR              "Curr"
 #define ZSTR_CAPACITY          "Capa"
 #define ZSTR_VFAS              "VFAS"
+#define ZSTR_BATT_PERCENT      "Bat%"
 #define ZSTR_ASPD              "ASpd"
 #define ZSTR_GSPD              "GSpd"
 #define ZSTR_HDG               "Hdg"
@@ -1288,5 +1311,6 @@
 #define ZSTR_GASSUIT_RES_VOL   "GRVl"
 #define ZSTR_GASSUIT_RES_PERC  "GRPc"
 #define ZSTR_GASSUIT_MAX_FLOW  "GMFl"
+#define ZSTR_GASSUIT_AVG_FLOW          "GAFl"
 #define ZSTR_SBEC_VOLTAGE              "BecV"
 #define ZSTR_SBEC_CURRENT              "BecA"
