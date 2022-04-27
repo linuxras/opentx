@@ -86,7 +86,9 @@ constexpr uint8_t MIXER_MAX_PERIOD = MAX_REFRESH_RATE / 1000 /*ms*/;
 void execMixerFrequentActions()
 {
 #if defined(SBUS)
+  if (g_eeGeneral.auxSerialMode == UART_MODE_SBUS_TRAINER) {
     processSbusInput();
+  }
 #endif
 
 #if defined(BLUETOOTH)

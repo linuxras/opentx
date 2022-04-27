@@ -70,11 +70,20 @@
 #define LEN_TRNCHN                     "\003"
 #define TR_TRNCHN                      "CH1CH2CH3CH4"
 
-#define LEN_AUX_SERIAL_MODES           "\016"
+#if defined(PCBI6X)
+#define LEN_AUX_SERIAL_MODES                 "\015"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0        ""Recopie S-Port""Télémétrie\0   ""Ecolage SBUS\0 ""LUA\0          "
+#define TR_AUX_SERIAL_MODES                  "Debug\0       ""Recopie Télém""Ecolage SBUS\0"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0          ""Recopie S-Port""Télémétrie\0   ""Ecolage SBUS\0 ""LUA\0          "
+#define TR_AUX_SERIAL_MODES                  "OFF\0         ""Recopie Télém""Ecolage SBUS\0"
+#endif
+#else
+#define LEN_AUX_SERIAL_MODES           "\015"
+#if defined(CLI) || defined(DEBUG)
+#define TR_AUX_SERIAL_MODES                  "Debug\0        ""Recopie Télém""Télémétrie\0  ""Ecolage SBUS\0""LUA\0         "
+#else
+#define TR_AUX_SERIAL_MODES                  "OFF\0          ""Recopie Télém""Télémétrie\0  ""Ecolage SBUS\0""LUA\0         "
+#endif
 #endif
 
 #define LEN_SWTYPES                    "\006"

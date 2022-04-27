@@ -71,11 +71,11 @@
 #define TR_TRNCHN              "KN1KN2KN3KN4"
 
 #if defined(PCBI6X)
-#define LEN_AUX_SERIAL_MODES                 "\014"
+#define LEN_AUX_SERIAL_MODES                 "\013"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Kopia Telem\0"
+#define TR_AUX_SERIAL_MODES                  "Debug\0     ""Kopia Telem""Trener SBUS"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Kopia Telem\0"
+#define TR_AUX_SERIAL_MODES                  "OFF\0       ""Kopia Telem""Trener SBUS"
 #endif
 #else
 #define LEN_AUX_SERIAL_MODES   "\015"  /*13 decimal*/

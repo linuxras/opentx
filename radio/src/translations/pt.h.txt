@@ -73,9 +73,9 @@
 #if defined(PCBI6X)
 #define LEN_AUX_SERIAL_MODES                 "\014"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror""SBUS Trainer"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror""SBUS Trainer"
 #endif
 #else
 #define LEN_AUX_SERIAL_MODES   "\015"
