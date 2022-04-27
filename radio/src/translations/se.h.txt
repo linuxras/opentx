@@ -107,8 +107,17 @@
 #define LEN_COUNTRYCODES       TR("\002", "\007")
 #define TR_COUNTRYCODES        TR("US""JP""EU", "Amerika""Japan\0 ""Europa\0")
 
+#if defined(PCBI6X)
+#define LEN_USBDETECTMODES             "\004"
+#define TR_USBDETECTMODES              "Auto""Once"
+#endif
+
 #define LEN_USBMODES           TR("\006", "\010")
+#if defined(PCBI6X)
+#define TR_USBMODES                    TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
+#else
 #define TR_USBMODES            TR("Ask\0  ""Joyst\0""Storag""Serial", "Ask\0    ""Joystick""Storage\0""Serial\0 ")
+#endif
 
 #define LEN_TARANIS_PROTOCOLS  "\004"
 #if defined(PCBI6X)
@@ -237,7 +246,7 @@
   #define TR_VVARIO            "[Vario]   "
 #endif
 
-#if defined(AUDIO)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND             "Spela Ljud"
 #else
   #define TR_SOUND             "Pip\0      "
@@ -387,6 +396,10 @@
   #define TR_VARIOSRC          "Alti\0""Alti+""Vario""A1\0  ""A2\0"
 #endif
 
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\007"
+  #define TR_VTELEMSCREENTYPE          "Inget\0 ""Siffror""Staplar"
+#else
   #define LEN_VTELEMSCREENTYPE   "\007"
   #define TR_VTELEMSCREENTYPE    "Inget\0 ""Siffror""Staplar""Script\0"
 
@@ -442,7 +455,10 @@
 #elif defined(PCBX9E)
   #define TR_POTS_VSRCRAW              "\310F1\0""\310F2\0""\310F3\0""\310F4\0""\311S1\0""\311S2\0""\311LS\0""\311RS\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0""\312SE\0""\312SF\0""\312SG\0""\312SH\0""\312SI\0""\312SJ\0""\312SK\0""\312SL\0""\312SM\0""\312SN\0""\312SO\0""\312SP\0""\312SQ\0""\312SR\0"
-#elif defined(PCBXLITE) || defined(PCBI6X)
+#elif defined(PCBI6X)
+  #define TR_POTS_VSRCRAW              "\310P1\0""\310P2\0"
+  #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
+#elif defined(PCBXLITE)
   #define TR_POTS_VSRCRAW              "\310S1\0""\310S2\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
 #elif defined(PCBX7)
@@ -555,12 +571,16 @@
 
 #if defined(PCBTARANIS) || defined(PCBHORUS)
   #define TR_ENTER             "[ENTER]"
+#elif defined(PCBI6X)
+  #define TR_ENTER                     "[ OK ]"
 #else
   #define TR_ENTER             "[MENU]"
 #endif
 
 #if defined(PCBHORUS)
   #define TR_EXIT              "[RTN]"
+#elif defined(PCBI6X)
+  #define TR_EXIT                      "[CANCEL]"
 #else
   #define TR_EXIT              "[EXIT]"
 #endif
@@ -711,10 +731,12 @@
   #define TR_MENUTOSTART       TR_ENTER " Startar "
   #define TR_SETMIDPOINT       "Centrera Allt"
   #define TR_MOVESTICKSPOTS    "Rör Spakar/Rattar"
+  #define TR_MENUWHENDONE              TR_ENTER " WHEN DONE"
 #else
   #define TR_MENUTOSTART       CENTER "\011" TR_ENTER " Startar "
   #define TR_SETMIDPOINT       TR(CENTER "\012Centrera Allt",CENTER "\013Centrera Allt")
   #define TR_MOVESTICKSPOTS    TR(CENTER "\005Rör Spakar/Rattar",CENTER "\006Rör Spakar/Rattar")
+  #define TR_MENUWHENDONE              CENTER "\006" TR_ENTER " WHEN DONE"
 #endif
 #define TR_RXBATT              "Rx Batt:"
 #define TR_TXnRX               "Tx:\0Rx:"
@@ -1047,8 +1069,8 @@
 #define TR_SCRIPT              "Programkod"
 #define TR_INPUTS              "Input"
 #define TR_OUTPUTS             "Outputs"
-#define TR_EEBACKUP            "\004[ENTER Lång] säkerhetskopiera EEPROM"
-#define TR_FACTORYRESET        "\012[MENU Long]: Factory reset"
+#define TR_EEBACKUP            "säkerhetskopiera EEPROM"
+#define TR_FACTORYRESET        "Factory reset"
 #define TR_CONFIRMRESET        "Erase ALL models and settings?"
 #define TR_TO_MANY_LUA_SCRIPTS "För många Lua-scripts!"
 

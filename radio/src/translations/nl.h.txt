@@ -109,8 +109,17 @@
 #define LEN_COUNTRYCODES       TR("\002", "\007")
 #define TR_COUNTRYCODES        TR("US""JP""EU", "Amerika""Japan\0 ""Europa\0")
 
+#if defined(PCBI6X)
+#define LEN_USBDETECTMODES             "\004"
+#define TR_USBDETECTMODES              "Auto""Once"
+#endif
+
 #define LEN_USBMODES           TR("\006", "\010")
+#if defined(PCBI6X)
+#define TR_USBMODES                    TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
+#else
 #define TR_USBMODES            TR("Ask\0  ""Joyst\0""Storag""Serial", "Ask\0    ""Joystick""Storage\0""Serial\0 ")
+#endif
 
 #define LEN_TARANIS_PROTOCOLS  "\004"
 #if defined(PCBI6X)
@@ -243,7 +252,7 @@
   #define TR_VVARIO            "[Vario]\0  "
 #endif
 
-#if defined(AUDIO)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND             "Geluid    "
 #else
   #define TR_SOUND             "Beep\0    "
@@ -376,8 +385,13 @@
   #define TR_VARIOSRC          "Alt\0""Alt+""VSpd""A1\0 ""A2\0"
 #endif
 
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\006"
+  #define TR_VTELEMSCREENTYPE          "Geen\0 ""Nums\0 ""Balken"
+#else
   #define LEN_VTELEMSCREENTYPE "\006"
   #define TR_VTELEMSCREENTYPE  "Geen\0 ""Nums\0 ""Balken""Script"
+#endif
 
 #define LEN_GPSFORMAT          "\004"
 #define TR_GPSFORMAT           "DMS\0""NMEA"
@@ -430,7 +444,10 @@
 #elif defined(PCBX9E)
   #define TR_POTS_VSRCRAW              "\310F1\0""\310F2\0""\310F3\0""\310F4\0""\311S1\0""\311S2\0""\311LS\0""\311RS\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0""\312SE\0""\312SF\0""\312SG\0""\312SH\0""\312SI\0""\312SJ\0""\312SK\0""\312SL\0""\312SM\0""\312SN\0""\312SO\0""\312SP\0""\312SQ\0""\312SR\0"
-#elif defined(PCBXLITE) || defined(PCBI6X)
+#elif defined(PCBI6X)
+  #define TR_POTS_VSRCRAW              "\310P1\0""\310P2\0"
+  #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
+#elif defined(PCBXLITE)
   #define TR_POTS_VSRCRAW              "\310S1\0""\310S2\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
 #elif defined(PCBX7)
@@ -512,8 +529,6 @@
 #define LEN_VFORMULAS          "\014"
 #define TR_VFORMULAS           "Optellen\0   ""Gemiddeld\0  ""Min\0        ""Max\0        ""Vermenigvuld""Totaal\0     ""Cellen\0     ""Verbruik\0   ""Afstand\0    "
 
-
-
 #define LEN_VPREC              "\004"
 #define TR_VPREC               "0.--""0.0 ""0.00"
 
@@ -543,12 +558,16 @@
 
 #if defined(PCBTARANIS) || defined(PCBHORUS)
   #define TR_ENTER             "[ENTER]"
+#elif defined(PCBI6X)
+  #define TR_ENTER                     "[ OK ]"
 #else
   #define TR_ENTER             "[MENU]"
 #endif
 
 #if defined(PCBHORUS)
   #define TR_EXIT              "[RTN]"
+#elif defined(PCBI6X)
+  #define TR_EXIT                      "[CANCEL]"
 #else
   #define TR_EXIT              "[EXIT]"
 #endif
@@ -560,6 +579,7 @@
   #define OFS_EXIT             sizeof(TR_ENTER)
 #endif
 
+#define TR_MENUWHENDONE        CENTER "\006" TR_ENTER " WHEN DONE"
 #define TR_FREE                "vrij"
 #define TR_DELETEMODEL         "WIS" BREAKSPACE "MODEL"
 #define TR_COPYINGMODEL        "Kopieer Model"
@@ -978,14 +998,14 @@
 #define TR_SPEAKER             INDENT "Speaker"
 #define TR_BUZZER              INDENT "Zoemer"
 #define TR_BYTES               "bytes"
-#define TR_MODULE_BIND         TR("[Bnd]", "[Bind]")
-#define TR_MODULE_RANGE        TR("[Rng]", "[Range]")
-#define TR_RESET_BTN           "[Reset]"
+#define TR_MODULE_BIND                 BUTTON(TR("Bnd", "Bind"))
+#define TR_MODULE_RANGE                BUTTON(TR("Rng", "Range"))
+#define TR_RESET_BTN                   BUTTON("Reset")
 #define TR_DEBUG                       "Debug"
 #define TR_KEYS_BTN                BUTTON(TR("SW","Switches"))
 #define TR_ANALOGS_BTN                 BUTTON(TR("Ana","Analogs"))
 #define TR_CALIB_BTN                   BUTTON("Calibration")
-#define TR_SET                 "[Set]"
+#define TR_SET                         BUTTON("Set")
 #define TR_TRAINER             "Trainer Poort"
 #define TR_ANTENNAPROBLEM      CENTER "TX-Antenneprobleem!"
 #define TR_MODELIDUSED         TR("ID al gebruikt", "Model-ID al gebruikt")
@@ -1040,8 +1060,8 @@
 #define TR_EEBACKUP            "EEPROM backup"
 #define TR_FACTORYRESET        "Factory reset"
 #else
-#define TR_EEBACKUP            TR("\001[ENTER Lang]: Backup", "\012[ENTER Lang]: EEPROM backup => SD")
-#define TR_FACTORYRESET        TR("\001[MENU Lang]: Fact. reset", "\012[MENU Lang]: Factory reset")
+#define TR_EEBACKUP            TR("Backup", "EEPROM backup => SD")
+#define TR_FACTORYRESET        TR("Fact. reset", "Factory reset")
 
 #endif
 #define TR_CONFIRMRESET        TR("Wis Alles?", "Wis ALLE modellen en instellingen?")
