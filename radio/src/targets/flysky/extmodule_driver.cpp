@@ -22,18 +22,18 @@
 
 void extmoduleSendNextFrame();
 
-inline void EnablePPMTim(void) {
-  TRACE("EnablePPMTim");
-  SET_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
-}
-inline void DisablePPMTim(void) {
-  TRACE("DisablePPMTim");
-  CLEAR_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
-}
-inline void EnablePPMOut(void) {
-  TRACE("EnablePPMOut");
-  SET_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
-}
+//inline void EnablePPMTim(void) {
+//  TRACE("EnablePPMTim");
+//  SET_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
+//}
+//inline void DisablePPMTim(void) {
+//  TRACE("DisablePPMTim");
+//  CLEAR_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
+//}
+// inline void EnablePPMOut(void) {
+//   TRACE("EnablePPMOut");
+//   SET_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
+// }
 inline void DisablePPMOut(void) {
   TRACE("DisablePPMOut");
   CLEAR_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
@@ -85,13 +85,6 @@ void extmoduleTimerStart(uint32_t period, uint8_t state) {
   EXTMODULE_TIMER->CCR2 = GET_PPM_DELAY(EXTERNAL_MODULE) * 2;
   EXTMODULE_TIMER->CCMR1 = TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_0;
   EXTMODULE_TIMER->BDTR |= TIM_BDTR_MOE;
-  // Channel 1: PPM IN         CC1 as input  | frequency used to sample input
-  EXTMODULE_TIMER->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_IC1F_1 | TIM_CCMR1_IC1F_0;
-  EXTMODULE_TIMER->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1P;  // 01: inverted/falling edge
-  EXTMODULE_TIMER->EGR = 1;                                // Restart
-
-  WRITE_REG(EXTMODULE_TIMER->SR, ~(TIM_SR_CC1IF));  // Clear capture interrupt flag (PPMIN)
-  EXTMODULE_TIMER->DIER |= TIM_DIER_CC1IE;          // Enable capture interrupt     (PPMIN)
 
   WRITE_REG(EXTMODULE_TIMER->SR, ~(TIM_SR_CC2IF));  // Clear compare interrupt flag (PPMOUT)
   EXTMODULE_TIMER->DIER |= TIM_DIER_CC2IE;          // Enable compare interrupt     (PPMOUT)
@@ -99,7 +92,7 @@ void extmoduleTimerStart(uint32_t period, uint8_t state) {
   NVIC_EnableIRQ(EXTMODULE_TIMER_IRQn);
   NVIC_SetPriority(EXTMODULE_TIMER_IRQn, 2);
 
-  EnablePPMTim();
+  EXTMODULE_TIMER->CR1 = TIM_CR1_CEN; // Start counter
 }
 
 void extmodulePpmStart() {
@@ -121,7 +114,7 @@ void extmodulePpmStart() {
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(EXTMODULE_TX_GPIO, &GPIO_InitStructure);
 
-  EnablePPMOut();
+  EXTMODULE_TIMER->CCER = TIM_CCER_CC2E;
 }
 
 inline void extmoduleSendNextFrame() {

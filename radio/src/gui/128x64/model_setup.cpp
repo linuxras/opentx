@@ -177,7 +177,7 @@ enum MenuModelSetupItems {
   #define EXTRA_MODULE_ROWS
 #endif
 
-#if defined(PCBX7) || defined(PCBI6X)
+#if defined(PCBX7)
 #define ANTENNA_ROW
 #if defined(BLUETOOTH)
   #define TRAINER_BLUETOOTH_M_ROW        ((bluetoothDistantAddr[0] == '\0' || bluetoothState == BLUETOOTH_STATE_CONNECTED) ? (uint8_t)0 : (uint8_t)1)
@@ -189,6 +189,8 @@ enum MenuModelSetupItems {
 #define TRAINER_CHANNELS_ROW             (IS_SLAVE_TRAINER() ? (uint8_t)1 : HIDDEN_ROW)
 #define TRAINER_PARAMS_ROW               (IS_SLAVE_TRAINER() ? (uint8_t)2 : HIDDEN_ROW)
 #define TRAINER_ROWS                     LABEL(Trainer), 0, TRAINER_BLUETOOTH_ROW TRAINER_CHANNELS_ROW, TRAINER_PARAMS_ROW
+#elif defined(PCBI6X)
+#define TRAINER_ROWS                     LABEL(Trainer), 0, HIDDEN_ROW, HIDDEN_ROW
 #elif defined(PCBXLITE)
   #define ANTENNA_ROW                    IF_INTERNAL_MODULE_ON(0),
   #define IF_BT_TRAINER_ON(x)            (g_eeGeneral.bluetoothMode == BLUETOOTH_TRAINER ? (uint8_t)(x) : HIDDEN_ROW)

@@ -30,6 +30,26 @@ void init_trainer_capture() {
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;  // erfly6: GPIO_PuPd_UP
   GPIO_Init(TRAINER_GPIO, &GPIO_InitStructure);
+
+  // Reuses EXTMODULE_TIMER
+
+  EXTMODULE_TIMER->CR1 &= ~TIM_CR1_CEN; // Stop counter
+
+  // Channel 1: PPM IN         CC1 as input  | frequency used to sample input
+  EXTMODULE_TIMER->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_IC1F_1 | TIM_CCMR1_IC1F_0;
+  EXTMODULE_TIMER->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1P;  // 01: inverted/falling edge
+  EXTMODULE_TIMER->EGR = 1;                                // Restart
+
+  WRITE_REG(EXTMODULE_TIMER->SR, ~(TIM_SR_CC1IF));  // Clear capture interrupt flag (PPMIN)
+  EXTMODULE_TIMER->DIER |= TIM_DIER_CC1IE;          // Enable capture interrupt     (PPMIN)
+
+  EXTMODULE_TIMER->CR1 = TIM_CR1_CEN; // Start counter
+}
+
+void stop_trainer_capture()
+{
+  // disable PPM input capture
+  // nothing to do because it would stop EXTMODULE_TIMER
 }
 
 int sbusGetByte(uint8_t * byte)

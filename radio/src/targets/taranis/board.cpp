@@ -296,58 +296,6 @@ void boardOff()
   pwrOff();
 }
 
-uint8_t currentTrainerMode = 0xff;
-
-void checkTrainerSettings()
-{
-  uint8_t requiredTrainerMode = g_model.trainerMode;
-  if (requiredTrainerMode != currentTrainerMode) {
-    switch (currentTrainerMode) {
-      case TRAINER_MODE_MASTER_TRAINER_JACK:
-        stop_trainer_capture();
-        break;
-      case TRAINER_MODE_SLAVE:
-        stop_trainer_ppm();
-        break;
-      case TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE:
-        stop_cppm_on_heartbeat_capture() ;
-        break;
-      case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
-        stop_sbus_on_heartbeat_capture() ;
-        break;
-#if defined(TRAINER_BATTERY_COMPARTMENT)
-      case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
-        auxSerialStop();
-#endif
-    }
-
-    currentTrainerMode = requiredTrainerMode;
-    switch (requiredTrainerMode) {
-      case TRAINER_MODE_SLAVE:
-        init_trainer_ppm();
-        break;
-      case TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE:
-         init_cppm_on_heartbeat_capture();
-         break;
-      case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
-         init_sbus_on_heartbeat_capture();
-         break;
-#if defined(TRAINER_BATTERY_COMPARTMENT)
-      case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
-        if (g_eeGeneral.serial2Mode == UART_MODE_SBUS_TRAINER) {
-          auxSerialSbusInit();
-          break;
-        }
-        // no break
-#endif
-      default:
-        // master is default
-        init_trainer_capture();
-        break;
-    }
-  }
-}
-
 uint16_t getBatteryVoltage()
 {
   int32_t instant_vbat = anaIn(TX_VOLTAGE); // using filtered ADC value on purpose

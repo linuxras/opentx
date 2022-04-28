@@ -54,9 +54,9 @@ void checkTrainerSettings()
   if (requiredTrainerMode != currentTrainerMode) {
     switch (currentTrainerMode) {
       case TRAINER_MODE_MASTER_TRAINER_JACK:
-        //stop_trainer_capture();
+        stop_trainer_capture();
         break;
-      /*
+#if !defined(PCBI6X)
       case TRAINER_MODE_SLAVE:
         stop_trainer_ppm();
         break;
@@ -65,7 +65,8 @@ void checkTrainerSettings()
         break;
       case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
         stop_sbus_on_heartbeat_capture() ;
-        break;*/
+        break;
+#endif
 #if defined(TRAINER_BATTERY_COMPARTMENT)
       case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
         auxSerialStop();
@@ -76,7 +77,7 @@ void checkTrainerSettings()
     currentTrainerMode = requiredTrainerMode;
 
     switch (requiredTrainerMode) {
-    /*
+#if !defined(PCBI6X)
     case TRAINER_MODE_SLAVE:
       init_trainer_ppm();
       break;
@@ -86,13 +87,15 @@ void checkTrainerSettings()
     case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
         init_sbus_on_heartbeat_capture();
         break;
-    */
+#endif
 #if defined(TRAINER_BATTERY_COMPARTMENT)
     case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
+#if defined(AUX_SERIAL)
       if (g_eeGeneral.auxSerialMode == UART_MODE_SBUS_TRAINER) {
         auxSerialSbusInit();
         break;
       }
+#endif
       // no break
 #endif
     default:

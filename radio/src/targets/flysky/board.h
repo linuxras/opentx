@@ -209,17 +209,11 @@ void extmoduleSendNextFrame();
 
 // Trainer driver
 #define SLAVE_MODE()                    (false) // (g_model.trainerMode == TRAINER_MODE_SLAVE)
-#if defined(PCBX9E) || defined(PCBI6X)
-  #define TRAINER_CONNECTED()           (true)
-#elif defined(PCBX7)
-  #define TRAINER_CONNECTED()           (GPIO_ReadInputDataBit(TRAINER_DETECT_GPIO, TRAINER_DETECT_GPIO_PIN) == Bit_SET)
-#elif defined(PCBXLITE)
-  #define TRAINER_CONNECTED()           false // there is no Trainer jack on Taranis X-Lite
-#else
-  #define TRAINER_CONNECTED()           (GPIO_ReadInputDataBit(TRAINER_DETECT_GPIO, TRAINER_DETECT_GPIO_PIN) == Bit_RESET)
-#endif
+#define TRAINER_CONNECTED()           (true)
+
 #if defined(TRAINER_GPIO)
   void init_trainer_capture(void);
+  void stop_trainer_capture(void);
 #else
   #define init_trainer_capture()
 #endif
