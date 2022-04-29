@@ -98,44 +98,42 @@ jobs:
 #            ls -la
 #            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete nightly-latest $CIRCLE_ARTIFACTS/
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.3
+#orbs:
+#  sonarcloud: sonarsource/sonarcloud@1.0.3
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   openi6x-release-workflow:
     jobs:
-      - sonar-scan:
-          context: SonarCloud
+#      - sonar-scan:
+#          context: SonarCloud
       - build-en:
           filters:
             branches:
               ignore:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
       - build-elrsv2:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
       - build-heli:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
       - build-std:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
 #      - publish-github-release:
 ##          filters:
 ##            branches:

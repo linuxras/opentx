@@ -47,13 +47,11 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
 
 | Key | Function                                                                           |
 | --- |------------------------------------------------------------------------------------|
-| UP     | Up. Hold on main screen for stats.                                                 |                              
-| DOWN   | Down. Hold on main screen for telemetry                                            |                                  
+| UP     | Up. Scroll values. Hold on main screen for stats.                                  |                              
+| DOWN   | Down. Scroll values. Hold on main screen for telemetry.                            |                                  
 | OK     | Confirm. Hold on main screen for model menu.                                       |
 | CANCEL | Exit.                                                                              |                      
 | BIND   | Scroll pages right or left (long press), go right in a line. Hold on main screen for general menu. |
-| LEFT POT | Change edited value.                                                               |
-
 
 ## Shutdown
 
