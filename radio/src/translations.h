@@ -644,6 +644,7 @@ extern const char STR_PERSISTENT_MAH[];
   extern const char STR_RESET_TIMER3[];
   extern const char STR_RESET_TELEMETRY[];
   extern const char STR_STATISTICS[];
+  extern const char STR_SAVEALLDATA[];
   extern const char STR_ABOUT_US[];
   extern const char STR_USB_JOYSTICK[];
   extern const char STR_USB_MASS_STORAGE[];

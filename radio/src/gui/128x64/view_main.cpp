@@ -293,6 +293,9 @@ void onMainViewMenu(const char *result)
   else if (result == STR_STATISTICS) {
     chainMenu(menuStatisticsView);
   }
+  else if (result == STR_SAVEALLDATA) {
+    saveAllData();
+  }
 #if !defined(PCBI6X)
   else if (result == STR_ABOUT_US) {
     chainMenu(menuAboutView);
@@ -345,6 +348,8 @@ void menuMainView(event_t event)
       POPUP_MENU_ADD_ITEM(STR_RESET_SUBMENU);
 
       POPUP_MENU_ADD_ITEM(STR_STATISTICS);
+
+      POPUP_MENU_ADD_ITEM(STR_SAVEALLDATA);
 #if !defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_ABOUT_US);
 #endif

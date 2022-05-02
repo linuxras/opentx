@@ -1093,6 +1093,7 @@ extern uint8_t mainRequestFlags;
 
 void checkBattery();
 void opentxClose(uint8_t shutdown=true);
+void saveAllData();
 void opentxInit();
 void opentxResume();
 

@@ -4,7 +4,7 @@ option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
 option(PCBI6X_ELRSV2 "Enable ExpressLRS v2 configuration tool" OFF) # ~4kB
 
 if(PCB STREQUAL I6X)
-  set(PWR_BUTTON "PRESS" CACHE STRING "Pwr button type (PRESS/SWITCH)")
+  set(PWR_BUTTON "SWITCH" CACHE STRING "Pwr button type (PRESS/SWITCH)")
   set(SPLASH "OFF")
   set(CPU_TYPE STM32F0)
   set(CPU_TYPE_FULL STM32F072)  # for size report
