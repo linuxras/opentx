@@ -40,7 +40,7 @@ void pwrOn() {
 }
 
 void pwrOff() {
-  GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN);
+  // GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN); // power off ext module
   
   for (;;) {
     // Wait for switch off
