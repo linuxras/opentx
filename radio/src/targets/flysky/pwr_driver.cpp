@@ -40,11 +40,13 @@ void pwrOn() {
 }
 
 void pwrOff() {
-  // GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN); // power off ext module
+#if defined(PWR_BUTTON_PRESS)
+  GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN); // power off ext module
   
   for (;;) {
     // Wait for switch off
   }
+#endif
 }
 
 #define PWR_PRESS_DURATION_MIN 200 // 2s
