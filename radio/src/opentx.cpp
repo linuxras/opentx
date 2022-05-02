@@ -1546,24 +1546,6 @@ void opentxClose(uint8_t shutdown) {
 
   saveAllData();
 
-//   storageFlushCurrentModel();
-
-//   if (sessionTimer > 0) {
-//     g_eeGeneral.globalTimer += sessionTimer;
-//     sessionTimer = 0;
-//   }
-
-// #if defined(PCBSKY9X)
-//   uint32_t mAhUsed = g_eeGeneral.mAhUsed + Current_used * (488 + g_eeGeneral.txCurrentCalibration) / 8192 / 36;
-//   if (g_eeGeneral.mAhUsed != mAhUsed) {
-//     g_eeGeneral.mAhUsed = mAhUsed;
-//   }
-// #endif
-
-//   g_eeGeneral.unexpectedShutdown = 0;
-//   storageDirty(EE_GENERAL);
-//   storageCheck(true);
-
   while (IS_PLAYING(ID_PLAY_PROMPT_BASE + AU_BYE)) {
     RTOS_WAIT_MS(10);
   }
