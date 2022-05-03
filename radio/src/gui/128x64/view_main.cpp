@@ -294,7 +294,7 @@ void onMainViewMenu(const char *result)
     chainMenu(menuStatisticsView);
   }
   else if (result == STR_SAVEALLDATA) {
-    watchdogSuspend(400 /*4s*/);
+    watchdogSuspend(200 /*2s*/);
     saveAllData();
   }
 #if !defined(PCBI6X)
