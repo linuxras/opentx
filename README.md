@@ -67,15 +67,15 @@ When to use this method:
 
 With Mode 1 radio you may experience inverted gimbal movement and swapped gimbals on main screen. To fix this swap gimbal connectors (red-white one with black-white one).
 
-## Hardware connections (optional)
+## Optional hardware connections
 
 | PCB Pad | Function |
 | ------- | ---------|
 | `TX2`   | S.Port |
-| `PA.09` | AUX Serial port TX |
-| `PA.10` | AUX Serial port RX |
-| `PA.15` | USB VBUS (USB connection detection) |
-| `PC.09` | External module power control |
+| `PA9` | AUX Serial port TX |
+| `PA10` | AUX Serial port RX |
+| `PA15` | USB VBUS (USB connection detection) |
+| `PC9` | External module power control |
 
 ![hw](https://github.com/OpenI6X/opentx/raw/master/doc/flysky/openi6x_hardware.jpeg?raw=true)
 
