@@ -1,6 +1,4 @@
-# OpenI6X
-
-## OpenTX port for Flysky FS-i6X RC radio transmitter.
+# OpenI6X: OpenTX for Flysky FS-i6X
 
 ![OpenI6X](https://circleci.com/gh/OpenI6X/opentx.svg?style=shield)
 [![Release](https://img.shields.io/github/v/release/OpenI6X/opentx?include_prereleases)](https://github.com/OpenI6X/opentx/releases/latest)
@@ -55,7 +53,7 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
 
 ## Shutdown
 
-Do not switch off you device when you see small square icon in top right corner of main screen - it indicates that there are settings not yet stored. Wait until it disappears or use "Save all" option from main screen popup menu.
+FlySky FS-i6X don't have a software controlled shutdown button, therefore do not switch off you device when you see small square icon in top right corner of main screen - it indicates that there are settings not yet saved. Wait until it disappears or use "Save all" option from main screen popup menu.
 
 When to use "Save all" option:
 * When you don't want to wait until square icon disapper before shutdown.

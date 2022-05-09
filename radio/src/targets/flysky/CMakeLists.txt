@@ -2,6 +2,7 @@ option(SHUTDOWN_CONFIRMATION "Shutdown confirmation" OFF)
 option(LCD_DUAL_BUFFER "Dual LCD Buffer" OFF)
 option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
 option(PCBI6X_ELRSV2 "Enable ExpressLRS v2 configuration tool" OFF) # ~4kB
+option(PCBI6X_USB_VBUS "Enable USB VBUS pin" OFF)
 option(PCBI6X_BACKLIGHT_DIM "Enable backlight dimming, requires wiring BL pad to PC9 pad" OFF)
 
 if(PCB STREQUAL I6X)
@@ -35,6 +36,10 @@ if(PCB STREQUAL I6X)
   add_definitions(-DEEPROM_VARIANT=0)
   add_definitions(-DSOFTWARE_VOLUME)
   add_definitions(-DAFHDS2A_LQI_CH=17) # inject LQI at channel
+endif()
+
+if(PCBI6X_USB_VBUS)
+  add_definitions(-DPCBI6X_USB_VBUS)
 endif()
 
 if(PCBI6X_BACKLIGHT_DIM)
