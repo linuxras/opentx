@@ -43,11 +43,13 @@ void backlightInit()
 void backlightEnable(uint8_t level)
 {
   BACKLIGHT_COUNTER_REGISTER = /*100 -*/ level;
+  BACKLIGHT_TIMER->CR1 = TIM_CR1_CEN;
 }
 
 void backlightDisable()
 {
   BACKLIGHT_COUNTER_REGISTER = 100;
+  BACKLIGHT_TIMER->CR1 &= ~TIM_CR1_CEN;          // solves very dim light with backlight off
 }
 
 uint8_t isBacklightEnabled()

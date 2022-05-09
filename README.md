@@ -33,6 +33,7 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
     * ExpressLRS V2 configuration (ELRSV2.lua port)
 * 16 channels
 * Telemetry, up to 26 sensors
+* Adjustable backlight brightness
 * Audio tones, alarms and vario sound custom implementation
 * DFU bootloader - Start by pushing trims to the center, like regular OpenTX one
 * USB Joystick & Storage modes (To enable on standard cable: General Settings > USB Detect: Once)
