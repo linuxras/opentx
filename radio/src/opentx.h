@@ -490,6 +490,7 @@ void doMixerPeriodicUpdates();
 void scheduleNextMixerCalculation(uint8_t module, uint16_t period_ms);
 
 void checkTrims();
+extern uint8_t currentBacklightBright;
 void perMain();
 void per10ms();
 
@@ -936,12 +937,12 @@ enum FunctionsActive {
   FUNCTION_TRAINER,
   FUNCTION_INSTANT_TRIM = FUNCTION_TRAINER+4,
   FUNCTION_VARIO,
-  FUNCTION_BACKLIGHT,
 #if defined(SDCARD)
   FUNCTION_LOGS,
 #endif
   FUNCTION_BACKGND_MUSIC,
   FUNCTION_BACKGND_MUSIC_PAUSE,
+  FUNCTION_BACKLIGHT,
 };
 
 #define VARIO_FREQUENCY_ZERO   700/*Hz*/
@@ -1083,6 +1084,7 @@ void clearMFP();
 #endif
 
 extern uint8_t requiredSpeakerVolume;
+extern uint8_t requiredBacklightBright;
 
 enum MainRequest {
   REQUEST_SCREENSHOT,

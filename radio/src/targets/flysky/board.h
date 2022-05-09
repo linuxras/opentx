@@ -391,9 +391,10 @@ uint32_t pwrPressedDuration(void);
 void backlightInit(void);
 void backlightDisable(void);
 #define BACKLIGHT_DISABLE()             backlightDisable()
+#define BACKLIGHT_FORCED_ON             101
 uint8_t isBacklightEnabled(void);
 void backlightEnable(uint8_t level);
-#define BACKLIGHT_ENABLE()            backlightEnable(g_eeGeneral.backlightBright)
+#define BACKLIGHT_ENABLE()            backlightEnable(currentBacklightBright)
 
 #if !defined(SIMU)
   void usbJoystickUpdate();
