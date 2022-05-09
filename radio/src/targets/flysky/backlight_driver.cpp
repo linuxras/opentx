@@ -20,7 +20,7 @@
 
 #include "opentx.h"
 
-#if defined(BACKLIGHT_DIMMABLE)
+#if defined(PCBI6X_BACKLIGHT_DIM)
 void backlightInit()
 {
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -52,7 +52,7 @@ void backlightDisable()
 
 uint8_t isBacklightEnabled()
 {
-  return BACKLIGHT_COUNTER_REGISTER != 0;
+  return BACKLIGHT_COUNTER_REGISTER != 100;
 }
 #else
 void backlightInit()
@@ -80,4 +80,4 @@ uint8_t isBacklightEnabled()
 {
 	return GPIO_ReadInputDataBit(BACKLIGHT_GPIO, BACKLIGHT_GPIO_PIN) != 0;
 }
-#endif // BACKLIGHT_DIMMABLE
+#endif // PCBI6X_BACKLIGHT_DIM
