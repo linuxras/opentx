@@ -368,7 +368,7 @@ void disable_afhds2a(uint32_t port);
 
 // External Module
 #define EXTMODULE_PWR_GPIO            GPIOC
-#define EXTMODULE_PWR_GPIO_PIN        GPIO_Pin_9  // PC.09
+#define EXTMODULE_PWR_GPIO_PIN        GPIO_Pin_13  // PC.13
 #define EXTMODULE_RCC_AHBPeriph       (RCC_AHBPeriph_GPIOC | RCC_AHBPeriph_GPIOF)
 #define EXTMODULE_RCC_APB2Periph      RCC_APB2Periph_TIM15 // TIM15_CH2
 #define EXTMODULE_TX_GPIO             GPIOF
@@ -487,33 +487,38 @@ F072 IRQs
 
 // Heartbeat
 
-  #define TRAINER_MODULE_HEARTBEAT
-  #define HEARTBEAT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOC
-  #define HEARTBEAT_RCC_APB2Periph      RCC_APB2Periph_USART6
-  #define HEARTBEAT_GPIO                GPIOC
-  #define HEARTBEAT_GPIO_PIN            GPIO_Pin_7  // PC.07
-  #define HEARTBEAT_GPIO_PinSource      GPIO_PinSource7
-  #define HEARTBEAT_GPIO_AF_SBUS        GPIO_AF_USART6
-  #define HEARTBEAT_GPIO_AF_CAPTURE     GPIO_AF_TIM3
-  #define HEARTBEAT_USART               USART6
-  #define HEARTBEAT_USART_IRQHandler    USART6_IRQHandler
-  #define HEARTBEAT_USART_IRQn          USART6_IRQn
-  #define HEARTBEAT_DMA_Stream          DMA2_Stream1
-  #define HEARTBEAT_DMA_Channel         DMA_Channel_5
+  // #define TRAINER_MODULE_HEARTBEAT
+  // #define HEARTBEAT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOC
+  // #define HEARTBEAT_RCC_APB2Periph      RCC_APB2Periph_USART6
+  // #define HEARTBEAT_GPIO                GPIOC
+  // #define HEARTBEAT_GPIO_PIN            GPIO_Pin_7  // PC.07
+  // #define HEARTBEAT_GPIO_PinSource      GPIO_PinSource7
+  // #define HEARTBEAT_GPIO_AF_SBUS        GPIO_AF_USART6
+  // #define HEARTBEAT_GPIO_AF_CAPTURE     GPIO_AF_TIM3
+  // #define HEARTBEAT_USART               USART6
+  // #define HEARTBEAT_USART_IRQHandler    USART6_IRQHandler
+  // #define HEARTBEAT_USART_IRQn          USART6_IRQn
+  // #define HEARTBEAT_DMA_Stream          DMA2_Stream1
+  // #define HEARTBEAT_DMA_Channel         DMA_Channel_5
 
-//only basic!!!
+#if defined(BACKLIGHT_DIMMABLE) // requires wiring BL pad to PC9 pad
+  #define BACKLIGHT_RCC_APB1Periph      RCC_APB1Periph_TIM3
+  #define BACKLIGHT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOC
+  #define BACKLIGHT_GPIO                GPIOC
+  #define BACKLIGHT_GPIO_PIN            GPIO_Pin_9
+  #define BACKLIGHT_TIMER_FREQ          (PERI1_FREQUENCY * TIMER_MULT_APB1)
+  #define BACKLIGHT_TIMER               TIM3
+  #define BACKLIGHT_GPIO_PinSource      GPIO_PinSource9
+  #define BACKLIGHT_GPIO_AF             GPIO_AF_0
+  #define BACKLIGHT_CCMR2               TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4M_2 // Channel4, PWM
+  #define BACKLIGHT_CCER                TIM_CCER_CC4P | TIM_CCER_CC4E
+  #define BACKLIGHT_COUNTER_REGISTER    BACKLIGHT_TIMER->CCR4
+#else // stock, no dimming
+  #define BACKLIGHT_RCC_APB1Periph      0
   #define BACKLIGHT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOF
   #define BACKLIGHT_GPIO                GPIOF
   #define BACKLIGHT_GPIO_PIN            GPIO_Pin_3
-
-// Backlight cannot be dimmed in this board
-  #define BACKLIGHT_TIMER_FREQ          (PERI1_FREQUENCY * TIMER_MULT_APB1)
-  #define BACKLIGHT_TIMER               TIM5
-  #define BACKLIGHT_GPIO_PinSource      GPIO_PinSource13
-  #define BACKLIGHT_GPIO_AF             GPIO_AF_TIM5
-  #define BACKLIGHT_CCMR1               TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2 // Channel2, PWM
-  #define BACKLIGHT_CCER                TIM_CCER_CC2E
-  #define BACKLIGHT_COUNTER_REGISTER    BACKLIGHT_TIMER->CCR2
+#endif // BACKLIGHT_DIMMABLE
 
 // Audio
 //#define AUDIO_RCC_AHB1Periph            (RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_DMA1)
@@ -533,11 +538,8 @@ F072 IRQs
 #define BUZZER_GPIO_PIN GPIO_Pin_8
 #define BUZZER_GPIO_PinSource GPIO_PinSource8
 #define BUZZER_RCC_AHBPeriph RCC_AHBPeriph_GPIOA
-#define PWM_RCC_APB2Periph            RCC_APB2Periph_TIM1
-#define PWM_TIMER         TIM1
-#define PWM_TIMER_RCC     RCC_TIM1
-#define PWM_TIMER_CHANNEL TIM_OC1
-#define PWM_DMA_REQUEST   TIM_DIER_CC1DE
+#define PWM_RCC_APB2Periph              RCC_APB2Periph_TIM1
+#define PWM_TIMER                       TIM1
 
 // Xms Interrupt TIMER 14
 #define INTERRUPT_xMS_RCC_APB1Periph    RCC_APB1Periph_TIM14
@@ -558,7 +560,7 @@ F072 IRQs
 
 //all used RCC goes here
 #define RCC_AHB1_LIST                   (I2C_RCC_AHB1Periph | BACKLIGHT_RCC_AHB1Periph | LCD_RCC_AHB1Periph | KEYS_RCC_AHB1Periph | BUZZER_RCC_AHBPeriph | EXTMODULE_RCC_AHBPeriph | CRC_RCC_AHB1Periph | TELEMETRY_RCC_AHB1Periph | AUX_SERIAL_RCC_AHB1Periph)
-#define RCC_APB1_LIST                   (I2C_RCC_APB1Periph | INTERRUPT_xMS_RCC_APB1Periph | TIMER_2MHz_RCC_APB1Periph | TELEMETRY_RCC_APB1Periph)
+#define RCC_APB1_LIST                   (I2C_RCC_APB1Periph | INTERRUPT_xMS_RCC_APB1Periph | TIMER_2MHz_RCC_APB1Periph | TELEMETRY_RCC_APB1Periph | BACKLIGHT_RCC_APB1Periph)
 #define RCC_APB2_LIST                   (MIXER_SCHEDULER_TIMER_RCC_APB1Periph | PWM_RCC_APB2Periph | EXTMODULE_RCC_APB2Periph | AUX_SERIAL_RCC_APB2Periph)
 
 #endif // _HAL_H_

@@ -222,7 +222,7 @@ void check(event_t event, uint8_t curr, const MenuHandlerFunc *menuTab, uint8_t 
   #define scrollUD 0
 #endif
 
-  if (p2valdiff || scrollUD || p1valdiff) backlightOn(); // on keypress turn the light on
+  if (p2valdiff || scrollUD || p1valdiff) resetBacklightTimeout(); // on keypress turn the light on
 
   if (menuTab) {
     uint8_t attr = 0;

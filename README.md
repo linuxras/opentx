@@ -35,13 +35,13 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
     * ExpressLRS V2 configuration (ELRSV2.lua port)
 * 16 channels
 * Telemetry, up to 26 sensors
+* Audio tones, alarms and vario sound custom implementation
+* DFU bootloader - Start by pushing trims to the center, like regular OpenTX one
+* USB Joystick & Storage modes (To enable on standard cable: General Settings > USB Detect: Once)
 * AUX Serial port with modes:
   * Telemetry mirror
   * SBUS Trainer
   * Debug (on DEBUG builds)
-* Audio tones, alarms and vario sound custom implementation
-* DFU bootloader - Start by pushing trims to the center, like regular OpenTX one
-* USB Joystick & Storage modes (To enable on standard cable: General Settings > USB Detect: Once)
 
 ## Navigation
 
@@ -68,13 +68,14 @@ With Mode 1 radio you may experience inverted gimbal movement and swapped gimbal
 
 ## Optional hardware connections
 
-| PCB Pad | Function |
-| ------- | ---------|
-| `TX2`   | S.Port |
-| `PA9` | AUX Serial port TX |
-| `PA10` | AUX Serial port RX |
-| `PA15` | USB VBUS (USB connection detection) |
-| `PC9` | External module power control |
+| PCB Pad    | Function                                        |
+|------------|-------------------------------------------------|
+| `TX2`      | S.Port                                          |
+| `PA9`      | AUX Serial port TX                              |
+| `PA10`     | AUX Serial port RX                              |
+| `PA15`     | USB VBUS (USB connection detection)             |
+| `PC13`     | External module power control                   |
+| `PC9`+`BL` | Wiring those together allows dimmable backlight |
 
 ![hw](https://github.com/OpenI6X/opentx/raw/master/doc/flysky/openi6x_hardware.jpeg?raw=true)
 

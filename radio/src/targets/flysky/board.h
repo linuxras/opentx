@@ -392,8 +392,8 @@ void backlightInit(void);
 void backlightDisable(void);
 #define BACKLIGHT_DISABLE()             backlightDisable()
 uint8_t isBacklightEnabled(void);
-void backlightEnable();
-#define BACKLIGHT_ENABLE()            backlightEnable()
+void backlightEnable(uint8_t level);
+#define BACKLIGHT_ENABLE()            backlightEnable(g_eeGeneral.backlightBright)
 
 #if !defined(SIMU)
   void usbJoystickUpdate();

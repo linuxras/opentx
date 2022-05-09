@@ -701,7 +701,7 @@ void checkBacklight() {
     if (inputsMoved()) {
       inactivity.counter = 0;
       if (g_eeGeneral.backlightMode & e_backlight_mode_sticks) {
-        backlightOn();
+        resetBacklightTimeout();
       }
     }
 
@@ -715,7 +715,7 @@ void checkBacklight() {
   }
 }
 
-void backlightOn() {
+void resetBacklightTimeout() {
   lightOffCounter = ((uint16_t)g_eeGeneral.lightAutoOff * 250) << 1;
 }
 
@@ -738,7 +738,7 @@ void doSplash() {
 #endif
 
   if (SPLASH_NEEDED()) {
-    backlightOn();
+    resetBacklightTimeout();
     drawSplash();
 
 #if defined(PCBSKY9X)
@@ -1846,7 +1846,7 @@ void opentxInit(OPENTX_INIT_ARGS) {
 
   if (g_eeGeneral.backlightMode != e_backlight_mode_off) {
     // on Tx start turn the light on
-    backlightOn();
+    resetBacklightTimeout();
   }
 
   if (!globalData.unexpectedShutdown) {
@@ -1862,7 +1862,7 @@ void opentxInit(OPENTX_INIT_ARGS) {
 #if defined(GUI)
   lcdSetContrast();
 #endif
-  backlightOn();
+  resetBacklightTimeout();
 
   startPulses();
 

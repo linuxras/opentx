@@ -83,7 +83,9 @@ enum MenuRadioSetupItems {
   ITEM_SETUP_BACKLIGHT_LABEL,
   ITEM_SETUP_BACKLIGHT_MODE,
   ITEM_SETUP_BACKLIGHT_DELAY,
-  // ITEM_SETUP_BRIGHTNESS,
+#if defined(BACKLIGHT_DIMMABLE)
+  ITEM_SETUP_BRIGHTNESS,
+#endif
   CASE_PWM_BACKLIGHT(ITEM_SETUP_BACKLIGHT_BRIGHTNESS_OFF)
   CASE_PWM_BACKLIGHT(ITEM_SETUP_BACKLIGHT_BRIGHTNESS_ON)
   ITEM_SETUP_FLASH_BEEP,
@@ -451,17 +453,17 @@ void menuRadioSetup(event_t event)
         lcdDrawChar(lcdLastRightPos, y, 's');
         if (attr) CHECK_INCDEC_GENVAR(event, g_eeGeneral.lightAutoOff, 0, 600/5);
         break;
-
-      // case ITEM_SETUP_BRIGHTNESS:
-      //   lcdDrawTextAlignedLeft(y, STR_BRIGHTNESS);
-      //   lcdDrawNumber(RADIO_SETUP_2ND_COLUMN, y, 100-g_eeGeneral.backlightBright, attr|LEFT) ;
-      //   if (attr) {
-      //     uint8_t b = 100 - g_eeGeneral.backlightBright;
-      //     CHECK_INCDEC_GENVAR(event, b, 0, 100);
-      //     g_eeGeneral.backlightBright = 100 - b;
-      //   }
-      //   break;
-
+#if defined(BACKLIGHT_DIMMABLE)
+      case ITEM_SETUP_BRIGHTNESS:
+        lcdDrawTextAlignedLeft(y, STR_BRIGHTNESS);
+        lcdDrawNumber(RADIO_SETUP_2ND_COLUMN, y, 100-g_eeGeneral.backlightBright, attr|LEFT) ;
+        if (attr) {
+          uint8_t b = 100 - g_eeGeneral.backlightBright;
+          CHECK_INCDEC_GENVAR(event, b, 0, 100);
+          g_eeGeneral.backlightBright = 100 - b;
+        }
+        break;
+#endif
 #if defined(PWM_BACKLIGHT)
       case ITEM_SETUP_BACKLIGHT_BRIGHTNESS_OFF:
         lcdDrawTextAlignedLeft(y, STR_BLOFFBRIGHTNESS);
