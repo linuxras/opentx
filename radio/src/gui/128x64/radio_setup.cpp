@@ -83,7 +83,7 @@ enum MenuRadioSetupItems {
   ITEM_SETUP_BACKLIGHT_LABEL,
   ITEM_SETUP_BACKLIGHT_MODE,
   ITEM_SETUP_BACKLIGHT_DELAY,
-#if defined(PCBI6X_BACKLIGHT_DIM)
+#if defined(PCBI6X_BACKLIGHT_ADJ)
   ITEM_SETUP_BRIGHTNESS,
 #endif
   CASE_PWM_BACKLIGHT(ITEM_SETUP_BACKLIGHT_BRIGHTNESS_OFF)
@@ -453,7 +453,7 @@ void menuRadioSetup(event_t event)
         lcdDrawChar(lcdLastRightPos, y, 's');
         if (attr) CHECK_INCDEC_GENVAR(event, g_eeGeneral.lightAutoOff, 0, 600/5);
         break;
-#if defined(PCBI6X_BACKLIGHT_DIM)
+#if defined(PCBI6X_BACKLIGHT_ADJ)
       case ITEM_SETUP_BRIGHTNESS:
         lcdDrawTextAlignedLeft(y, STR_BRIGHTNESS);
         lcdDrawNumber(RADIO_SETUP_2ND_COLUMN, y, 100-g_eeGeneral.backlightBright, attr|LEFT) ;

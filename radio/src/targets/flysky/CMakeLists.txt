@@ -3,7 +3,7 @@ option(LCD_DUAL_BUFFER "Dual LCD Buffer" OFF)
 option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
 option(PCBI6X_ELRSV2 "Enable ExpressLRS v2 configuration tool" NO) # ~4kB
 option(PCBI6X_USB_VBUS "Enable USB VBUS pin" NO)
-option(PCBI6X_BACKLIGHT_DIM "Enable backlight dimming, requires wiring BL pad to PC9 pad" NO)
+option(PCBI6X_BACKLIGHT_ADJ "Enable backlight dimming, requires wiring BL pad to PC9 pad" NO)
 
 if(PCB STREQUAL I6X)
   set(PWR_BUTTON "SWITCH" CACHE STRING "Pwr button type (PRESS/SWITCH)")
@@ -42,8 +42,8 @@ if(PCBI6X_USB_VBUS STREQUAL YES)
   add_definitions(-DPCBI6X_USB_VBUS)
 endif()
 
-if(PCBI6X_BACKLIGHT_DIM STREQUAL YES)
-  add_definitions(-DPCBI6X_BACKLIGHT_DIM)
+if(PCBI6X_BACKLIGHT_ADJ STREQUAL YES)
+  add_definitions(-DPCBI6X_BACKLIGHT_ADJ)
 endif()
 
 if(PCBI6X_ELRSV2 STREQUAL YES)
