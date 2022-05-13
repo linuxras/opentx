@@ -501,7 +501,7 @@ F072 IRQs
   // #define HEARTBEAT_DMA_Stream          DMA2_Stream1
   // #define HEARTBEAT_DMA_Channel         DMA_Channel_5
 
-#if defined(PCBI6X_BACKLIGHT_ADJ) // requires wiring BL pad to PC9 pad
+#if defined(PCBI6X_BACKLIGHT_MOD) // requires wiring BL pad to PC9 pad
   #define BACKLIGHT_RCC_APB1Periph      RCC_APB1Periph_TIM3
   #define BACKLIGHT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOC
   #define BACKLIGHT_GPIO                GPIOC
@@ -518,7 +518,7 @@ F072 IRQs
   #define BACKLIGHT_RCC_AHB1Periph      RCC_AHBPeriph_GPIOF
   #define BACKLIGHT_GPIO                GPIOF
   #define BACKLIGHT_GPIO_PIN            GPIO_Pin_3
-#endif // PCBI6X_BACKLIGHT_ADJ
+#endif // PCBI6X_BACKLIGHT_MOD
 
 // Audio
 //#define AUDIO_RCC_AHB1Periph            (RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_DMA1)
