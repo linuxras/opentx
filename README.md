@@ -32,7 +32,7 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
     * ExpressLRS V2 configuration (ELRSV2.lua port)
 * 16 channels
 * Telemetry, up to 26 sensors
-* Adjustable backlight brightness (requires [basic mod](#optional-hardware-connections) & nightly build)
+* Adjustable backlight brightness (requires [basic mod](#optional-hardware-connections) & backlight_mod build)
 * Audio tones, alarms and vario sound custom implementation
 * DFU bootloader - Start by pushing trims to the center, like regular OpenTX one
 * USB Joystick & Storage modes (To enable on standard cable: General Settings > USB Detect: Once)
@@ -43,12 +43,12 @@ Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
 
 ## Navigation
 
-| Key | Function                                                                           |
-| --- |------------------------------------------------------------------------------------|
-| UP     | Up. Scroll values. Hold on main screen for stats.                                  |                              
-| DOWN   | Down. Scroll values. Hold on main screen for telemetry.                            |                                  
-| OK     | Confirm. Hold on main screen for model menu. Short press on main screen for popup menu. |
-| CANCEL | Exit.                                                                              |                      
+| Key | Function                                                                                           |
+| --- |----------------------------------------------------------------------------------------------------|
+| UP     | Up. Scroll values. Hold on main screen for stats.                                                  |                              
+| DOWN   | Down. Scroll values. Hold on main screen for telemetry.                                            |                                  
+| OK     | Confirm. Hold on main screen for model menu. Short press on main screen for popup menu.            |
+| CANCEL | Exit/Back/Cancel.                                                                                  |                      
 | BIND   | Scroll pages right or left (long press), go right in a line. Hold on main screen for general menu. |
 
 ## Shutdown
@@ -60,20 +60,20 @@ When to use "Save all" option:
 * With USB connected - when USB is connected then settings are not stored with standard delay.
 * To save timers.
 
-## Mode 1 radios
+## Mode 1 & Mode 3 radios
 
-With Mode 1 radio you may experience inverted gimbal movement and swapped gimbals on main screen. To fix this swap gimbal connectors (red-white one with black-white one).
+With Mode 1 & Mode 3 radios you may experience inverted gimbal movement and swapped gimbals on main screen. To fix this swap gimbal connectors (red-white one with black-white one).
 
 ## Optional hardware connections
 
-| PCB Pad    | Function                                        |
-|------------|-------------------------------------------------|
-| `TX2`      | S.Port                                          |
-| `PA9`      | AUX Serial port TX                              |
-| `PA10`     | AUX Serial port RX                              |
-| `PA15`     | USB VBUS (USB connection detection)             |
-| `PC13`     | External module power control                   |
-| `PC9`+`BL` | Wiring those together allows adjustable backlight |
+| PCB Pad    | Function                                              |
+|------------|-------------------------------------------------------|
+| `TX2`      | S.Port                                                |
+| `PA9`      | AUX Serial port TX                                    |
+| `PA10`     | AUX Serial port RX                                    |
+| `PA15`     | USB VBUS (USB connection detection)                   |
+| `PC13`     | External module power control                         |
+| `PC9`+`BL` | Wiring those together allows for adjustable backlight |
 
 ![hw](https://github.com/OpenI6X/opentx/raw/master/doc/flysky/openi6x_hardware.jpeg?raw=true)
 
