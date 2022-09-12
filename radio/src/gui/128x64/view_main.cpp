@@ -346,12 +346,13 @@ void menuMainView(event_t event)
       }
 #endif
 
+#if defined(PCBI6X)
+      POPUP_MENU_ADD_ITEM(STR_SAVEALLDATA);
+#endif
       POPUP_MENU_ADD_ITEM(STR_RESET_SUBMENU);
 
       POPUP_MENU_ADD_ITEM(STR_STATISTICS);
-#if defined(PCBI6X)
-      POPUP_MENU_ADD_ITEM(STR_SAVEALLDATA);
-#else
+#if !defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_ABOUT_US);
 #endif
       POPUP_MENU_START(onMainViewMenu);
