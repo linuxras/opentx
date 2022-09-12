@@ -216,9 +216,11 @@ void eepromPageWrite(uint8_t* pBuffer, uint16_t WriteAddr, uint8_t NumByteToWrit
   * @param  None
   * @retval None
   */
+// #define I2C_PROPER_WAIT // +128B
 #define I2C_STANDBY_WAIT_MAX 100
 bool I2C_EE_WaitEepromStandbyState(void)
 {
+#if defined(I2C_PROPER_WAIT)
   __IO uint32_t trials = 0;
   I2C_TransferHandling(I2C, I2C_ADDRESS_EEPROM, 0, I2C_AutoEnd_Mode, I2C_No_StartStop);
   do {
@@ -231,7 +233,9 @@ bool I2C_EE_WaitEepromStandbyState(void)
   } while (I2C_GetFlagStatus(I2C, I2C_ISR_NACKF) != RESET);
 
   I2C_ClearFlag(I2C, I2C_FLAG_STOPF);
-
+#else
+  delay_ms(5);
+#endif
   return true;
 }
 
