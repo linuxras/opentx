@@ -26,8 +26,8 @@ uint8_t currentBacklightBright = 0;
 uint8_t requiredBacklightBright = 0;
 uint8_t mainRequestFlags = 0;
 
-#if defined(PCBI6X_ELRSV2)
-extern void ELRSV2_stop();
+#if defined(PCBI6X_ELRSV3)
+extern void ELRSV3_stop();
 uint8_t cScriptRunning = 0;
 #endif
 
@@ -73,8 +73,8 @@ void handleUsbConnection()
     else {
       #if !defined(PCBI6X) || defined(PCBI6X_USB_MSD)
       if (getSelectedUsbMode() == USB_MASS_STORAGE_MODE) {
-        #if defined(PCBI6X_ELRSV2)
-        ELRSV2_stop();
+        #if defined(PCBI6X_ELRSV3)
+        ELRSV3_stop();
         #endif
         opentxClose(false);
         usbPluggedIn();
@@ -342,7 +342,7 @@ void handleGui(event_t event) {
     // todo     drawStatusLine(); here???
   }
   else
-#elif defined(PCBI6X_ELRSV2)
+#elif defined(PCBI6X_ELRSV3)
   if (cScriptRunning == 1) {
     // standalone c script is active
     menuHandlers[menuLevel](event);

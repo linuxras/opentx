@@ -1,7 +1,7 @@
 option(SHUTDOWN_CONFIRMATION "Shutdown confirmation" OFF)
 option(LCD_DUAL_BUFFER "Dual LCD Buffer" OFF)
 option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
-option(PCBI6X_ELRSV2 "Enable ExpressLRS v2 configuration tool" NO) # ~4kB
+option(PCBI6X_ELRSV3 "Enable ExpressLRS v2 configuration tool" NO) # ~4kB
 option(PCBI6X_USB_VBUS "Remove manual USB connection, just auto using VBUS, requires wiring USB VBUS to PA15 pad" NO)
 option(PCBI6X_BACKLIGHT_MOD "Enable adjustable backlight, requires wiring BL pad to PC9 pad" NO)
 
@@ -46,10 +46,10 @@ if(PCBI6X_BACKLIGHT_MOD STREQUAL YES)
   add_definitions(-DPCBI6X_BACKLIGHT_MOD)
 endif()
 
-if(PCBI6X_ELRSV2 STREQUAL YES)
-  add_definitions(-DPCBI6X_ELRSV2)
-  add_definitions(-DPCBI6X_ELRSV2_DEVICES)
-else() # features disabled for ELRSV2
+if(PCBI6X_ELRSV3 STREQUAL YES)
+  add_definitions(-DPCBI6X_ELRSV3)
+  add_definitions(-DPCBI6X_ELRSV3_DEVICES)
+else() # features disabled for ELRSV3
   add_definitions(-DPCBI6X_USB_MSD) # 3620B
 endif()
 
@@ -105,7 +105,7 @@ set(TARGET_SRC
   adc_driver.cpp
   i2c_driver.cpp
   crc_driver.cpp
-  tools/elrsV2.cpp
+  tools/elrsV3.cpp
   ../common/arm/stm32/mixer_scheduler_driver.cpp
   )
 

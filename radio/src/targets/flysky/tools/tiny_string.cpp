@@ -1,5 +1,5 @@
 /**
- * Minimal implementation of sprintf for elrsv2 needs.
+ * Minimal implementation of sprintf for ExpressLRS menu handling needs.
  */
 #include <cstdarg>
 
