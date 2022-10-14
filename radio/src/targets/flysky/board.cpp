@@ -203,18 +203,18 @@ void boardInit()
   RCC_APB1PeriphClockCmd(RCC_APB1_LIST, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2_LIST, ENABLE);
 
-#if defined(DEBUG) && defined(AUX_SERIAL_GPIO)
-  auxSerialInit(UART_MODE_DEBUG, 0); // default serial mode (None if DEBUG not defined)
-  TRACE("\ni6X board started :)");
-  // TRACE("RCC->CSR = %08x", RCC->CSR);
-#endif
-
   pwrInit();
   keysInit();
 
   if (readTrims() == BOOTLOADER_KEYS) {
     SystemBootloaderJump();
   }
+
+#if defined(DEBUG) && defined(AUX_SERIAL_GPIO)
+  auxSerialInit(UART_MODE_DEBUG, 0); // default serial mode (None if DEBUG not defined)
+  TRACE("\ni6X board started :)");
+  // TRACE("RCC->CSR = %08x", RCC->CSR);
+#endif
 
   crcInit();
   adcInit();
