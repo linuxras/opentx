@@ -707,7 +707,9 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         fieldId = 1;
 #if defined(PCBI6X_ELRSV3_DEVICES)
 //        createDeviceFields();
-        getFieldById(otherDevicesId)->id = allocatedFieldsCount;
+        if (getFieldById(otherDevicesId)) {
+          getFieldById(otherDevicesId)->id = allocatedFieldsCount;
+        }
 #endif
       } else if (allParamsLoaded == 0) {
         fieldId++; // fieldId = 1 + (fieldId % (fieldsLen-1));
