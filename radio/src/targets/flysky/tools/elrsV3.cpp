@@ -266,7 +266,7 @@ static FieldProps * getField(const uint8_t line) {
   uint32_t counter = 1;
   for (uint32_t i = 0; i < allocatedFieldsCount; i++) {
     FieldProps * field = &fields[i];
-    if (/*folderAccess == field->parent &&*/ field->nameLength != 0/* && field->hidden == 0*/) {
+    if (folderAccess == field->parent && field->nameLength != 0/* && field->hidden == 0*/) {
       if (counter < line) {
         counter = counter + 1;
       } else {
@@ -384,7 +384,6 @@ static uint8_t semicolonPos(const char * str, uint8_t last) {
 }
 
 static void fieldTextSelectionDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
-  TRACE("disp %d %d %d", field->id, field->value, field->valuesOffset);
   uint8_t start = field->valuesOffset;
   uint8_t len;
   uint32_t i = 0;
@@ -409,7 +408,6 @@ static void fieldTextSelectionDisplay(FieldProps * field, uint8_t y, uint8_t att
 // }
 
 static void fieldStringDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
-  TRACE("disp2 %d %d %d", field->id, field->value, field->valuesOffset);
   lcdDrawSizedText(COL2, y, (char *)&valuesBuffer[field->valuesOffset], field->valuesLength, attr);
 }
 
@@ -576,6 +574,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
     if (newFieldCount != fields_count || newFieldCount == 0) {
       fields_count = newFieldCount;
       clearFields(); // allocateFields();
+      addBackBtn();
 #if defined(PCBI6X_ELRSV3_DEVICES)
       addOtherDevicesBtn();
       if (newFieldCount == 0) {
@@ -611,7 +610,7 @@ static const FieldFunctions functions[] = {
   { .load=nullptr, .save=fieldDeviceIdSelect, .display=fieldUnifiedDisplay }, // 16 device(15)
   { .load=nullptr, .save=fieldFolderDeviceOpen, .display=fieldUnifiedDisplay }, // 17 deviceFOLDER(16)
 #endif
-  { .load=nullptr, .save=nullptr, .display=nullptr }, // TODO: remap UINT8(0) here -> 18
+  { .load=nullptr, .save=nullptr, .display=nullptr }, // TODO: remap UINT8(0) here? -> 18
 };
 
 static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
@@ -632,6 +631,9 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   FieldProps* field = getFieldById(fieldId);
   if (field == nullptr) {
     field = &tempField;
+    field->id = 0;
+    field->parent = 0;
+    field->type = 0;
     field->nameLength = 0;
     field-> valuesLength = 0;
   }
@@ -652,7 +654,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     statusComplete = 0;
   } else {
     TRACE("%d, %s, %d", fieldId, &fieldData[2], fieldDataLen);
-    DUMP(fieldData, fieldDataLen);
+//    DUMP(fieldData, fieldDataLen);
     fieldChunk = 0;
     if (fieldDataLen < 4) {
       fieldDataLen = 0;
