@@ -1748,9 +1748,8 @@ volatile rotenc_t rotencValue[1] = {0};
 uint8_t rotencSpeed;
 #endif
 
-#define OPENTX_INIT_ARGS
-
-void opentxInit(OPENTX_INIT_ARGS) {
+void opentxInit()
+{
   TRACE("opentxInit");
 
 #if defined(GUI)
