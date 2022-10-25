@@ -161,7 +161,7 @@ static void luaLcdDrawGauge(coord_t x, coord_t y, coord_t w, coord_t h, int32_t 
 
 static void storeField(FieldProps * field);
 static void clearFields();
-static void addBackBtn();
+static void addBackButton();
 static void reloadAllField();
 static FieldProps * getField(uint8_t line);
 static void UIbackExec(FieldProps * field);
@@ -188,16 +188,17 @@ static void crossfireTelemetryPing(){
 }
 
 static void clearFields() {
-  TRACE("clearFields");
-  for (uint32_t i = 0; i < FIELDS_MAX_COUNT; i++) {
+  TRACE("clearFields %d", allocatedFieldsCount);
+  for (uint32_t i = 0; i < allocatedFieldsCount; i++) {
     fields[i].nameLength = 0;
     fields[i].valuesLength = 0;
   }
+  allocatedFieldsCount = 0;
 }
 
-static void addBackBtn() {
+static void addBackButton() {
   backButtonId = allocatedFieldsCount;
-  TRACE("addBackBtn id %d", backButtonId);
+  TRACE("addBackButton id %d", backButtonId);
   FieldProps backBtnField;
   backBtnField.id = backButtonId;
   backBtnField.nameLength = 1;
@@ -206,10 +207,10 @@ static void addBackBtn() {
   storeField(&backBtnField);
 }
 
-static void addOtherDevicesBtn() {
-  otherDevicesId = 255;//allocatedFieldsCount;
-  TRACE("addOtherDevicesBtn %d", otherDevicesId);
-  FieldProps otherDevicesField; // add "Other Devices"
+static void addOtherDevicesButton() {
+  otherDevicesId = allocatedFieldsCount;
+  TRACE("addOtherDevicesButton %d", otherDevicesId);
+  FieldProps otherDevicesField;
   otherDevicesField.id = otherDevicesId;
   otherDevicesField.nameLength = 1;
   otherDevicesField.type = 16;
@@ -218,6 +219,7 @@ static void addOtherDevicesBtn() {
 }
 
 static void reloadAllField() {
+  TRACE("reloadAllField");
   allParamsLoaded = 0;
   fieldId = 1;
   fieldChunk = 0;
@@ -225,7 +227,6 @@ static void reloadAllField() {
   namesBufferOffset = 0;
   valuesBufferOffset = 0;
 //  clearFields();
-//  allocatedFieldsCount = 0;
 }
 
 static FieldProps * getFieldById(const uint8_t id) {
@@ -417,9 +418,7 @@ static void fieldFolderOpen(FieldProps * field) {
   pageOffset = 0;
   folderAccess = field->id;
   getFieldById(backButtonId)->parent = folderAccess;
-  for (uint32_t i = 0; i < backButtonId; i++) {
-    fields[i].valuesLength = 0;
-  }
+  clearFields();
   reloadAllField();
 }
 
@@ -428,9 +427,9 @@ static void fieldFolderDeviceOpen(FieldProps * field) {
   // if folderAccess == devices folder, store only devices instead of fields
   fields_count = devicesLen;
   devicesLen = 0;
-  allocatedFieldsCount = 0;
+  clearFields();
   crossfireTelemetryPing(); //broadcast with standard handset ID to get all node respond correctly
-  return fieldFolderOpen(field);
+  fieldFolderOpen(field);
 }
 #endif
 
@@ -554,7 +553,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
       if (devicesLen == fields_count - 1) {
         allParamsLoaded = 1;
         fieldId = 1;
-        addBackBtn(); // createDeviceFields();
+        addBackButton(); // createDeviceFields();
       }
     }
     devicesLen++;
@@ -574,14 +573,13 @@ static void parseDeviceInfoMessage(uint8_t* data) {
     if (newFieldCount != fields_count || newFieldCount == 0) {
       fields_count = newFieldCount;
       clearFields(); // allocateFields();
-      addBackBtn();
 #if defined(PCBI6X_ELRSV3_DEVICES)
-      addOtherDevicesBtn();
+      addOtherDevicesButton();
       if (newFieldCount == 0) {
       // This device has no fields so the Loading code never starts
         allParamsLoaded = 1;
         fieldId = 1;
-        addBackBtn(); // createDeviceFields();
+        addBackButton(); // createDeviceFields();
       }
 #endif
     }
@@ -669,7 +667,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     if (field->nameLength != 0) {
       if (field->parent != parent || field->type != type/* || field->hidden != hidden*/) {
         fieldDataLen = 0;
-        return;
+        return; // ten return nie pozwala zakonczyc ladowania, bo finalnie nigdy nie dochodzi do fieldId == fields_count?
       }
     }
     field->parent = parent;
@@ -705,6 +703,9 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         TRACE("allocatedFieldsCount %d", allocatedFieldsCount);
         allParamsLoaded = 1;
         fieldId = 1;
+        if (folderAccess != 0) {
+          addBackButton();
+        }
 #if defined(PCBI6X_ELRSV3_DEVICES)
 //        createDeviceFields();
         if (getFieldById(otherDevicesId)) {
@@ -712,8 +713,10 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         }
 #endif
       } else if (allParamsLoaded == 0) {
+        TRACE("fieldId++");
         fieldId++; // fieldId = 1 + (fieldId % (fieldsLen-1));
       } else if (reloadFolder != 0) { // if we still have to reload the folder name
+        TRACE("fieldId = reloadFolder");
         fieldId = reloadFolder;
         fieldChunk = 0;
         statusComplete = 0;
@@ -1005,7 +1008,7 @@ void ELRSV3_run(event_t event) {
   if (cScriptRunning == 0) {
     cScriptRunning = 1;
     fields_count = 0;
-    allocatedFieldsCount = 0;
+    clearFields();
     registerCrossfireTelemetryCallback(refreshNext);
   }
 
