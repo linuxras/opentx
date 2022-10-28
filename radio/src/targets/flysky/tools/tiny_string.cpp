@@ -1,9 +1,11 @@
 /**
- * Minimal implementation of sprintf for ExpressLRS menu handling needs.
+ * Tiny implementation of sprintf for ExpressLRS menu handling needs.
+ * String input always expect length passed as parameter.
+ * @author Jan Kozak (ajjjjjjjj)
  */
 #include <cstdarg>
 
-void tiny_sprintf(char *arr, char const *fmt, char strLen, char argsLen, ...) {
+void tiny_sprintf(char *arr, char const *fmt, char argsLen, ...) {
   va_list args;
   va_start(args, argsLen);
   char ch;
@@ -21,9 +23,10 @@ void tiny_sprintf(char *arr, char const *fmt, char strLen, char argsLen, ...) {
           length++;
           break;
         case 's':
+          int_temp = va_arg(args, int); // reuse as string length
           string_temp = va_arg(args, char *);
-          memcpy(&arr[length], string_temp, strLen);
-          length += strLen;
+          memcpy(&arr[length], string_temp, int_temp);
+          length += int_temp;
           break;
         case 'u':
           int_temp = va_arg(args, int);
@@ -32,8 +35,8 @@ void tiny_sprintf(char *arr, char const *fmt, char strLen, char argsLen, ...) {
           break;
       }
     } else {
-        arr[length] = ch;
-        length++;
+      arr[length] = ch;
+      length++;
     }
   }
   va_end(args);
