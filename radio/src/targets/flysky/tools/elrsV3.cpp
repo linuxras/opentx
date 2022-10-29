@@ -1,10 +1,9 @@
 /**
- * ExpressLRS V3 configurator for i6X.
+ * ExpressLRS V3 configurator for i6X based on elrsV2/3.lua
  * @author: Jan Kozak (ajjjjjjjj)
  *
  * Limitations vs original lua:
  * - no float and string fields support, not used by ExpressLRS anyway,
- * - field unit is not displayed ("(5000bps)", "(ID:0)"),
  *
  + reduce fieldsSize:
     + getFieldById,
@@ -23,26 +22,25 @@
      + reuse valuesOffset = min, valuesLength = max,
    + modify,
    + add to functions table
- - unit support, RAM req: 34B (new offset + lenght)(does not fit in 512 buffer :() + 20B (actual units) = 54B+
+ + unit support, RAM req: 34B (new offset + lenght)(does not fit in 512 buffer :() + 24B (actual units) = 54B+
    + tiny_sprintf improvement to support many strings,
-   - reorganize buffers,
-   - display,
-     + add tiny_sprintf where necessary,
-     - use unitOffset and unitLength,
-   - load,
+   + reorganize buffers,
+   + display,
+   + load,
+ - create universal method for memcpy + increase buff len?
 
-previous:
+old:
  512: namesBuffer(164) + valuesBuffer(176) + fieldData(172)
  RAM: deviceName(20) + otherDevices(8) + fields(256) = 284b
  free: 40b
 
-current: The same RAM usage and full valuesBuffer
+prev: The same RAM usage and full valuesBuffer
  512: namesBuffer(180) + fieldData(172) + fields(136) = 488, 24b left for tuning.
  RAM: deviceName(20) + otherDevices(8)  + valuesBuffer(255(242+)) = 284b
 
-next: units support,
- 512: namesBuffer(180) +  + valuesBuffer(255(242+)) + deviceName(20) = 455, 57B left for tuning and units strings.
- RAM: fieldData(172) + fields(136+34) + otherDevices(8) = 350B, 30B missing - to recover from menu task,
+current: units support,
+ 512: namesBuffer(180+24(units)) + valuesBuffer(255(242+)) + deviceName(20) = 479, 33B left for tuning.
+ RAM: fieldData(172) + fields(136+34) + otherDevices(8) = 350B,
 
  */
 
@@ -76,16 +74,14 @@ struct FieldProps {
   uint8_t nameLength;
   uint8_t valuesOffset; // valueOffset|min|timeout for commands
   uint8_t valuesLength; // valuesLength|max|lastStatus for popup
-//  uint8_t unitOffset;
-//  uint8_t unitLength;
+  uint8_t unitOffset;
+  uint8_t unitLength;
   uint8_t parent;
   uint8_t type;
   uint8_t value;
-//  uint8_t max;
   uint8_t id;
   // uint8_t hidden : 1;
   // uint8_t spare : 2;
-  // uint8_t step; // assume always 1
 } PACKED;
 
 struct FieldFunctions {
@@ -94,25 +90,25 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 180; // 191 - 12 = ~180+ (no Antenna Mode with FM30)
+static constexpr uint8_t NAMES_BUFFER_SIZE  = 204; // 191 - 12 = ~180+ (no Antenna Mode with FM30)
 static constexpr uint8_t VALUES_BUFFER_SIZE = 255; // 154+
 static uint8_t *namesBuffer = &reusableBuffer.MSC_BOT_Data[0];
 uint8_t namesBufferOffset = 0;
-//static uint8_t *valuesBuffer = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
-static uint8_t valuesBuffer[VALUES_BUFFER_SIZE];
+static uint8_t *valuesBuffer = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
+//static uint8_t valuesBuffer[VALUES_BUFFER_SIZE];
 uint8_t valuesBufferOffset = 0;
 
 // last 25b are also used for popup messages
 static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 172; // 172+
-static uint8_t *fieldData = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
+//static uint8_t *fieldData = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
+static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 static constexpr uint8_t POPUP_MSG_OFFSET = FIELD_DATA_BUFFER_SIZE - 24 - 1;
 // static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 uint8_t fieldDataLen = 0;
 
 static constexpr uint8_t FIELDS_MAX_COUNT = 17; // 15 + Antenna Mode + Airport // 32 * 8 = 256b // 30 + 2 margin for future fields
-//static FieldProps fields[FIELDS_MAX_COUNT]; // = (FieldProps *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
-static FieldProps *fields = (FieldProps *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
+static FieldProps fields[FIELDS_MAX_COUNT];
+//static FieldProps *fields = (FieldProps *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
 uint8_t allocatedFieldsCount = 0;
 
 #if defined(PCBI6X_ELRSV3_DEVICES)
@@ -129,7 +125,8 @@ static constexpr uint8_t handsetId = 0xEF;
 #endif
 
 static constexpr uint8_t DEVICE_NAME_MAX_LEN = 20;
-static char deviceName[DEVICE_NAME_MAX_LEN];
+static uint8_t *deviceName = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+//static char deviceName[DEVICE_NAME_MAX_LEN];
 uint8_t lineIndex = 1;
 uint8_t pageOffset = 0;
 uint8_t edit = 0;
@@ -201,7 +198,7 @@ static void fieldTextSelectionSave(FieldProps * field);
 
 
 static void crossfireTelemetryPush4(const uint8_t cmd, const uint8_t third, const uint8_t fourth) {
-  TRACE("crsf push %x  %x  %x", cmd, third, fourth);
+//  TRACE("crsf push %x  %x  %x", cmd, third, fourth);
   uint8_t crsfPushData[4] { deviceId, handsetId, third, fourth };
   crossfireTelemetryPush(cmd, crsfPushData, 4);
 }
@@ -276,14 +273,6 @@ static void storeField(FieldProps * field) {
     TRACE("allocFieldsCount %d", allocatedFieldsCount);
   }
   memcpy(storedField, field, sizeof(FieldProps));
-//  storedField->id = field->id;
-//  storedField->value = field->value;
-//  storedField->type = field->type;
-//  storedField->parent = field->parent;
-//  storedField->nameOffset = field->nameOffset;
-//  storedField->nameLength = field->nameLength;
-//  storedField->valuesOffset = field->valuesOffset;
-//  storedField->valuesLength = field->valuesLength;
 }
 
 /**
@@ -291,18 +280,6 @@ static void storeField(FieldProps * field) {
  */
 static FieldProps * getField(const uint8_t line) {
   return &fields[line - 1];
-//  uint32_t counter = 1;
-//  for (uint32_t i = 0; i < allocatedFieldsCount; i++) {
-//    FieldProps * field = &fields[i];
-//    if (folderAccess == field->parent && field->nameLength != 0/* && field->hidden == 0*/) {
-//      if (counter < line) {
-//        counter = counter + 1;
-//      } else {
-//        return field;
-//      }
-//    }
-//  }
-//  return nullptr;
 }
 
 static uint8_t getSemicolonCount(const char * str, const uint8_t len) {
@@ -398,10 +375,20 @@ static void strShorten(char * src, const uint8_t maxLen) {
   }
 }
 
+static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
+  uint8_t unitLen = strlen((char*)&data[unitOffset]);
+  if (field->type < TYPE_STRING && unitLen > 0) {
+    memcpy(&namesBuffer[namesBufferOffset], (char*)&data[unitOffset], unitLen);
+    field->unitOffset = namesBufferOffset;
+    field->unitLength = unitLen;
+    namesBufferOffset += unitLen;
+  }
+}
+
 // UINT8
 static void fieldUint8Display(FieldProps * field, uint8_t y, uint8_t attr) {
   char stringTmp[24];
-  tiny_sprintf((char *)&stringTmp, "%u%s", 3, field->value, 1, "x");
+  tiny_sprintf((char *)&stringTmp, "%u%s", 3, field->value, field->unitLength, (char *)&namesBuffer[field->unitOffset]);
   lcdDrawText(COL2, y, (char *)&stringTmp, attr);
 }
 
@@ -409,6 +396,7 @@ static void fieldUint8Load(FieldProps * field, uint8_t * data, uint8_t offset) {
   field->value = data[offset + 1];
   field->valuesOffset = data[offset + 2]; // min
   field->valuesLength = data[offset + 3]; // max
+  unitSave(field, data, offset + 5);
 }
 
 static void fieldUint8Save(FieldProps * field) {
@@ -422,6 +410,7 @@ static void fieldUint8Save(FieldProps * field) {
 static void fieldTextSelectionLoad(FieldProps * field, uint8_t * data, uint8_t offset) {
   uint8_t len = strlen((char*)&data[offset]);
   field->value = data[offset + len + 1];
+  unitSave(field, data, offset + len + 5);
 //  len -= strRemove((char*)&data[offset], "UX", len); // trim AUX to A // flash cost: 104b
 //  strRemoveInBrackets((char*)&data[offset]);
   strShorten((char*)&data[offset], 12);
@@ -458,7 +447,7 @@ static void fieldTextSelectionDisplay(FieldProps * field, uint8_t y, uint8_t att
   len = semicolonPos((char *)&valuesBuffer[start], field->valuesLength - (start - field->valuesOffset)) - 1;
 
   char stringTmp[24];
-  tiny_sprintf((char *)&stringTmp, "%s%s", 2, len, (char *)&valuesBuffer[start], 1, "x");
+  tiny_sprintf((char *)&stringTmp, "%s%s", 4, len, (char *)&valuesBuffer[start], field->unitLength, (char *)&namesBuffer[field->unitOffset]);
   lcdDrawText(COL2, y, (char *)&stringTmp, attr);
 }
 
@@ -496,7 +485,9 @@ static void fieldFolderDeviceOpen(FieldProps * field) {
 }
 #endif
 
+static void noopLoad(FieldProps * field, uint8_t * data, uint8_t offset) {}
 static void noopSave(FieldProps * field) {}
+static void noopDisplay(FieldProps * field, uint8_t y, uint8_t attr) {}
 
 static void fieldCommandLoad(FieldProps * field, uint8_t * data, uint8_t offset) {
   field->value = data[offset];
@@ -612,7 +603,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
 #else
   if (deviceId == id) {
 #endif // PCBI6X_ELRSV3_DEVICES
-    memcpy(deviceName, (char *)&data[3], DEVICE_NAME_MAX_LEN);
+    memcpy(&deviceName[0], (char *)&data[3], DEVICE_NAME_MAX_LEN);
 #if defined(PCBI6X_ELRSV3_DEVICES)
     deviceIsELRS_TX = ((memcmp(&data[offset], "ELRS", 4) == 0) && (deviceId == 0xEE)) ? 1 : 0; // SerialNumber = 'E L R S' and ID is TX module
 #endif
@@ -637,15 +628,15 @@ static void parseDeviceInfoMessage(uint8_t* data) {
 
 static const FieldFunctions functions[] = {
   { .load=fieldUint8Load, .save=fieldUint8Save, .display=fieldUint8Display }, // 1 UINT8(0)
-  { .load=nullptr, .save=noopSave, .display=nullptr }, // 2 INT8(1)
-  { .load=nullptr, .save=noopSave, .display=nullptr }, // 3 UINT16(2)
-  { .load=nullptr, .save=noopSave, .display=nullptr }, // 4 INT16(3)
+  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 2 INT8(1)
+  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 3 UINT16(2)
+  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 4 INT16(3)
   { .load=nullptr, .save=nullptr, .display=nullptr }, //   nil
   { .load=nullptr, .save=nullptr, .display=nullptr }, //   nil
   { .load=nullptr, .save=nullptr, .display=nullptr }, //   nil
   { .load=nullptr, .save=nullptr, .display=nullptr }, //   nil
-  { .load=nullptr, .save=noopSave, .display=nullptr }, // 9 FLOAT(8)
-  { .load=fieldTextSelectionLoad, .save=fieldTextSelectionSave, .display=fieldTextSelectionDisplay }, // 10 SELECT(9)
+  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 9 FLOAT(8)
+  { .load=fieldTextSelectionLoad, .save=fieldTextSelectionSave, .display=fieldTextSelectionDisplay }, // 10 TEXT SELECTION(9)
   { .load=nullptr, .save=noopSave, .display=fieldStringDisplay }, // 11 STRING(10)editing NOTIMPL
   { .load=nullptr, .save=fieldFolderOpen, .display=fieldUnifiedDisplay }, // 12 FOLDER(11)
   { .load=fieldTextSelectionLoad, .save=noopSave, .display=fieldStringDisplay }, // 13 INFO(12)
@@ -671,15 +662,10 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   }
 
   // get by id or use temporary one to decide later if it should be stored (wrong folder, hidden, etc.)
-  FieldProps tempField;
+  FieldProps tempField = {0};
   FieldProps* field = getFieldById(fieldId);
   if (field == nullptr) {
     field = &tempField;
-    field->id = 0;
-    field->parent = 0;
-    field->type = 0;
-    field->nameLength = 0;
-    field-> valuesLength = 0;
   }
 
   uint8_t chunksRemain = data[4];
@@ -737,9 +723,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         storeField(field);
       }
     }
-//    TRACE("fieldPopup %d", fieldPopup);
-//    TRACE("allParamsLoaded %d", allParamsLoaded);
-//    TRACE("reloadFolder %d", reloadFolder);
+
     if (fieldPopup == 0) {
       if (fieldId == expectedFieldsCount) { // if we have loaded all params
         TRACE("namesBufferOffset %d", namesBufferOffset);
@@ -864,7 +848,7 @@ static void lcd_title() {
     if (titleShowWarn) {
       lcdDrawSizedText(textXoffset, 1, elrsFlagsInfo, 16, INVERS);
     } else {
-      lcdDrawSizedText(textXoffset, 1, (allParamsLoaded == 1) ? deviceName : "Loading...", DEVICE_NAME_MAX_LEN, INVERS);
+      lcdDrawSizedText(textXoffset, 1, (allParamsLoaded == 1) ? (char *)&deviceName[0] : "Loading...", DEVICE_NAME_MAX_LEN, INVERS);
     }
   }
 }
@@ -931,7 +915,6 @@ static void handleDevicePageEvent(event_t event) {
             if (field->parent) {
               // if it is inside a folder, then we reload the folder
               reloadFolder = field->parent;
-              getFieldById(field->parent)->nameLength = 0; // fields[field->parent - 1].nameLength = 0;
             }
             fieldDataLen = 0;
           }
