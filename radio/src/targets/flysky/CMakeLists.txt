@@ -1,13 +1,11 @@
 option(SHUTDOWN_CONFIRMATION "Shutdown confirmation" OFF)
-option(LCD_DUAL_BUFFER "Dual LCD Buffer" OFF)
-option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
-option(PCBI6X_ELRSV3 "Enable ExpressLRS v2 configuration tool" NO) # ~4kB
+option(PCBI6X_ELRSV3 "Enable ExpressLRS v3 configuration tool" NO) # ~4kB
 option(PCBI6X_USB_VBUS "Remove manual USB connection, just auto using VBUS, requires wiring USB VBUS to PA15 pad" NO)
 option(PCBI6X_BACKLIGHT_MOD "Enable adjustable backlight, requires wiring BL pad to PC9 pad" NO)
 
 if(PCB STREQUAL I6X)
   set(PWR_BUTTON "SWITCH" CACHE STRING "Pwr button type (PRESS/SWITCH)")
-  set(SPLASH "OFF")
+  set(SPLASH "OFF") # ~628B
   set(CPU_TYPE STM32F0)
   set(CPU_TYPE_FULL STM32F072)  # for size report
   set(LINKER_SCRIPT targets/flysky/STM32F072VB_FLASH.ld)
@@ -48,7 +46,6 @@ endif()
 
 if(PCBI6X_ELRSV3 STREQUAL YES)
   add_definitions(-DPCBI6X_ELRSV3)
-  add_definitions(-DPCBI6X_ELRSV3_DEVICES)
 else() # features disabled for ELRSV3
   add_definitions(-DPCBI6X_USB_MSD) # 3620B
 endif()
