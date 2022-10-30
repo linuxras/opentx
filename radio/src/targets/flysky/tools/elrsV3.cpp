@@ -75,7 +75,11 @@ static constexpr uint8_t DEVICES_MAX_COUNT = 8;
 static uint8_t deviceIds[DEVICES_MAX_COUNT];
 uint8_t devicesLen = 0;
 uint8_t otherDevicesId = 255;
-uint8_t otherDevicesAdded = 0;
+
+#define BTN_NONE 0
+#define BTN_REQUESTED 1
+#define BTN_ADDED 2
+uint8_t otherDevicesState = BTN_NONE;
 
 uint8_t deviceId = 0xEE;
 uint8_t handsetId = 0xEF;
@@ -166,13 +170,13 @@ static void clearFields() {
     fields[i].nameLength = 0;
     fields[i].valuesLength = 0;
   }
-  otherDevicesAdded = 0;
+  otherDevicesState = BTN_NONE;
   allocatedFieldsCount = 0;
 }
 
 // Both buttons must be added as last ones because i cannot overwrite existing Id
 static void addBackButton() {
-  backButtonId = allocatedFieldsCount;
+  backButtonId = 100; // cannot be allocatedFieldsCount because can overwrite existing id
   FieldProps backBtnField;
   backBtnField.id = backButtonId;
   backBtnField.nameLength = 1;
@@ -182,14 +186,14 @@ static void addBackButton() {
 }
 
 static void addOtherDevicesButton() {
-  otherDevicesId = allocatedFieldsCount;
+  otherDevicesId = 101; // cannot be allocatedFieldsCount because can overwrite existing id
   FieldProps otherDevicesField;
   otherDevicesField.id = otherDevicesId;
   otherDevicesField.nameLength = 1;
   otherDevicesField.type = TYPE_DEVICES_FOLDER;
   otherDevicesField.parent = 0;
   storeField(&otherDevicesField);
-  otherDevicesAdded = 1;
+  otherDevicesState = BTN_ADDED;
 }
 
 static void reloadAllField() {
@@ -243,17 +247,15 @@ static uint8_t getSemicolonCount(const char * str, const uint8_t len) {
 
 static void incrField(int8_t step) {
   FieldProps * field = getField(lineIndex);
-  if (field->type == TYPE_STRING) {
-    ; // not implemented
-  } else {
-    uint8_t min = 0, max = 0;
-    if (field->type == TYPE_TEXT_SELECTION) {
-//      min = 0;
-      max = getSemicolonCount((char *)&valuesBuffer[field->valuesOffset], field->valuesLength);
-    } else if (field->type == TYPE_UINT8) {
+  uint8_t min = 0, max = 0;
+  if (field->type == TYPE_UINT8) {
       min = field->valuesOffset;
       max = field->valuesLength;
-    }
+  } else if (field->type == TYPE_TEXT_SELECTION) {
+//    min = 0;
+    max = getSemicolonCount((char *)&valuesBuffer[field->valuesOffset], field->valuesLength);
+  }
+  if (/*min +*/ max != 0) { // if actually supported
     field->value = limit<uint8_t>(min, field->value + step, max);
   }
 }
@@ -306,10 +308,10 @@ static void strShorten(char * src, const uint8_t maxLen) {
 
 static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
   uint8_t unitLen = strlen((char*)&data[unitOffset]);
+  field->unitLength = unitLen;
   if (field->type < TYPE_STRING && unitLen > 0) {
     memcpy(&namesBuffer[namesBufferOffset], (char*)&data[unitOffset], unitLen);
     field->unitOffset = namesBufferOffset;
-    field->unitLength = unitLen;
     namesBufferOffset += unitLen;
   }
 }
@@ -322,10 +324,10 @@ static void fieldUint8Display(FieldProps * field, uint8_t y, uint8_t attr) {
 }
 
 static void fieldUint8Load(FieldProps * field, uint8_t * data, uint8_t offset) {
-  field->value = data[offset + 1];
-  field->valuesOffset = data[offset + 2]; // min
-  field->valuesLength = data[offset + 3]; // max
-  unitSave(field, data, offset + 5);
+  field->value = data[offset + 0];
+  field->valuesOffset = data[offset + 1]; // min
+  field->valuesLength = data[offset + 2]; // max
+  unitSave(field, data, offset + 4);
 }
 
 static void fieldUint8Save(FieldProps * field) {
@@ -509,6 +511,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
     TRACE("deviceId match %x, newFieldCount %d", deviceId, newFieldCount);
     reloadAllField();
     if (newFieldCount != expectedFieldsCount || newFieldCount == 0) {
+      TRACE("here 2 %d", expectedFieldsCount);
       expectedFieldsCount = newFieldCount;
       clearFields();
       if (newFieldCount == 0) {
@@ -600,7 +603,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     // field->hidden = hidden;
     offset = strlen((char*)&fieldData[2]) + 1 + 2;
 
-    if (parent != folderAccess || type < 9) { // not current folder or unsupported type
+    if (parent != folderAccess) {
       field->nameLength = 0; // mark as clear
     } else {
       if (field->nameLength == 0 && !hidden) {
@@ -609,7 +612,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         memcpy(&namesBuffer[namesBufferOffset], &fieldData[2], field->nameLength);
         namesBufferOffset += field->nameLength;
       }
-      if (field->type >= TYPE_TEXT_SELECTION && functions[field->type].load && !hidden) {
+      if (functions[field->type].load && !hidden) {
         functions[field->type].load(field, fieldData, offset);
       }
       if (/*field->nameLength != 0 && */!hidden) {
@@ -628,6 +631,8 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         fieldId = 1;
         if (folderAccess != 0) {
           addBackButton();
+        } else {
+          otherDevicesState = BTN_REQUESTED;
         }
       } else if (allParamsLoaded == 0) {
         fieldId++; // fieldId = 1 + (fieldId % (fieldsLen-1));
@@ -775,14 +780,14 @@ static void handleDevicePageEvent(event_t event) {
       crossfireTelemetryPush4(0x2D, 0x2E, 0x00);
     } else {
       FieldProps * field = getField(lineIndex);
-      if (field != 0 && field->nameLength > 0 && field->type >= TYPE_TEXT_SELECTION) {
-        if (field->type == 10) {
+      if (field != 0 && field->nameLength > 0) {
+        if (field->type == TYPE_STRING) {
           ; // not implemented
-        } else if (field->type < 11) {
+        } else if (field->type < TYPE_FOLDER) {
           edit = 1 - edit;
         }
         if (!edit) {
-          if (field->type < 11 || field->type == TYPE_COMMAND) {
+          if (field->type < TYPE_FOLDER || field->type == TYPE_COMMAND) {
             // For editable field types and commands, request this field's
             // data again, with a short delay to allow the module EEPROM to
             // commit. Do this before save() to allow save to override
@@ -820,13 +825,13 @@ static void runDevicePage(event_t event) {
 
   lcd_title();
 
-  FieldProps * field;
-  if (allParamsLoaded == 1 && devicesLen > 1 && otherDevicesAdded == 0 && folderAccess == 0) {
+  if (devicesLen > 1 && otherDevicesState == BTN_REQUESTED) {
     addOtherDevicesButton();
   }
   if (elrsFlags > 0x1F) {
     lcd_warn();
   } else {
+    FieldProps * field;
     for (uint32_t y = 1; y < maxLineIndex+2; y++) {
       if (pageOffset+y > allocatedFieldsCount) break;
       field = getField(pageOffset+y);
@@ -834,10 +839,10 @@ static void runDevicePage(event_t event) {
         break;
       } else if (field->nameLength > 0) {
         uint8_t attr = (lineIndex == (pageOffset+y)) ? ((edit && BLINK) + INVERS) : 0;
-        if (field->type < 11 or field->type == 12) {
+        if (field->type < TYPE_FOLDER or field->type == TYPE_INFO) {
           lcdDrawSizedText(textXoffset, y*textSize+textYoffset, (char *)&namesBuffer[field->nameOffset], field->nameLength, 0);
         }
-        if (field->type >= TYPE_TEXT_SELECTION && functions[field->type].display) {
+        if (functions[field->type].display) {
           functions[field->type].display(field, y*textSize+textYoffset, attr);
         }
       }
