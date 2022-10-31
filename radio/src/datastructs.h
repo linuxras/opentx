@@ -713,10 +713,9 @@ PACK(struct TrainerData {
   uint8_t auxSerialMode : 4;                                        \
   uint8_t slidersConfig : 4;                                        \
   uint8_t potsConfig; /* two bits per pot */                        \
-  uint8_t backlightColor;                                           \
-  uint8_t receiverId[16][4]; /* AFHDS2A RxNum */                          \
   swarnstate_t switchUnlockStates;                                  \
   swconfig_t switchConfig;                                          \
+  uint8_t receiverId[16][4]; /* AFHDS2A RxNum */                    \
   char switchNames[NUM_SWITCHES][LEN_SWITCH_NAME];                  \
   char anaNames[NUM_STICKS + NUM_POTS + NUM_SLIDERS][LEN_ANA_NAME]; \
   BLUETOOTH_FIELDS
@@ -925,7 +924,6 @@ static inline void check_struct() {
   CHKSIZE(TelemetrySensor, 14);
 
 #if defined(PCBI6X)
-  CHKSIZE(RadioData, 292);
   CHKSIZE(ModuleData, 40);
 #else
   CHKSIZE(ModuleData, 70);
@@ -936,7 +934,10 @@ static inline void check_struct() {
   CHKSIZE(RssiAlarmData, 2);
   CHKSIZE(TrainerData, 16);
 
-#if defined(PCBXLITE)
+#if defined(PCBI6X)
+  CHKSIZE(RadioData, 291);
+  CHKSIZE(ModelData, 2768);
+#elif defined(PCBXLITE)
   CHKSIZE(RadioData, 844);
   CHKSIZE(ModelData, 6025);
 #elif defined(PCBX7)
