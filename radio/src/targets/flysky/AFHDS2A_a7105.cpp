@@ -114,7 +114,7 @@ static void AFHDS2A_build_bind_packet(void) {
     case AFHDS2A_BIND4:
       packet[0] = 0xbc;
       if (phase == AFHDS2A_BIND4) {
-        memcpy(&packet[5], &g_eeGeneral.receiverId[&g_model.header.modelId[INTERNAL_MODULE]], 4);
+        memcpy(&packet[5], &g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]][0], 4);
         memset(&packet[11], 0xff, 16);
       }
       packet[9] = phase - 1;
@@ -128,7 +128,7 @@ static void AFHDS2A_build_bind_packet(void) {
 
 void AFHDS2A_build_packet(const uint8_t type) {
   memcpy(&packet[1], ID.rx_tx_addr, sizeof(ID.rx_tx_addr));
-  memcpy(&packet[5], &g_eeGeneral.receiverId[&g_model.header.modelId[INTERNAL_MODULE]], 4);
+  memcpy(&packet[5], &g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]][0], 4);
   switch (type) {
     case AFHDS2A_PACKET_STICKS:
       packet[0] = 0x58;
@@ -309,7 +309,7 @@ EndSendBIND123_:  //-----------------------------------------------------------
 ResBIND123_:  //-----------------------------------------------------------
   A7105_ReadData(AFHDS2A_RXPACKET_SIZE);
   if ((packet[0] == 0xbc) & (packet[9] == 0x01)) {
-    memcpy(&g_eeGeneral.receiverId[&g_model.header.modelId[INTERNAL_MODULE]], &packet[5], 4);
+    memcpy(&g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]][0], &packet[5], 4);
     RadioState = (RadioState & 0xF0) | AFHDS2A_BIND4;
     bind_phase = 0;
     SETBIT(RadioState, SEND_RES, SEND);
