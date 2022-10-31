@@ -414,7 +414,6 @@ PACK(struct ModuleData {
   uint8_t subType : 3;
   uint8_t invertedSerial : 1;  // telemetry serial inverted from standard
 #if defined(PCBI6X)
-  uint8_t rxID[4];
   uint16_t servoFreq;
 #endif
   int16_t failsafeChannels[MAX_OUTPUT_CHANNELS];
@@ -715,6 +714,7 @@ PACK(struct TrainerData {
   uint8_t slidersConfig : 4;                                        \
   uint8_t potsConfig; /* two bits per pot */                        \
   uint8_t backlightColor;                                           \
+  uint8_t receiverId[16][4]; /* AFHDS2A RxNum */                          \
   swarnstate_t switchUnlockStates;                                  \
   swconfig_t switchConfig;                                          \
   char switchNames[NUM_SWITCHES][LEN_SWITCH_NAME];                  \

@@ -149,8 +149,11 @@ const mm_protocol_definition *getMultiProtocolDefinition (uint8_t protocol);
 #define MULTIMODULE_OPTIONS_ROW         HIDDEN_ROW
 #endif
 
-
+#if defined(PCBI6X)
+#define MAX_RX_NUM(x)                  (isModuleA7105(x) ? 15 : 63)
+#else
 #define MAX_RX_NUM(x)                  (isModuleDSM2(x) ? 20 : isModuleMultimodule(x) ? MULTI_MAX_RX_NUM(x) : 63)
+#endif
 #define IS_D8_RX(x)                    (g_model.moduleData[x].rfProtocol == RF_PROTO_D8)
 #define IS_R9M_OR_XJTD16(x)            ((isModuleXJT(x) && g_model.moduleData[x].rfProtocol== RF_PROTO_X16) || isModuleR9M(x))
 
