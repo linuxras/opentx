@@ -226,7 +226,7 @@ char * getGVarString(char * dest, int idx)
   return dest;
 }
 
-char * getSwitchString(char * dest, swsrc_t idx)
+char * getSwitchPositionName(char * dest, swsrc_t idx)
 {
   if (idx == SWSRC_NONE) {
     return getStringAtIndex(dest, STR_VSWITCHES, 0);
@@ -284,15 +284,9 @@ char * getSwitchString(char * dest, swsrc_t idx)
   }
 #endif
 
-#if defined(PCBSKY9X)
-  else if (idx <= SWSRC_REa) {
-    getStringAtIndex(s, STR_VSWITCHES, IDX_TRIMS_IN_STR_VSWITCHES+idx-SWSRC_FIRST_TRIM);
-  }
-#else
   else if (idx <= SWSRC_LAST_TRIM) {
     getStringAtIndex(s, STR_VSWITCHES, IDX_TRIMS_IN_STR_VSWITCHES+idx-SWSRC_FIRST_TRIM);
   }
-#endif
 
   else if (idx <= SWSRC_LAST_LOGICAL_SWITCH) {
     *s++ = 'L';
@@ -369,7 +363,7 @@ char * getSourceString(char * dest, mixsrc_t idx)
     }
   }
   else if (idx <= MIXSRC_LAST_LOGICAL_SWITCH) {
-    getSwitchString(dest, SWSRC_SW1 + idx - MIXSRC_SW1);
+    getSwitchPositionName(dest, SWSRC_SW1 + idx - MIXSRC_SW1);
   }
   else if (idx <= MIXSRC_LAST_TRAINER) {
     strAppendStringWithIndex(dest, STR_PPM_TRAINER, idx - MIXSRC_FIRST_TRAINER + 1);
@@ -416,10 +410,10 @@ char * strAppendUnsigned(char * dest, uint32_t value, uint8_t digits, uint8_t ra
     }
   }
   uint8_t idx = digits;
-  while(idx > 0) {
-    uint32_t rem = value % radix;
-    dest[--idx] = (rem >= 10 ? 'A'-10 : '0') + rem;
-    value /= radix;
+  while (idx > 0) {
+    div_t qr = div(value, radix);
+    dest[--idx] = (qr.rem >= 10 ? 'A' - 10 : '0') + qr.rem;
+    value = qr.quot;
   }
   dest[digits] = '\0';
   return &dest[digits];

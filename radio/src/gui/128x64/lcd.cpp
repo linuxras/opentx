@@ -770,7 +770,7 @@ void putsModelName(coord_t x, coord_t y, char *name, uint8_t id, LcdFlags att)
 void drawSwitch(coord_t x, coord_t y, swsrc_t idx, LcdFlags flags, bool autoBold)
 {
   char s[8];
-  getSwitchString(s, idx);
+  getSwitchPositionName(s, idx);
   if (autoBold && idx != SWSRC_NONE && getSwitch(idx))
     flags |= BOLD;
   lcdDrawText(x, y, s, flags);
