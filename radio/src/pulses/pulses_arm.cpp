@@ -27,12 +27,12 @@
 #include "mixer_scheduler.h"
 
 uint8_t s_pulses_paused = 0;
-ModuleState moduleState[NUM_MODULES];
+ModuleState moduleState[NUM_MODULES] = {
+  { .protocol=255, .mode=0, .counter=100 },
+  { .protocol=255, .mode=0, .counter=100 }
+};
 ModulePulsesData modulePulsesData[NUM_MODULES] __DMA;
 TrainerPulsesData trainerPulsesData __DMA;
-
-moduleState[INTERNAL_MODULE].protocol = 255;
-moduleState[EXTERNAL_MODULE].protocol = 255;
 
 #if defined(CROSSFIRE)
 uint8_t createCrossfireChannelsFrame(uint8_t* frame, int16_t* pulses);

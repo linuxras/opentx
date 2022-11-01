@@ -33,9 +33,9 @@
 extern uint8_t s_pulses_paused;
 
 PACK(struct ModuleState {
-  uint8_t protocol:4;
-  uint8_t paused:1; // not used?
-  uint8_t mode:3;
+  uint8_t protocol; // :4
+//  uint8_t paused; // :1 not used?
+  uint8_t mode; // :3
   uint16_t counter;
 });
 
