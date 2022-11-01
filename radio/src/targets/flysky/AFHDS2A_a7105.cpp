@@ -209,7 +209,7 @@ void ActionAFHDS2A(void) {
   static uint16_t packet_counter = 0;
   A7105_AdjustLOBaseFreq();
 
-  if (moduleFlag[INTERNAL_MODULE] == MODULE_BIND) {
+  if (moduleState[INTERNAL_MODULE].mode ==MODULE_MODE_BIND) {
     if (IS_BIND_DONE && IS_BIND_STOP) {
       TRACE("Binding in progress...");
       // __disable_irq(); crashes
@@ -219,7 +219,7 @@ void ActionAFHDS2A(void) {
     } else {
       if (IS_BIND_DONE) {
         TRACE("Bind done!");
-        moduleFlag[INTERNAL_MODULE] = MODULE_NORMAL_MODE;
+        moduleState[INTERNAL_MODULE].mode = MODULE_MODE_NORMAL;
         s_editMode = EDIT_SELECT_MENU;
         storageDirty(EE_MODEL);  // Save RX_ID
         BIND_STOP;
@@ -236,10 +236,10 @@ void ActionAFHDS2A(void) {
       // __enable_irq();
     }
   }
-  if (moduleFlag[INTERNAL_MODULE] == MODULE_RANGECHECK && !IS_RANGE_FLAG_on) {
+  if (moduleState[INTERNAL_MODULE].mode == MODULE_MODE_RANGECHECK && !IS_RANGE_FLAG_on) {
     RANGE_FLAG_on;
   }
-  if (moduleFlag[INTERNAL_MODULE] != MODULE_RANGECHECK && IS_RANGE_FLAG_on) {
+  if (moduleState[INTERNAL_MODULE].mode != MODULE_MODE_RANGECHECK && IS_RANGE_FLAG_on) {
     RANGE_FLAG_off;
   }
   //----------------------------------------------------------------------------

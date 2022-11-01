@@ -30,9 +30,16 @@
 #define MODULES_INIT(...) __VA_ARGS__
 #endif
 
-extern uint8_t s_current_protocol[NUM_MODULES];
 extern uint8_t s_pulses_paused;
-extern uint16_t failsafeCounter[NUM_MODULES];
+
+PACK(struct ModuleState {
+  uint8_t protocol:4;
+  uint8_t paused:1; // not used?
+  uint8_t mode:3;
+  uint16_t counter;
+});
+
+extern ModuleState moduleState[NUM_MODULES];
 
 template <class T>
 struct PpmPulsesData {
@@ -157,15 +164,15 @@ inline void startPulses() {
 #endif
 }
 
-inline bool pulsesStarted() { return s_current_protocol[0] != 255; }
+inline bool pulsesStarted() { return moduleState[0].protocol != 255; }
 inline void pausePulses() { s_pulses_paused = true; }
 inline void resumePulses() { s_pulses_paused = false; }
 
-#define SEND_FAILSAFE_NOW(idx) failsafeCounter[idx] = 1
+#define SEND_FAILSAFE_NOW(idx) moduleState[idx].counter = 1
 
 inline void SEND_FAILSAFE_1S() {
   for (int i = 0; i < NUM_MODULES; i++) {
-    failsafeCounter[i] = 100;
+    moduleState[i].counter = 100;
   }
 }
 

@@ -168,7 +168,7 @@ void per10ms()
 #endif
 
 #if defined(TELEMETRY_FRSKY) || defined(TELEMETRY_JETI)
-  if (!IS_DSM2_SERIAL_PROTOCOL(s_current_protocol[0])) {
+  if (!IS_DSM2_SERIAL_PROTOCOL(moduleState[0].protocol)) {
     telemetryInterrupt10ms();
   }
 #endif
@@ -1481,9 +1481,9 @@ void doMixerPeriodicUpdates()
     static uint8_t countRangecheck = 0;
     for (uint8_t i = 0; i < NUM_MODULES; ++i) {
 #if defined(MULTIMODULE)
-      if (moduleFlag[i] != MODULE_NORMAL_MODE || (i == EXTERNAL_MODULE && multiModuleStatus.isBinding())) {
+      if (moduleState[i].mode != MODULE_MODE_NORMAL || (i == EXTERNAL_MODULE && multiModuleStatus.isBinding())) {
 #else
-      if (moduleFlag[i] != MODULE_NORMAL_MODE) {
+      if (moduleState[i].mode != MODULE_MODE_NORMAL) {
 #endif
         if (++countRangecheck >= 250) {
           countRangecheck = 0;

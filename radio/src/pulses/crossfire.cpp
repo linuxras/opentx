@@ -79,19 +79,19 @@ uint8_t createCrossfireChannelsFrame(uint8_t* frame, int16_t* pulses) {
 void setupPulsesCrossfire() {
   uint8_t* pulses = modulePulsesData[EXTERNAL_MODULE].crossfire.pulses;
 
-    if (outputTelemetryBufferSize > 0) {
-      memcpy(pulses, outputTelemetryBuffer, outputTelemetryBufferSize);
-      modulePulsesData[EXTERNAL_MODULE].crossfire.length = outputTelemetryBufferSize;
-      outputTelemetryBufferSize = 0;
-      outputTelemetryBufferTrigger = 0;
+  if (outputTelemetryBufferSize > 0) {
+    memcpy(pulses, outputTelemetryBuffer, outputTelemetryBufferSize);
+    modulePulsesData[EXTERNAL_MODULE].crossfire.length = outputTelemetryBufferSize;
+    outputTelemetryBufferSize = 0;
+    outputTelemetryBufferTrigger = 0;
+  } else {
+    if (moduleState[EXTERNAL_MODULE].counter == CRSF_FRAME_MODELID) {
+      modulePulsesData[EXTERNAL_MODULE].crossfire.length = createCrossfireModelIDFrame(pulses);
+      moduleState[EXTERNAL_MODULE].counter = CRSF_FRAME_MODELID_SENT;
     } else {
-    // if (moduleState[EXTERNAL_MODULE].counter == CRSF_FRAME_MODELID) {
-    //   modulePulsesData[EXTERNAL_MODULE].crossfire.length = createCrossfireModelIDFrame(pulses);
-    //   moduleState[EXTERNAL_MODULE].counter = CRSF_FRAME_MODELID_SENT;
-    // } else {
     modulePulsesData[EXTERNAL_MODULE].crossfire.length = createCrossfireChannelsFrame(
         pulses,
         &channelOutputs[g_model.moduleData[EXTERNAL_MODULE].channelsStart]);
-    // }
+    }
   }
 }

@@ -21,20 +21,19 @@
 #ifndef _PULSES_H_
 #define _PULSES_H_
 
-enum ModuleFlag
+enum ModuleSettingsMode
 {
-  MODULE_NORMAL_MODE,
-  MODULE_RANGECHECK,
-  MODULE_BIND,
-  // MODULE_OFF, // will need an EEPROM conversion
+  MODULE_MODE_NORMAL,
+  MODULE_MODE_RANGECHECK,
+  MODULE_MODE_BIND
 };
 
-  extern uint8_t moduleFlag[NUM_MODULES];
+//extern ModuleState moduleState[NUM_MODULES];
 
 #if NUM_MODULES > 1
-  #define IS_RANGECHECK_ENABLE()             (moduleFlag[0] == MODULE_RANGECHECK || moduleFlag[1] == MODULE_RANGECHECK)
+  #define IS_RANGECHECK_ENABLE()             (moduleState[0].mode == MODULE_MODE_RANGECHECK || moduleState[1].mode == MODULE_MODE_RANGECHECK)
 #else
-  #define IS_RANGECHECK_ENABLE()             (moduleFlag[0] == MODULE_RANGECHECK)
+  #define IS_RANGECHECK_ENABLE()             (moduleState[0].mode == MODULE_MODE_RANGECHECK)
 #endif
 
 #if defined(DSM2) && !defined(PCBTARANIS)

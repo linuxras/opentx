@@ -27,12 +27,12 @@
 #include "mixer_scheduler.h"
 
 uint8_t s_pulses_paused = 0;
-uint8_t s_current_protocol[NUM_MODULES] = {MODULES_INIT(255)};
-uint16_t failsafeCounter[NUM_MODULES] = {MODULES_INIT(100)};
-uint8_t moduleFlag[NUM_MODULES] = {0};
-
+ModuleState moduleState[NUM_MODULES];
 ModulePulsesData modulePulsesData[NUM_MODULES] __DMA;
 TrainerPulsesData trainerPulsesData __DMA;
+
+moduleState[INTERNAL_MODULE].protocol = 255;
+moduleState[EXTERNAL_MODULE].protocol = 255;
 
 #if defined(CROSSFIRE)
 uint8_t createCrossfireChannelsFrame(uint8_t* frame, int16_t* pulses);
@@ -92,7 +92,7 @@ uint8_t getRequiredProtocol(uint8_t port) {
           // The module is set to OFF during one second before BIND start
           {
             static tmr10ms_t bindStartTime = 0;
-            if (moduleFlag[EXTERNAL_MODULE] == MODULE_BIND) {
+            if (moduleState[EXTERNAL_MODULE].mode == MODULE_MODE_BIND) {
               if (bindStartTime == 0) bindStartTime = get_tmr10ms();
               if ((tmr10ms_t)(get_tmr10ms() - bindStartTime) < 100) {
                 required_protocol = PROTO_NONE;
@@ -122,7 +122,7 @@ uint8_t getRequiredProtocol(uint8_t port) {
 
 #if 0
   // will need an EEPROM conversion
-  if (moduleFlag[port] == MODULE_OFF) {
+  if (moduleState[port].mode == MODULE_OFF) {
     required_protocol = PROTO_NONE;
   }
 #endif
@@ -153,10 +153,10 @@ bool setupPulses(uint8_t port) {
   
   heartbeat |= (HEART_TIMER_PULSES << port);
 
-  if (s_current_protocol[port] != required_protocol) {
-    TRACE("protocol change %d -> %d", s_current_protocol[port], required_protocol);
+  if (moduleState[port].protocol != required_protocol) {
+    TRACE("protocol change %d -> %d", moduleState[port].protocol, required_protocol);
     init_needed = true;
-    switch (s_current_protocol[port]) {  // stop existing protocol hardware
+    switch (moduleState[port].protocol) {  // stop existing protocol hardware
 #if defined(PXX)
       case PROTO_PXX:
         disable_pxx(port);
@@ -201,7 +201,7 @@ bool setupPulses(uint8_t port) {
         disable_no_pulses(port);
         break;
     }
-    s_current_protocol[port] = required_protocol;
+    moduleState[port].protocol = required_protocol;
   }
 
   // Set up output data here

@@ -155,7 +155,7 @@ enum MenuModelSetupItems {
   #define IF_INTERNAL_MODULE_ON(x)       (IS_INTERNAL_MODULE_ENABLED()? (uint8_t)(x) : HIDDEN_ROW)
   #define IF_EXTERNAL_MODULE_ON(x)       (IS_EXTERNAL_MODULE_ENABLED()? (uint8_t)(x) : HIDDEN_ROW)
   #define INTERNAL_MODULE_CHANNELS_ROWS  IF_INTERNAL_MODULE_ON(1)
-  #define EXTERNAL_MODULE_BIND_ROWS()    ((isModuleXJT(EXTERNAL_MODULE) && IS_D8_RX(EXTERNAL_MODULE)) || isModuleSBUS(EXTERNAL_MODULE)) ? (uint8_t)1 : (isModulePPM(EXTERNAL_MODULE) || isModulePXX(EXTERNAL_MODULE) || isModuleDSM2(EXTERNAL_MODULE) || isModuleMultimodule(EXTERNAL_MODULE)) ? (uint8_t)2 : HIDDEN_ROW
+  #define EXTERNAL_MODULE_BIND_ROWS()    ((isModuleXJT(EXTERNAL_MODULE) && IS_D8_RX(EXTERNAL_MODULE)) || isModuleSBUS(EXTERNAL_MODULE)) ? (uint8_t)1 : (isModulePPM(EXTERNAL_MODULE) || isModulePXX(EXTERNAL_MODULE) || isModuleDSM2(EXTERNAL_MODULE) || isModuleMultimodule(EXTERNAL_MODULE)) ? (uint8_t)2 : (isModuleCrossfire(EXTERNAL_MODULE)) ? (uint8_t)0 : HIDDEN_ROW
 
 #if defined(PCBSKY9X) && defined(REVX)
   #define OUTPUT_TYPE_ROWS()             (isModulePPM(EXTERNAL_MODULE) ? (uint8_t)0 : HIDDEN_ROW) ,
@@ -248,7 +248,7 @@ void onBindMenu(const char * result)
     return;
   }
 
-  moduleFlag[moduleIdx] = MODULE_BIND;
+  moduleState[moduleIdx].mode =MODULE_MODE_BIND;
 }
 
 
@@ -356,9 +356,9 @@ void menuModelSetup(event_t event)
 
 #if (defined(DSM2) || defined(PXX))
   if (menuEvent) {
-    moduleFlag[0] = 0;
+    moduleState[0].mode = 0;
 #if NUM_MODULES > 1
-    moduleFlag[1] = 0;
+    moduleState[1].mode = 0;
 #endif
   }
 #endif
@@ -1121,6 +1121,8 @@ void menuModelSetup(event_t event)
               if (editMode>0 || p1valdiff) {
                 CHECK_INCDEC_MODELVAR_ZERO(event, g_model.header.modelId[moduleIdx], MAX_RX_NUM(moduleIdx));
                 if (checkIncDec_Ret) {
+                  if (isModuleCrossfire(moduleIdx))
+                    moduleState[EXTERNAL_MODULE].counter = CRSF_FRAME_MODELID;
                   modelHeaders[g_eeGeneral.currModel].modelId[moduleIdx] = g_model.header.modelId[moduleIdx];
                 }
                 else if (event == EVT_KEY_LONG(KEY_ENTER)) {
@@ -1180,8 +1182,8 @@ void menuModelSetup(event_t event)
                       POPUP_MENU_START(onBindMenu);
                       continue;
                     }
-                    if (moduleFlag[moduleIdx] == MODULE_BIND) {
-                      newFlag = MODULE_BIND;
+                    if (moduleState[moduleIdx].mode == MODULE_MODE_BIND) {
+                      newFlag =MODULE_MODE_BIND;
                     }
                     else {
                       if (!popupMenuItemsCount) {
@@ -1190,26 +1192,26 @@ void menuModelSetup(event_t event)
                     }
                   }
                   else {
-                    newFlag = MODULE_BIND;
+                    newFlag = MODULE_MODE_BIND;
                   }
                 }
                 else if (l_posHorz == 2) {
-                  newFlag = MODULE_RANGECHECK;
+                  newFlag = MODULE_MODE_RANGECHECK;
                 }
               }
             }
 #else
             if (attr && l_posHorz>0 && s_editMode>0) {
               if (l_posHorz == 1)
-                newFlag = MODULE_BIND;
+                newFlag = MODULE_MODE_BIND;
               else if (l_posHorz == 2)
-                newFlag = MODULE_RANGECHECK;
+                newFlag = MODULE_MODE_RANGECHECK;
             }
 #endif
-            moduleFlag[moduleIdx] = newFlag;
+            moduleState[moduleIdx].mode = newFlag;
 
 #if defined(MULTIMODULE)
-            if (newFlag == MODULE_BIND) {
+            if (newFlag == MODULE_MODE_BIND) {
               multiBindStatus = MULTI_BIND_INITIATED;
             }
 #endif

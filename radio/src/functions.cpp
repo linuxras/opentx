@@ -243,7 +243,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
           {
             unsigned int moduleIndex = CFN_PARAM(cfn);
             if (moduleIndex < NUM_MODULES) {
-              moduleFlag[moduleIndex] = 1 + CFN_FUNC(cfn) - FUNC_RANGECHECK;
+              moduleState[moduleIndex].mode = 1 + CFN_FUNC(cfn) - FUNC_RANGECHECK;
             }
             break;
           }
@@ -429,7 +429,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
             {
               unsigned int moduleIndex = CFN_PARAM(cfn);
               if (moduleIndex < NUM_MODULES) {
-                moduleFlag[moduleIndex] = 0;
+                moduleState[moduleIndex].mode = 0;
               }
               break;
             }
