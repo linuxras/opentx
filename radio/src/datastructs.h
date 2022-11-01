@@ -411,8 +411,8 @@ PACK(struct ModuleData {
   uint8_t channelsStart;
   int8_t channelsCount;      // 0=8 channels
   uint8_t failsafeMode : 4;  // only 3 bits used
-  uint8_t subType : 3;
-  uint8_t invertedSerial : 1;  // telemetry serial inverted from standard
+  uint8_t subType : 4;
+//  uint8_t invertedSerial : 1;  // telemetry serial inverted from standard, not used on PCBI6X
 #if defined(PCBI6X)
   uint16_t servoFreq;
 #endif
