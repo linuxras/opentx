@@ -1114,7 +1114,7 @@ void menuModelSetup(event_t event)
           } else {
             lcdDrawTextAlignedLeft(y, STR_RECEIVER_NUM);
           }
-          if (isModulePXX(moduleIdx) || isModuleDSM2(moduleIdx) || isModuleMultimodule(moduleIdx) || isModuleA7105(moduleIdx)) {
+          if (isModulePXX(moduleIdx) || isModuleDSM2(moduleIdx) || isModuleMultimodule(moduleIdx) || isModuleCrossfire(moduleIdx) || isModuleA7105(moduleIdx)) {
             if (xOffsetBind)
               lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, g_model.header.modelId[moduleIdx], (l_posHorz==0 ? attr : 0) | LEADING0|LEFT, 2);
             if (attr && l_posHorz == 0) {
@@ -1135,6 +1135,8 @@ void menuModelSetup(event_t event)
                 }
               }
             }
+          }
+          if (isModuleA7105(moduleIdx)) { // isModuleBindRangeAvailable
             lcdDrawText(MODEL_SETUP_2ND_COLUMN+xOffsetBind, y, STR_MODULE_BIND, l_posHorz==1 ? attr : 0);
 #if defined(PCBTARANIS) || defined(DSM2) || defined(PCBI6X)
             lcdDrawText(MODEL_SETUP_2ND_COLUMN+MODEL_SETUP_RANGE_OFS+xOffsetBind, y, STR_MODULE_RANGE, l_posHorz==2 ? attr : 0);
