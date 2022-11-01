@@ -131,7 +131,7 @@ template <class PxxTransport>
 uint8_t PxxPulses<PxxTransport>::addFlag1(uint8_t port)
 {
   uint8_t flag1 = (g_model.moduleData[port].rfProtocol << 6);
-  if (moduleState[port].mode ==MODULE_MODE_BIND) {
+  if (moduleState[port].mode == MODULE_MODE_BIND) {
     flag1 |= (g_eeGeneral.countryCode << 1) | PXX_SEND_BIND;
   }
   else if (moduleState[port].mode == MODULE_MODE_RANGECHECK) {

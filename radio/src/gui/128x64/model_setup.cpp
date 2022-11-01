@@ -248,7 +248,7 @@ void onBindMenu(const char * result)
     return;
   }
 
-  moduleState[moduleIdx].mode =MODULE_MODE_BIND;
+  moduleState[moduleIdx].mode = MODULE_MODE_BIND;
 }
 
 
@@ -1183,7 +1183,7 @@ void menuModelSetup(event_t event)
                       continue;
                     }
                     if (moduleState[moduleIdx].mode == MODULE_MODE_BIND) {
-                      newFlag =MODULE_MODE_BIND;
+                      newFlag = MODULE_MODE_BIND;
                     }
                     else {
                       if (!popupMenuItemsCount) {

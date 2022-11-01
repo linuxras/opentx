@@ -209,7 +209,7 @@ void ActionAFHDS2A(void) {
   static uint16_t packet_counter = 0;
   A7105_AdjustLOBaseFreq();
 
-  if (moduleState[INTERNAL_MODULE].mode ==MODULE_MODE_BIND) {
+  if (moduleState[INTERNAL_MODULE].mode == MODULE_MODE_BIND) {
     if (IS_BIND_DONE && IS_BIND_STOP) {
       TRACE("Binding in progress...");
       // __disable_irq(); crashes

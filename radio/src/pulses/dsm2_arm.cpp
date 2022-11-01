@@ -140,7 +140,7 @@ void setupPulsesDSM2(uint8_t port)
   if (dsm2BindTimer > 0) {
     dsm2BindTimer--;
     if (switchState(SW_DSM2_BIND)) {
-      moduleState[port].mode =MODULE_MODE_BIND;
+      moduleState[port].mode = MODULE_MODE_BIND;
       dsmDat[0] |= DSM2_SEND_BIND;
     }
   }
@@ -151,7 +151,7 @@ void setupPulsesDSM2(uint8_t port)
     moduleState[port].mode = 0;
   }
 #else
-  if (moduleState[port].mode ==MODULE_MODE_BIND) {
+  if (moduleState[port].mode == MODULE_MODE_BIND) {
     dsmDat[0] |= DSM2_SEND_BIND;
   }
   else if (moduleState[port].mode == MODULE_MODE_RANGECHECK) {
