@@ -69,7 +69,8 @@ static FieldProps fields[FIELDS_MAX_COUNT];
 uint8_t allocatedFieldsCount = 0;
 
 static constexpr uint8_t DEVICES_MAX_COUNT = 8;
-static uint8_t deviceIds[DEVICES_MAX_COUNT];
+static uint8_t *deviceIds = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+//static uint8_t deviceIds[DEVICES_MAX_COUNT];
 uint8_t devicesLen = 0;
 uint8_t otherDevicesId = 255;
 
@@ -82,7 +83,7 @@ uint8_t deviceId = 0xEE;
 uint8_t handsetId = 0xEF;
 
 static constexpr uint8_t DEVICE_NAME_MAX_LEN = 20;
-static uint8_t *deviceName = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+static uint8_t *deviceName = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + DEVICES_MAX_COUNT];
 //static char deviceName[DEVICE_NAME_MAX_LEN];
 uint8_t lineIndex = 1;
 uint8_t pageOffset = 0;
@@ -95,7 +96,8 @@ uint8_t fieldChunk = 0;
 
 static char goodBadPkt[11] = "?/???    ?";
 uint8_t elrsFlags = 0;
-static char elrsFlagsInfo[16] = "";
+static char *elrsFlagsInfo = (char *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + DEVICES_MAX_COUNT + DEVICE_NAME_MAX_LEN]; // 16
+//static char elrsFlagsInfo[16] = "";
 uint8_t expectedFieldsCount = 0;
 uint8_t backButtonId = 2;
 tmr10ms_t devicesRefreshTimeout = 50;
@@ -558,17 +560,17 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   }
 
   uint8_t chunksRemain = data[4];
-  // If no field or the chunksremain changed when we have data, don't continue
+  // If no field or the chunksRemain changed when we have data, don't continue
   if (/*field == 0 ||*/ (chunksRemain != expectedChunks && expectedChunks != -1)) {
     return;
   }
   expectedChunks = chunksRemain - 1;
   for (uint32_t i = 5; i < length; i++) {
-    fieldData[fieldDataLen++] = data[i];
-    if (fieldDataLen >= FIELD_DATA_BUFFER_SIZE) {
+    if (fieldDataLen > FIELD_DATA_BUFFER_SIZE) {
       TRACE("fieldData OF");
       return;
     }
+    fieldData[fieldDataLen++] = data[i];
   }
 //  TRACE("chunk len %d", length); // to know what is the max single chunk size
 
