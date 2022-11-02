@@ -565,6 +565,10 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   expectedChunks = chunksRemain - 1;
   for (uint32_t i = 5; i < length; i++) {
     fieldData[fieldDataLen++] = data[i];
+    if (fieldDataLen >= FIELD_DATA_BUFFER_SIZE) {
+      TRACE("fieldData OF");
+      return;
+    }
   }
 //  TRACE("chunk len %d", length); // to know what is the max single chunk size
 
@@ -585,6 +589,12 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     uint8_t type = fieldData[1] & 0x7F;
     uint8_t hidden = (fieldData[1] & 0x80) ? 1 : 0;
     uint8_t offset;
+
+    if (type > TYPE_COMMAND) {
+      TRACE("type %d", type);
+      return;
+    }
+
     if (field->nameLength != 0) {
       if (field->parent != parent || field->type != type/* || field->hidden != hidden*/) {
         fieldDataLen = 0;
