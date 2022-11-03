@@ -445,10 +445,11 @@ enum MMRFrskySubtypes {
   MM_RF_FRSKY_SUBTYPE_D16_LBT_8CH
 };
 
-#define HAS_RF_PROTOCOL_FAILSAFE(rf) ((rf) == RF_PROTO_X16)
 #if defined(PCBI6X)
+#define HAS_RF_PROTOCOL_FAILSAFE(rf) (1) /*((rf) == RF_I6X_PROTO_AFHDS2A)*/
 #define HAS_RF_PROTOCOL_MODELINDEX(rf) (1)
 #else
+#define HAS_RF_PROTOCOL_FAILSAFE(rf) ((rf) == RF_PROTO_X16)
 #define HAS_RF_PROTOCOL_MODELINDEX(rf) (((rf) == RF_PROTO_X16) || ((rf) == RF_PROTO_LR12))
 #endif
 

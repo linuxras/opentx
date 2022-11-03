@@ -812,9 +812,9 @@ void menuModelSetup(event_t event)
         break;
         case ITEM_MODEL_INTERNAL_MODULE_SERVOFREQ:
         lcdDrawTextAlignedLeft(y, INDENT "Servo freq");
-        lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, g_model.moduleData[INTERNAL_MODULE].servoFreq, attr|LEADING0|LEFT, 3);
+        lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq, attr|LEADING0|LEFT, 3);
         if (attr) {
-          CHECK_INCDEC_MODELVAR(event, g_model.moduleData[INTERNAL_MODULE].servoFreq, 50, 400);
+          CHECK_INCDEC_MODELVAR(event, g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq, 50, 400);
         }
         break;
   

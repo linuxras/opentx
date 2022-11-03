@@ -468,8 +468,8 @@ void modelDefault(uint8_t id) {
   g_model.moduleData[INTERNAL_MODULE].type = MODULE_TYPE_AFHDS2A_SPI;
   g_model.moduleData[INTERNAL_MODULE].channelsStart = 0;
   g_model.moduleData[INTERNAL_MODULE].channelsCount = MAX_OUTPUT_CHANNELS;
-  g_model.moduleData[INTERNAL_MODULE].servoFreq = 50;
   g_model.moduleData[INTERNAL_MODULE].subType = AFHDS2A_SUBTYPE_PWM_IBUS;
+  g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq = 50;
 #endif
 
 #if defined(PCBXLITE)

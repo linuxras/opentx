@@ -169,14 +169,8 @@ void AFHDS2A_build_packet(const uint8_t type) {
       packet[0] = 0xaa;
       packet[9] = 0xfd;
       packet[10] = 0xff;
-
-      if (g_model.moduleData[INTERNAL_MODULE].servoFreq < 50 ||
-          g_model.moduleData[INTERNAL_MODULE].servoFreq > 400) {
-        g_model.moduleData[INTERNAL_MODULE].servoFreq = 50;  // default is 50Hz
-      }
-
-      packet[11] = g_model.moduleData[INTERNAL_MODULE].servoFreq;
-      packet[12] = g_model.moduleData[INTERNAL_MODULE].servoFreq >> 8;
+      packet[11] = g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq;
+      packet[12] = g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq >> 8;
       if (g_model.moduleData[INTERNAL_MODULE].subType & (AFHDS2A_SUBTYPE_PPM_IBUS & AFHDS2A_SUBTYPE_PPM_SBUS)) {
         packet[13] = 0x01;  // PPM output enabled
       } else {

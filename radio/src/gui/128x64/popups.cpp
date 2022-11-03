@@ -52,7 +52,7 @@ void drawAlertBox(const char * title, const char * text, const char * action)
 {
   lcdClear();
 
-#if defined(PCBI6X_ELRSV3) && defined(TRANSLATIONS_CZ) // not enough flash space
+#if defined(PCBI6X_ELRSV3) && defined(TRANSLATIONS_PT) // not enough flash space
   lcdDrawRect(2, 2, 32 - 4, 32 - 4);
   lcdDrawText(11, 6, "x", DBLSIZE);
 #else

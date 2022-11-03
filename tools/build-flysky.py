@@ -53,7 +53,7 @@ translations = [
     "CZ",
     "DE",
     "ES",
-    # "PT",
+    "PT",
     "NL",
     "SE",
     "FI",

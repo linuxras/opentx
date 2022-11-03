@@ -406,17 +406,15 @@ PACK(struct TelemetrySensor {
 #define MM_RF_CUSTOM_SELECTED 0xff
 
 PACK(struct ModuleData {
-  uint8_t type : 4;
-  int8_t rfProtocol : 4;
+  uint8_t type; // : 4; // use full byte to reduce code size on PCBI6X
+  int8_t rfProtocol; //  : 4
   uint8_t channelsStart;
   int8_t channelsCount;      // 0=8 channels
   uint8_t failsafeMode : 4;  // only 3 bits used
-  uint8_t subType : 4;
-//  uint8_t invertedSerial : 1;  // telemetry serial inverted from standard, not used on PCBI6X
-#if defined(PCBI6X)
-  uint16_t servoFreq;
-#endif
+  uint8_t subType : 3;
+  uint8_t invertedSerial : 1;  // telemetry serial inverted from standard
   int16_t failsafeChannels[MAX_OUTPUT_CHANNELS];
+
   union {
     struct {
       int8_t delay : 6;
@@ -447,6 +445,9 @@ PACK(struct ModuleData {
       uint8_t spare2 : 1;
       int8_t refreshRate;  // definition as framelength for ppm (* 5 + 225 = time in 1/10 ms)
     } sbus);
+    NOBACKUP(struct {
+      uint16_t servoFreq; // 50 - 400
+    } afhds2a);
   };
 
   // Helper functions to set both of the rfProto protocol at the same time
@@ -715,9 +716,9 @@ PACK(struct TrainerData {
   uint8_t potsConfig; /* two bits per pot */                        \
   swarnstate_t switchUnlockStates;                                  \
   swconfig_t switchConfig;                                          \
-  uint8_t receiverId[16][4]; /* AFHDS2A RxNum */                    \
   char switchNames[NUM_SWITCHES][LEN_SWITCH_NAME];                  \
   char anaNames[NUM_STICKS + NUM_POTS + NUM_SLIDERS][LEN_ANA_NAME]; \
+  uint8_t receiverId[16][4]; /* AFHDS2A RxNum */                    \
   BLUETOOTH_FIELDS
 #elif defined(PCBSKY9X)
 #define EXTRA_GENERAL_FIELDS                                        \
@@ -923,11 +924,7 @@ static inline void check_struct() {
   CHKSIZE(LogicalSwitchData, 9);
   CHKSIZE(TelemetrySensor, 14);
 
-#if defined(PCBI6X)
-  CHKSIZE(ModuleData, 40);
-#else
-  CHKSIZE(ModuleData, 70);
-#endif
+  CHKSIZE(ModuleData, 7 + (2 * MAX_OUTPUT_CHANNELS));
 
   CHKSIZE(GVarData, 7);
 
@@ -936,7 +933,7 @@ static inline void check_struct() {
 
 #if defined(PCBI6X)
   CHKSIZE(RadioData, 291);
-  CHKSIZE(ModelData, 2768);
+  CHKSIZE(ModelData, 2765);
 #elif defined(PCBXLITE)
   CHKSIZE(RadioData, 844);
   CHKSIZE(ModelData, 6025);
