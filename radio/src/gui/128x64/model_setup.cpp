@@ -187,7 +187,7 @@ enum MenuModelSetupItems {
   #define TRAINER_BLUETOOTH_ROW
 #endif
 #define TRAINER_CHANNELS_ROW             (IS_SLAVE_TRAINER() ? (uint8_t)1 : HIDDEN_ROW)
-#define TRAINER_PARAMS_ROW               (IS_SLAVE_TRAINER() ? (uint8_t)2 : HIDDEN_ROW)
+#define TRAINER_PARAMS_ROW               (g_model.trainerData.mode == TRAINER_MODE_SLAVE ? (uint8_t)2 : HIDDEN_ROW)
 #define TRAINER_ROWS                     LABEL(Trainer), 0, TRAINER_BLUETOOTH_ROW TRAINER_CHANNELS_ROW, TRAINER_PARAMS_ROW
 #elif defined(PCBI6X)
 #define TRAINER_ROWS                     LABEL(Trainer), 0, HIDDEN_ROW, HIDDEN_ROW
@@ -1498,13 +1498,13 @@ void menuModelFailsafe(event_t event)
         s_editMode = 0;
       }
       else {
-        int16_t & failsafe = g_model.moduleData[g_moduleIdx].failsafeChannels[menuVerticalPosition];
-        if (failsafe < FAILSAFE_CHANNEL_HOLD)
-          failsafe = FAILSAFE_CHANNEL_HOLD;
-        else if (failsafe == FAILSAFE_CHANNEL_HOLD)
-          failsafe = FAILSAFE_CHANNEL_NOPULSE;
+        int16_t * failsafe = &g_model.moduleData[g_moduleIdx].failsafeChannels[menuVerticalPosition];
+        if (*failsafe < FAILSAFE_CHANNEL_HOLD)
+          *failsafe = FAILSAFE_CHANNEL_HOLD;
+        else if (*failsafe == FAILSAFE_CHANNEL_HOLD)
+          *failsafe = FAILSAFE_CHANNEL_NOPULSE;
         else
-          failsafe = 0;
+          *failsafe = 0;
       }
     }
     else {
