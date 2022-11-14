@@ -120,7 +120,7 @@ jobs:
 
   build-en:
     docker:
-      - image: ajjjjjjjj/opentx-docker-i6x:latest
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
     steps:
       - checkout
       - run: |
