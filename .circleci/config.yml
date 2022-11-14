@@ -124,8 +124,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          docker run --rm -it -e "BOARD_NAME=i6x" -e "CMAKE_FLAGS=PCB=I6X HELI=NO GVARS=YES PCBI6X_ELRSV3=YES DEBUG=NO PPM_UNIT=PERCENT_PREC0 PCBI6X_BACKLIGHT_MOD=YES" -v $PWD:/opentx ajjjjjjjj/opentx-docker-i6x
-#          python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN /opentx/
+          python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN $PWD/opentx/
       - store_artifacts:
           path: output
 
