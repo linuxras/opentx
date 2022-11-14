@@ -632,12 +632,12 @@
 #define TR_SUBTYPE             INDENT "Subtype"
 #define TR_NOFREEEXPO          "BrakWoln.Expo!"
 #define TR_NOFREEMIXER         "BrakWoln.Mixów!"
-#define TR_SOURCE              INDENT "Źródło"
+#define TR_SOURCE               "Źródło"
 #define TR_WEIGHT              "Waga "
-#define TR_EXPO                TR("Expo", "Exponential")
+#define TR_EXPO                TR("Wykł", "Wykładnicza")
 #define TR_SIDE                "Strona"
 #define TR_DIFFERENTIAL        "Różnic"
-#define TR_OFFSET              INDENT"Ofset "
+#define TR_OFFSET              "Ofset"
 #define TR_TRIM                "Trym"
 #define TR_DREX                "DRex"
 #define DREX_CHBOX_OFFSET      30
@@ -946,7 +946,7 @@
 #define TR_MONTHS              { "Jan", "Fev", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 #define TR_ROTARY_ENCODER      "R.Encs"
 #define TR_CHANNELS_MONITOR    "MONITOR KANAŁÓW"
-#define TR_MIXERS_MONITOR      "MONITOR MIKSER"
+#define TR_MIXERS_MONITOR      "MONITOR MIKSERÓW"
 #define TR_PATH_TOO_LONG       "Ścieżka za długa"
 #define TR_VIEW_TEXT           "Pokaż tekst"
 #define TR_FLASH_BOOTLOADER    "Flash BootLoader"
@@ -985,10 +985,10 @@
 #define TR_STATISTICS          "Statystyki"
 #define TR_ABOUT_US            "O nas"
 #define TR_USB_JOYSTICK        "USB Joystick"
-#define TR_USB_MASS_STORAGE    "USB Storage"
+#define TR_USB_MASS_STORAGE    "USB Dane"
 #define TR_USB_SERIAL          "USB Serial"
-#define TR_SETUP_SCREENS       "Setup screens"
-#define TR_MONITOR_SCREENS     "Monitors"
+#define TR_SETUP_SCREENS       "Ustaw ekrany"
+#define TR_MONITOR_SCREENS     "Monitory"
 #define TR_AND_SWITCH          "Przełącznik AND"
 #define TR_SF                  "FS"
 #define TR_GF                  "FG"
@@ -1023,7 +1023,7 @@
 #define TR_CRITICALALARM       INDENT "Alarm krytyczny"
 #define TR_RSSIALARM_WARN             TR("RSSI","TELEMETRY RSSI")
 #define TR_NO_RSSIALARM                TR(INDENT "Alarms disabled", INDENT "Telemetry alarms disabled")
-#define TR_DISABLE_ALARM               TR(INDENT "Disable alarms", INDENT "Disable telemetry alarms")
+#define TR_DISABLE_ALARM               TR(INDENT "Wyłącz alarmy", INDENT "Disable telemetry alarms")
 #define TR_ENABLE_POPUP        "Aktywuj Popup"
 #define TR_DISABLE_POPUP       "Wyłącz Popup"
 #define TR_POPUP               "Popup"
@@ -1044,7 +1044,7 @@
 #define TR_INCDEC              "Zwiększ/Zmnie"
 #define TR_GLOBALVAR           "Zm.Global."
 #define TR_MIXSOURCE           "Źródło Miks."
-#define TR_CONSTANT            "Stala   "
+#define TR_CONSTANT            "Stała"
 #define TR_PERSISTENT_MAH      TR(INDENT "Zap. mAh", INDENT "Zapisz mAh")
 #define TR_PREFLIGHT           "Lista Ostrzeżeń"
 #define TR_CHECKLIST           TR(INDENT "Czeklista",INDENT "Pokaż Listę Ostrzeżeń")
@@ -1055,7 +1055,7 @@
 #define TR_OUTPUTS             "Wyjścia"
 #define TR_EEBACKUP            "Backup EEPROMu"
 #define TR_FACTORYRESET        "Ustaw.Fabrycz"
-#define TR_CONFIRMRESET        "Wykasować wszytkie modele?    "
+#define TR_CONFIRMRESET        "Skasować wszystkie modele?"
 #define TR_TO_MANY_LUA_SCRIPTS "Za dużo skryptów Lua!"
 
 
@@ -1172,12 +1172,12 @@
 #define TR_MODS_FORBIDDEN      "Modyfikacje zabronione!"
 #define TR_UNLOCKED            "Odblokowane"
 #define TR_ID                  "ID"
-#define TR_PRECISION           "Precyzja "
+#define TR_PRECISION           "Precyzja"
 #define TR_RATIO               "Współcz."
 #define TR_FORMULA             "Formuła"
 #define TR_CELLINDEX           "Cell index"
 #define TR_LOGS                "Logi"
-#define TR_OPTIONS             "Opcje  "
+#define TR_OPTIONS             "Opcje"
 
 #define TR_ALTSENSOR           "Alt sensor"
 #define TR_CELLSENSOR          "Cell sensor"
@@ -1211,7 +1211,7 @@
 #define TR_MAIN_COLOR          "Main color"
 #define TR_TEXT_VIEWER                 "Text Viever"
 
-#define TR_MENU_INPUTS         "\314Wejści"
+#define TR_MENU_INPUTS         "\314Wejścia"
 #define TR_MENU_LUA            "\322SkryptyLUA"
 #define TR_MENU_STICKS         "\307Drążki"
 #define TR_MENU_POTS           "\310Pots"
@@ -1220,10 +1220,10 @@
 #define TR_MENU_TRIMS          "\313Trymy"
 #define TR_MENU_SWITCHES       "\312Przełczn"
 #define TR_MENU_LOGICAL_SWITCHES "\312Przełączn.Logicz"
-#define TR_MENU_TRAINER        "\317Trener "
-#define TR_MENU_CHANNELS       "\320Kanały  "
-#define TR_MENU_GVARS          "\311ZmGlo"
-#define TR_MENU_TELEMETRY      "\321Telemetry"
+#define TR_MENU_TRAINER        "\317Trener"
+#define TR_MENU_CHANNELS       "\320Kanały"
+#define TR_MENU_GVARS          "\311ZmGlob"
+#define TR_MENU_TELEMETRY      "\321Telemetria"
 #define TR_MENU_DISPLAY        "DISPLAY"
 #define TR_MENU_OTHER          "Inny "
 #define TR_MENU_INVERT         "Odwróć"

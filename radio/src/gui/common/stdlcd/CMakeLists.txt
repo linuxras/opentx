@@ -19,6 +19,7 @@ set(GUI_SRC
   ../common/stdlcd/model_inputs.cpp
   ../common/stdlcd/model_mixes.cpp
   ../common/stdlcd/view_text.cpp
+  ../common/stdlcd/radio_trainer.cpp
 )
 set(CURVE_EDIT_SRC )
 
