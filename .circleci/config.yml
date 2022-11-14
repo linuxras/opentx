@@ -120,16 +120,10 @@ jobs:
 
   build-en:
     docker:
-      - image: cimg/python:3.10.4
+      - image: ajjjjjjjj/opentx-docker-i6x:latest
     steps:
       - checkout
       - run: |
-          wget https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2 -P /tmp
-          tar -C /tmp -xjf /tmp/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-          export PATH=$PATH:/tmp/gcc-arm-none-eabi-4_7-2013q3/bin
-          pip3 install pillow libclang-py3 pyqt5
-          sudo apt-get update
-          sudo apt-get install -y libclang-6.0-dev
           python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN /home/circleci/project/
       - store_artifacts:
           path: output

@@ -43,9 +43,9 @@
 //******************************************************************************
 //                              EQUATES
 //******************************************************************************	
-U32 NVIC_INT_CTRL  = 0xE000ED04;            // Interrupt control state register
-U32 NVIC_PENDSVSET = 0x10000000;            // Value to trigger PendSV exception
-U32 INT_EXIT       = 0xFFFFFFFC;
+U32 __attribute__((used)) NVIC_INT_CTRL  = 0xE000ED04;            // Interrupt control state register
+U32 __attribute__((used)) NVIC_PENDSVSET = 0x10000000;            // Value to trigger PendSV exception
+U32 __attribute__((used)) INT_EXIT       = 0xFFFFFFFC;
 
 //******************************************************************************
 //                         PUBLIC FUNCTIONS
