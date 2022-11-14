@@ -136,13 +136,11 @@ void onCustomFunctionsMenu(const char * result)
     memset(cfn, 0, sizeof(CustomFunctionData));
     storageDirty(eeFlags);
   }
-#if !defined(PCBI6X)
   else if (result == STR_DELETE) {
     memmove(cfn, cfn+1, (MAX_SPECIAL_FUNCTIONS-sub-1)*sizeof(CustomFunctionData));
     memset(&g_model.customFn[MAX_SPECIAL_FUNCTIONS-1], 0, sizeof(CustomFunctionData));
     storageDirty(eeFlags);
   }
-#endif
 }
 #endif // PCBTARANIS, PCBI6X
 
@@ -169,8 +167,6 @@ void menuSpecialFunctions(event_t event, CustomFunctionData * functions, CustomF
     if (!CFN_EMPTY(cfn))
 #if !defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_COPY);
-#endif // PCBI6X
-#if defined(SDCARD)
     if (clipboard.type == CLIPBOARD_TYPE_CUSTOM_FUNCTION && isAssignableFunctionAvailable(clipboard.data.cfn.func))
       POPUP_MENU_ADD_ITEM(STR_PASTE);
 #endif
@@ -178,14 +174,12 @@ void menuSpecialFunctions(event_t event, CustomFunctionData * functions, CustomF
       POPUP_MENU_ADD_ITEM(STR_INSERT);
     if (!CFN_EMPTY(cfn))
       POPUP_MENU_ADD_ITEM(STR_CLEAR);
-#if !defined(PCBI6X)
     for (int i=sub+1; i<MAX_SPECIAL_FUNCTIONS; i++) {
       if (!CFN_EMPTY(&functions[i])) {
         POPUP_MENU_ADD_ITEM(STR_DELETE);
         break;
       }
     }
-#endif
     POPUP_MENU_START(onCustomFunctionsMenu);
   }
 #if defined(PCBXLITE)

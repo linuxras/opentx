@@ -215,11 +215,13 @@ void menuRadioHardware(event_t event)
 #if defined(CROSSFIRE)
     0 /* max bauds */,
 #endif
+    0 /* Aux serial mode */,
     BLUETOOTH_ROWS
     0 /*jitter filter*/,
 #if defined(MENU_DIAG_ANAS_KEYS)
     1 /* debugs */,
 #endif
+    0 /* factory reset */
   });
 
   uint8_t sub = menuVerticalPosition - HEADER_LINE;

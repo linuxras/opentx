@@ -1111,10 +1111,10 @@ void menuModelSetup(event_t event)
             xOffsetBind = 0;
             lcdDrawTextAlignedLeft(y, STR_RECEIVER);
             if (attr) l_posHorz += 1;
-          } else if (isModuleCrossfire(moduleIdx)) {
-            lcdDrawTextAlignedLeft(y, STR_RECEIVER);
+//          } else if (isModuleCrossfire(moduleIdx)) {
+//            lcdDrawTextAlignedLeft(y, STR_RECEIVER);
           } else {
-            lcdDrawTextAlignedLeft(y, STR_RECEIVER_NUM);
+            lcdDrawTextAlignedLeft(y, STR_RECEIVER);
           }
           if (isModulePXX(moduleIdx) || isModuleDSM2(moduleIdx) || isModuleMultimodule(moduleIdx) || isModuleCrossfire(moduleIdx) || isModuleA7105(moduleIdx)) {
             if (xOffsetBind)
@@ -1570,7 +1570,7 @@ void menuModelFailsafe(event_t event)
     }
 
     // Gauge
-#if !defined(PCBX7)  // X7 LCD doesn't like too many horizontal lines
+#if !defined(PCBX7) && !defined(PCBI6X) // X7  & i6X LCD doesn't like too many horizontal lines
     lcdDrawRect(x+LCD_W-3-wbar, y, wbar+1, 6);
 #endif
     const uint8_t lenChannel = limit<uint8_t>(1, (abs(channelValue) * wbar/2 + lim/2) / lim, wbar/2);

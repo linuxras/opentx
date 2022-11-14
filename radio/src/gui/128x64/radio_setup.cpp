@@ -156,20 +156,30 @@ void menuRadioSetup(event_t event)
     0, LABEL(ALARMS), 0, CASE_CAPACITY(0)
     CASE_PCBSKY9X(0)
     0, 0, 0, 0, IF_ROTARY_ENCODERS(0)
-    LABEL(BACKLIGHT), 0, 0, /*0,*/ CASE_PWM_BACKLIGHT(0)
-    CASE_PWM_BACKLIGHT(0)
+    LABEL(BACKLIGHT), 0, 0,
+#if defined(PCBI6X_BACKLIGHT_MOD)
     0,
+#endif
+    CASE_PWM_BACKLIGHT(0)
+    CASE_PWM_BACKLIGHT(0)
+    0, /* alarm */
     CASE_SPLASH_PARAM(0)
 #if defined(PXX2)
     0 /* owner registration ID */,
 #endif
     CASE_GPS(0)
-    0, CASE_GPS(0)
+    /*0, rtc */
+    CASE_GPS(0)
     CASE_PXX(0)
-    0, 0, IF_FAI_CHOICE(0)
+    /*0, 0,*/ /* voice language, imperial */
+    IF_FAI_CHOICE(0)
     0,
     CASE_STM32(0) // USB mode
-    0, COL_TX_MODE, 0, 1/*to force edit mode*/});
+#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
+    0,
+#endif
+    0,
+    COL_TX_MODE, 0, 1/*to force edit mode*/});
 
   if (event == EVT_ENTRY) {
     reusableBuffer.generalSettings.stickMode = g_eeGeneral.stickMode;
