@@ -129,9 +129,8 @@ void A7105_AntSwitch(void) {
 
 }
 
-void A7105_SetTxRxMode(uint8_t mode)
-{
-TX_RX_PutVal(mode);
+void A7105_SetTxRxMode(uint8_t mode) {
+	TX_RX_PutVal(mode);
 }
 
 void A7105_Strobe(uint8_t address) {
@@ -353,8 +352,8 @@ static void __attribute__((unused)) A7105_SetVCOBand(uint8_t vb1, uint8_t vb2)
 // #endif
 
 void A7105_Sleep(void) {
-	A7105_SetTxRxMode(TXRX_OFF);
-    A7105_Strobe(A7105_SLEEP);
+	A7105_WriteReg(A7105_0B_GPIO1_PIN1, 0x33);
+	A7105_WriteReg(A7105_0C_GPIO2_PIN_II, 0x33);
 }
 
 #define ID_NORMAL 0x55201041
