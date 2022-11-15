@@ -78,7 +78,9 @@ enum MenuRadioSetupItems {
   ITEM_SETUP_INACTIVITY_ALARM,
   ITEM_SETUP_MEMORY_WARNING,
   ITEM_SETUP_ALARM_WARNING,
+#if defined(PWR_BUTTON_SOFT)
   ITEM_SETUP_RSSI_POWEROFF_ALARM,
+#endif
   IF_ROTARY_ENCODERS(ITEM_SETUP_RE_NAVIGATION)
   ITEM_SETUP_BACKLIGHT_LABEL,
   ITEM_SETUP_BACKLIGHT_MODE,
@@ -93,7 +95,7 @@ enum MenuRadioSetupItems {
   #if defined(PXX2)
     ITEM_RADIO_OWNER_ID,
   #endif
-  CASE_GPS(ITEM_SETUP_TIMEZONE)
+  // CASE_GPS(ITEM_SETUP_TIMEZONE)
   // ITEM_SETUP_ADJUST_RTC,
   CASE_GPS(ITEM_SETUP_GPSFORMAT)
   CASE_PXX(ITEM_SETUP_COUNTRYCODE)
@@ -155,7 +157,11 @@ void menuRadioSetup(event_t event)
     CASE_HAPTIC(0)
     0, LABEL(ALARMS), 0, CASE_CAPACITY(0)
     CASE_PCBSKY9X(0)
-    0, 0, 0, 0, IF_ROTARY_ENCODERS(0)
+    0, 0, 0,
+#if defined(PWR_BUTTON_SOFT)
+    0, /* rssi poweroff alarm */
+#endif
+    IF_ROTARY_ENCODERS(0)
     LABEL(BACKLIGHT), 0, 0,
 #if defined(PCBI6X_BACKLIGHT_MOD)
     0,
@@ -167,7 +173,7 @@ void menuRadioSetup(event_t event)
 #if defined(PXX2)
     0 /* owner registration ID */,
 #endif
-    CASE_GPS(0)
+    /*CASE_GPS(0)*/
     /*0, rtc */
     CASE_GPS(0)
     CASE_PXX(0)
@@ -405,13 +411,14 @@ void menuRadioSetup(event_t event)
         g_eeGeneral.disableAlarmWarning = 1 - editCheckBox(b, RADIO_SETUP_2ND_COLUMN, y, STR_ALARMWARNING, attr, event);
         break;
       }
-
+#if defined(PWR_BUTTON_SOFT)
       case ITEM_SETUP_RSSI_POWEROFF_ALARM:
       {
         uint8_t b = 1 - g_eeGeneral.disableRssiPoweroffAlarm;
         g_eeGeneral.disableRssiPoweroffAlarm = 1 - editCheckBox(b, RADIO_SETUP_2ND_COLUMN, y, STR_RSSISHUTDOWNALARM, attr, event);
         break;
       }
+#endif
 
 #if defined(TX_CAPACITY_MEASUREMENT)
       case ITEM_SETUP_CAPACITY_WARNING:
@@ -511,6 +518,7 @@ void menuRadioSetup(event_t event)
 #endif
 
 #if defined(TELEMETRY_FRSKY) && defined(GPS)
+#if !defined(PCBI6X)
       case ITEM_SETUP_TIMEZONE:
         lcdDrawTextAlignedLeft(y, STR_TIMEZONE);
         lcdDrawNumber(RADIO_SETUP_2ND_COLUMN, y, g_eeGeneral.timezone, attr|LEFT);
@@ -520,7 +528,7 @@ void menuRadioSetup(event_t event)
       case ITEM_SETUP_ADJUST_RTC:
         g_eeGeneral.adjustRTC = editCheckBox(g_eeGeneral.adjustRTC, RADIO_SETUP_2ND_COLUMN, y, STR_ADJUST_RTC, attr, event);
         break;
-
+#endif
       case ITEM_SETUP_GPSFORMAT:
         g_eeGeneral.gpsFormat = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_GPSCOORD, STR_GPSFORMAT, g_eeGeneral.gpsFormat, 0, 1, attr, event);
         break;
