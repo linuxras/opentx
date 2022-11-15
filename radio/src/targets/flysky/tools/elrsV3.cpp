@@ -3,13 +3,23 @@
  * @author Jan Kozak (ajjjjjjjj)
  *
  * Limitations vs elrsV3.lua:
- * - no some int, float, string fields support, but not used by ExpressLRS anyway,
+ * - no int16, float, string fields support, but not used by ExpressLRS anyway,
  */
 
 #include "opentx.h"
 #include "tiny_string.cpp"
 
 #define PACKED __attribute__((packed))
+
+enum COMMAND_STEP {
+    STEP_IDLE = 0,
+    STEP_CLICK = 1,       // user has clicked the command to execute
+    STEP_EXECUTING = 2,   // command is executing
+    STEP_CONFIRM = 3,     // command pending user OK
+    STEP_CONFIRMED = 4,   // user has confirmed
+    STEP_CANCEL = 5,      // user has requested cancel
+    STEP_QUERY = 6,       // UI is requesting status update
+};
 
 #define TYPE_UINT8				   0
 #define TYPE_INT8				     1
@@ -30,13 +40,24 @@ extern uint8_t cScriptRunning;
 struct FieldProps {
   uint8_t nameOffset;
   uint8_t nameLength;
-  uint8_t valuesOffset; // valueOffset|min|timeout for commands
-  uint8_t valuesLength; // valuesLength|max|lastStatus for popup
+  union {
+    uint8_t valuesOffset;
+    uint8_t min;
+    uint8_t timeout;
+  };
+  union {
+    uint8_t valuesLength;
+    uint8_t max;
+    uint8_t lastStatus;
+  };
   uint8_t unitOffset;
   uint8_t unitLength;
   uint8_t parent;
   uint8_t type;
-  uint8_t value;
+  union {
+    uint8_t value;
+    uint8_t status;
+  };
   uint8_t id;
   // uint8_t hidden : 1;
 } PACKED;
@@ -47,7 +68,7 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 204; // 191 - 12 = ~180+ (no Antenna Mode with FM30)
+static constexpr uint8_t NAMES_BUFFER_SIZE  = 188; // 165 + 23 (units) => 188
 static constexpr uint8_t VALUES_BUFFER_SIZE = 255; // 154+
 static uint8_t *namesBuffer = &reusableBuffer.MSC_BOT_Data[0];
 uint8_t namesBufferOffset = 0;
@@ -63,7 +84,7 @@ static constexpr uint8_t POPUP_MSG_OFFSET = FIELD_DATA_BUFFER_SIZE - 24 - 1;
 // static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 uint8_t fieldDataLen = 0;
 
-static constexpr uint8_t FIELDS_MAX_COUNT = 17; // 15 + Antenna Mode + Airport // 32 * 8 = 256b // 30 + 2 margin for future fields
+static constexpr uint8_t FIELDS_MAX_COUNT = 16;
 static FieldProps fields[FIELDS_MAX_COUNT];
 //static FieldProps *fields = (FieldProps *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
 uint8_t allocatedFieldsCount = 0;
@@ -89,8 +110,8 @@ uint8_t lineIndex = 1;
 uint8_t pageOffset = 0;
 uint8_t edit = 0;
 uint8_t charIndex = 1;
-static FieldProps * fieldPopup = 0;
-tmr10ms_t fieldTimeout = 0;
+static FieldProps * fieldPopup = nullptr;
+volatile tmr10ms_t fieldTimeout = 0;
 uint8_t fieldId = 1;
 uint8_t fieldChunk = 0;
 
@@ -247,8 +268,8 @@ static void incrField(int8_t step) {
   FieldProps * field = getField(lineIndex);
   int32_t min = 0, max = 0;
   if (field->type <= TYPE_INT16) {
-      min = field->valuesOffset;
-      max = field->valuesLength;
+      min = field->min;
+      max = field->max;
   } else if (field->type == TYPE_TEXT_SELECTION) {
 //    min = 0;
     max = getSemicolonCount((char *)&valuesBuffer[field->valuesOffset], field->valuesLength);
@@ -304,6 +325,7 @@ static void strShorten(char * src, const uint8_t maxLen) {
 
 static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
   uint8_t unitLen = strlen((char*)&data[unitOffset]);
+  if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
   field->unitLength = unitLen;
   if (field->type < TYPE_STRING && unitLen > 0) {
     memcpy(&namesBuffer[namesBufferOffset], (char*)&data[unitOffset], unitLen);
@@ -313,16 +335,15 @@ static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
 }
 
 // UINT8
-static void fieldUint8Display(FieldProps * field, uint8_t y, uint8_t attr) {
-  char stringTmp[24];
-  tiny_sprintf((char *)&stringTmp, "%u%s", 3, field->value, field->unitLength, (char *)&namesBuffer[field->unitOffset]);
-  lcdDrawText(COL2, y, (char *)&stringTmp, attr);
+static void fieldIntegerDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
+  lcdDrawNumber(COL2, y, field->value, attr);
+  lcdDrawSizedText(lcdLastRightPos, y, (char *)&namesBuffer[field->unitOffset], field->unitLength, attr);
 }
 
 static void fieldUint8Load(FieldProps * field, uint8_t * data, uint8_t offset) {
   field->value = data[offset + 0];
-  field->valuesOffset = data[offset + 1]; // min
-  field->valuesLength = data[offset + 2]; // max
+  field->min = data[offset + 1];
+  field->max = data[offset + 2];
   unitSave(field, data, offset + 4);
 }
 
@@ -371,9 +392,8 @@ static void fieldTextSelectionDisplay(FieldProps * field, uint8_t y, uint8_t att
   }
   len = semicolonPos((char *)&valuesBuffer[start], field->valuesLength - (start - field->valuesOffset)) - 1;
 
-  char stringTmp[24];
-  tiny_sprintf((char *)&stringTmp, "%s%s", 4, len, (char *)&valuesBuffer[start], field->unitLength, (char *)&namesBuffer[field->unitOffset]);
-  lcdDrawText(COL2, y, (char *)&stringTmp, attr);
+  lcdDrawSizedText(COL2, y, (char *)&valuesBuffer[start], len, attr);
+  lcdDrawSizedText(lcdLastRightPos, y, (char *)&namesBuffer[field->unitOffset], field->unitLength, 0);
 }
 
 static void fieldStringDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
@@ -387,6 +407,9 @@ static void fieldFolderOpen(FieldProps * field) {
   folderAccess = field->id;
   clearFields();
   reloadAllField();
+  if (field->type == TYPE_FOLDER) {
+    fieldId = field->id + 1; // UX hack: start loading from first folder item to fetch it faster
+  }
 }
 
 static void fieldFolderDeviceOpen(FieldProps * field) {
@@ -402,21 +425,21 @@ static void noopSave(FieldProps * field) {}
 static void noopDisplay(FieldProps * field, uint8_t y, uint8_t attr) {}
 
 static void fieldCommandLoad(FieldProps * field, uint8_t * data, uint8_t offset) {
-  field->value = data[offset];
-  field->valuesOffset = data[offset+1];
+  field->status = data[offset];
+  field->timeout = data[offset+1];
   strcpy((char *)&fieldData[POPUP_MSG_OFFSET], (char *)&data[offset+2]);
-  if (field->value == 0) {
-    fieldPopup = 0;
+  if (field->status == STEP_IDLE) {
+    fieldPopup = nullptr;
   }
 }
 
 static void fieldCommandSave(FieldProps * field) {
-  if (field->value < 4) {
-    field->value = 1;
-    fieldTextSelectionSave(field); //crossfireTelemetryPush4(0x2D, field->id, field->value);
+  if (field->status < 4) {
+    field->status = 1;
+    fieldTextSelectionSave(field); //crossfireTelemetryPush4(0x2D, field->id, field->status);
     fieldPopup = field;
-    fieldPopup->valuesLength = 0;
-    fieldTimeout = getTime() + field->valuesOffset;
+    fieldPopup->lastStatus = 0;
+    fieldTimeout = getTime() + field->timeout;
   }
 }
 
@@ -520,10 +543,10 @@ static void parseDeviceInfoMessage(uint8_t* data) {
 }
 
 static const FieldFunctions functions[] = {
-  { .load=fieldUint8Load, .save=fieldUint8Save, .display=fieldUint8Display }, // 1 UINT8(0)
-  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 2 INT8(1)
-  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 3 UINT16(2)
-  { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 4 INT16(3)
+  { .load=fieldUint8Load, .save=fieldUint8Save, .display=fieldIntegerDisplay }, // 1 UINT8(0)
+  { .load=noopLoad, .save=noopSave, .display=fieldIntegerDisplay }, // 2 INT8(1)
+  { .load=noopLoad, .save=noopSave, .display=fieldIntegerDisplay }, // 3 UINT16(2)
+  { .load=noopLoad, .save=noopSave, .display=fieldIntegerDisplay }, // 4 INT16(3)
   { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 5 UINT32(4)
   { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 6 INT32(5)
   { .load=noopLoad, .save=noopSave, .display=noopDisplay }, // 7 UINT64(6)
@@ -644,7 +667,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
       }
       fieldTimeout = getTime() + 200;
     } else {
-      fieldTimeout = getTime() + fieldPopup->valuesOffset;
+      fieldTimeout = getTime() + fieldPopup->timeout;
     }
     if (reloadFolder == 0) {
       statusComplete = 1;  // status is not complete, we got to reload the folder
@@ -687,10 +710,10 @@ static void refreshNext(uint8_t command = 0, uint8_t* data = 0, uint8_t length =
   }
 
   tmr10ms_t time = getTime();
-  if (fieldPopup != 0) {
-    if (time > fieldTimeout && fieldPopup->value != 3) {
+  if (fieldPopup != nullptr) {
+    if (time > fieldTimeout && fieldPopup->status != STEP_CONFIRM) {
       crossfireTelemetryPush4(0x2D, fieldPopup->id, 6); // lcsQuery
-      fieldTimeout = time + fieldPopup->valuesOffset; // + popup timeout
+      fieldTimeout = time + fieldPopup->timeout; // + popup timeout
     }
   } else if (time > devicesRefreshTimeout && expectedFieldsCount < 1) {
     devicesRefreshTimeout = time + 100;
@@ -863,36 +886,32 @@ static uint8_t popupCompat(event_t event) {
 
 static void runPopupPage(event_t event) {
   if (event == EVT_VIRTUAL_EXIT) {
-    crossfireTelemetryPush4(0x2D, fieldPopup->id, 5);
+    crossfireTelemetryPush4(0x2D, fieldPopup->id, STEP_CANCEL);
     fieldTimeout = getTime() + 200;
   }
 
   uint8_t result = 0;
-  if (fieldPopup->value == 0 && fieldPopup->valuesLength != 0) {
+  if (fieldPopup->status == STEP_IDLE && fieldPopup->lastStatus != STEP_IDLE) { // stopped
       popupCompat(event);
       reloadAllField();
-      fieldPopup = 0;
-  } else if (fieldPopup->value == 3) {
+      fieldPopup = nullptr;
+  } else if (fieldPopup->status == STEP_CONFIRM) { // confirmation required
     result = popupCompat(event);
-    if (fieldPopup != 0) {
-      fieldPopup->valuesLength = fieldPopup->value;
-    }
+    fieldPopup->lastStatus = fieldPopup->status;
     if (result == RESULT_OK) {
-      crossfireTelemetryPush4(0x2D, fieldPopup->id, 4);
-      fieldTimeout = getTime() + fieldPopup->valuesOffset;
-      fieldPopup->value = 4;
+      crossfireTelemetryPush4(0x2D, fieldPopup->id, STEP_CONFIRMED); // lcsConfirmed
+      fieldTimeout = getTime() + fieldPopup->timeout; // we are expecting an immediate response
+      fieldPopup->status = STEP_CONFIRMED;
     } else if (result == RESULT_CANCEL) {
-      fieldPopup = 0;
+      fieldPopup = nullptr;
     }
-  } else if (fieldPopup->value == 2) {
+  } else if (fieldPopup->status == STEP_EXECUTING) { // running
     result = popupCompat(event);
-    if (fieldPopup != 0) {
-      fieldPopup->valuesLength = fieldPopup->value;
-    }
+    fieldPopup->lastStatus = fieldPopup->status;
     if (result == RESULT_CANCEL) {
-      crossfireTelemetryPush4(0x2D, fieldPopup->id, 5);
-      fieldTimeout = getTime() + fieldPopup->valuesOffset;
-      fieldPopup = 0;
+      crossfireTelemetryPush4(0x2D, fieldPopup->id, STEP_CANCEL);
+      fieldTimeout = getTime() + fieldPopup->timeout;
+      fieldPopup = nullptr;
     }
   }
 }
@@ -901,13 +920,13 @@ void ELRSV3_stop() {
   registerCrossfireTelemetryCallback(nullptr);
   // reloadAllField();
   UIbackExec();
-  fieldPopup = 0;
+  fieldPopup = nullptr;
   deviceId = 0xEE;
   handsetId = 0xEF;
 
   if (cScriptRunning) {
     cScriptRunning = 0;
-    memset(reusableBuffer.MSC_BOT_Data, 0, 512);
+    memclear(reusableBuffer.MSC_BOT_Data, 512);
     popMenu();
   }
 }
@@ -923,7 +942,7 @@ void ELRSV3_run(event_t event) {
   if (event == EVT_KEY_LONG(KEY_EXIT)) {
     ELRSV3_stop();
   } else { 
-    if (fieldPopup != 0) {
+    if (fieldPopup != nullptr) {
       runPopupPage(event);
     } else {
       runDevicePage(event);
