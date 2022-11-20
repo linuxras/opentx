@@ -32,20 +32,13 @@ uint8_t prev_power=0xFD; // unused power value
 
 uint8_t  packet[AFHDS2A_TXPACKET_SIZE]; 
 
-//#define NUM_CHN 16
-
-// Servo data
-//uint16_t Channel_data[NUM_CHN];
 //Protocol variables
 ID_t ID;
 uint8_t  packet_count = 0;
-//uint8_t  phase;
 uint8_t  bind_phase;
 uint8_t  hopping_frequency[AFHDS2A_NUMFREQ];
 uint8_t  hopping_frequency_no;
-//uint8_t  rx_id[5];
 uint8_t option;   // option value should be between 0 and 70 which gives a value between 50 and 400Hz
-uint8_t sub_protocol;
 
 
 /******************************************************************************/

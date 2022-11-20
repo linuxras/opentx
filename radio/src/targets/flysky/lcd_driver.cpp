@@ -198,7 +198,7 @@ void lcdSetRefVolt(uint8_t val){
 
 void lcdReset() {
     // wait for voltages to be stable
-    delay_ms(20); // TODO: test in low temperatures
+    delay_ms(20);
     LCD_RST_LO();
     delay_us(20);  // at least 5us
     LCD_RST_HI();

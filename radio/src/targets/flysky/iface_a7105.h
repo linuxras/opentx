@@ -73,12 +73,12 @@ extern uint8_t protocol_flags,protocol_flags2;
 extern uint8_t protocol;
 extern uint8_t prev_power; // unused power value
 
-#define RX_RSSI 0
-#define RX_Err  1
-#define RX_IntV 2
-#define RX_ExtV 3
-#define RX_Temp 4
-#define RX_RPM  5
+// #define RX_RSSI 0
+// #define RX_Err  1
+// #define RX_IntV 2
+// #define RX_ExtV 3
+// #define RX_Temp 4
+// #define RX_RPM  5
 
 // extern int16_t telem_AFHDS2A[6];
 // extern uint8_t telem_status;
@@ -105,11 +105,7 @@ extern uint8_t  phase;
 extern uint8_t  bind_phase;
 extern uint8_t  hopping_frequency[AFHDS2A_NUMFREQ];
 extern uint8_t  hopping_frequency_no;
-//extern uint8_t  rx_tx_addr[4];
-//extern uint8_t  rx_id[5];
 extern uint8_t  option;   // option value should be between 0 and 70 which gives a value between 50 and 400Hz
-extern uint8_t  RX_num;
-extern uint8_t  sub_protocol;
 extern volatile uint8_t RadioState;
 
 #define BIND_IN_PROGRESS	protocol_flags &= ~_BV(7)

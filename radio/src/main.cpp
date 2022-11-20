@@ -28,7 +28,6 @@ uint8_t mainRequestFlags = 0;
 
 #if defined(PCBI6X_ELRSV3)
 extern void ELRSV3_stop();
-uint8_t cScriptRunning = 0;
 #endif
 
 #if defined(STM32)
@@ -343,7 +342,7 @@ void handleGui(event_t event) {
   }
   else
 #elif defined(PCBI6X_ELRSV3)
-  if (cScriptRunning == 1) {
+  if (globalData.cScriptRunning == 1) {
     // standalone c script is active
     menuHandlers[menuLevel](event);
   }

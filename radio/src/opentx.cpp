@@ -27,8 +27,6 @@ ModelData g_model;
 Clipboard clipboard;
 #endif
 
-uint8_t unexpectedShutdown = 0;
-
 GlobalData globalData;
 
 uint16_t maxMixerDuration; // step = 0.01ms

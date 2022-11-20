@@ -35,8 +35,6 @@ enum COMMAND_STEP {
 #define TYPE_DEVICE         15
 #define TYPE_DEVICES_FOLDER 16
 
-extern uint8_t cScriptRunning;
-
 struct FieldProps {
   uint8_t nameOffset;
   uint8_t nameLength;
@@ -461,7 +459,7 @@ static void fieldUnifiedDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
   } else { // CMD || DEVICE
     pat = cmdPat;
   }
-  char stringTmp[24];
+  char stringTmp[28];
   tiny_sprintf((char *)&stringTmp, pat, 2, field->nameLength, (char *)&namesBuffer[field->nameOffset]);
   lcdDrawText(textIndent, y, (char *)&stringTmp, attr | BOLD);
 }
@@ -653,10 +651,10 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         TRACE("allocatedFieldsCount %d", allocatedFieldsCount);
         allParamsLoaded = 1;
         fieldId = 1;
-        if (folderAccess != 0) {
-          addBackButton();
-        } else {
+        if (folderAccess == 0) {
           otherDevicesState = BTN_REQUESTED;
+        } else {
+          addBackButton();
         }
       } else if (allParamsLoaded == 0) {
         fieldId++; // fieldId = 1 + (fieldId % (fieldsLen-1));
@@ -744,7 +742,7 @@ static void lcd_title() {
 
   const uint8_t barHeight = 9;
   if (titleShowWarn) {
-    lcdDrawChar(LCD_W - FW - 1, 1, tostring(elrsFlags));
+    lcdDrawChar(LCD_W, 1, tostring(elrsFlags), RIGHT);
   } else {
     lcdDrawText(LCD_W - 1, 1, goodBadPkt, RIGHT);
     lcdDrawVerticalLine(LCD_W - 10, 0, barHeight, SOLID, INVERS);
@@ -770,10 +768,10 @@ static void lcd_warn() {
 }
 
 static void handleDevicePageEvent(event_t event) {
-  if (allocatedFieldsCount == 0) {
+  if (allocatedFieldsCount == 0) { // if there is no field yet
     return;
   } else {
-    if (getFieldById(backButtonId)->nameLength == 0) {
+    if (getFieldById(backButtonId)->nameLength == 0) { // if back button is not assigned yet, means there is no field yet.
       return;
     }
   }
@@ -924,18 +922,16 @@ void ELRSV3_stop() {
   deviceId = 0xEE;
   handsetId = 0xEF;
 
-  if (cScriptRunning) {
-    cScriptRunning = 0;
+  if (globalData.cScriptRunning) {
+    globalData.cScriptRunning = 0;
     memclear(reusableBuffer.MSC_BOT_Data, 512);
     popMenu();
   }
 }
 
 void ELRSV3_run(event_t event) {
-  if (cScriptRunning == 0) {
-    cScriptRunning = 1;
-    expectedFieldsCount = 0;
-    clearFields();
+  if (globalData.cScriptRunning == 0) {
+    globalData.cScriptRunning = 1;
     registerCrossfireTelemetryCallback(refreshNext);
   }
 
