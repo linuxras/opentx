@@ -95,11 +95,6 @@ void menuModelMixOne(event_t event)
     pushMenu(menuChannelsView);
     killEvents(event);
   }
-#elif defined(PCBI6X)
-  if (event == EVT_KEY_LONG(KEY_RIGHT)) {
-    pushMenu(menuChannelsView);
-    killEvents(event);
-  }
 #endif
   MixData * md2 = mixAddress(s_currIdx) ;
   putsChn(PSIZE(TR_MIXER)*FW+FW, 0, md2->destCh+1,0);

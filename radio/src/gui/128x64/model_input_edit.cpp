@@ -81,11 +81,6 @@ void menuModelExpoOne(event_t event)
     pushMenu(menuChannelsView);
     killEvents(event);
   }
-#elif defined(PCBI6X)
-  if (event == EVT_KEY_LONG(KEY_RIGHT)) {
-    pushMenu(menuChannelsView);
-    killEvents(event);
-  }
 #endif
   ExpoData * ed = expoAddress(s_currIdx);
   drawSource(PSIZE(TR_MENUINPUTS)*FW+FW, 0, MIXSRC_FIRST_INPUT+ed->chn, 0);
