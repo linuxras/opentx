@@ -323,7 +323,7 @@ static void strShorten(char * src, const uint8_t maxLen) {
 
 static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
   uint8_t unitLen = strlen((char*)&data[unitOffset]);
-  if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
+  //if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
   field->unitLength = unitLen;
   if (field->type < TYPE_STRING && unitLen > 0) {
     memcpy(&namesBuffer[namesBufferOffset], (char*)&data[unitOffset], unitLen);
