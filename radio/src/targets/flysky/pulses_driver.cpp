@@ -45,32 +45,31 @@ void disable_afhds2a(uint32_t port) {
 
 void init_ppm(uint32_t port) {
   if (port == EXTERNAL_MODULE) {
-    TRACE("Init PPM");
+    TRACE("init_ppm");
     extmodulePpmStart();
   }
 }
 
 void disable_ppm(uint32_t port) {
   if (port == EXTERNAL_MODULE) {
-    TRACE("Disable PPM");
+    TRACE("disable_ppm");
     extmoduleStop();
   }
 }
 
 void init_no_pulses(uint32_t port) {
-  TRACE("Init no pulses");
-  if (port == INTERNAL_MODULE) {    
+  TRACE("init_no_pulses %d", port);
+  if (port == INTERNAL_MODULE) {
     intmoduleNoneStart();
   }
   extmoduleTimerStart(18000, false);
 }
 
 void disable_no_pulses(uint32_t port) {
+  TRACE("disable_no_pulses %d", port);
   if (port == INTERNAL_MODULE) {
-    TRACE("Disable no pulses internal");
     intmoduleStop();
   } else {
-    TRACE("Disable no pulses external");
     extmoduleStop();
   }
 }

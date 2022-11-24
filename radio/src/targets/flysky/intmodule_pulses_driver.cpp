@@ -32,7 +32,7 @@ inline void DisablePRTTim(void) {
 }
 
 void intmoduleStop() {
-  TRACE("intmoduleStop: Stopping internal RF");
+  TRACE("intmoduleStop");
   DisablePRTTim();
   if (ahfds2aEnabled) {
     A7105_Sleep();
@@ -41,7 +41,7 @@ void intmoduleStop() {
 }
 
 void intmoduleNoneStart() {
-  TRACE("intmoduleNoneStart: Init internal timer no pulses");
+  TRACE("intmoduleNoneStart");
     __IO uint32_t tmpreg;
   SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM16EN);
 

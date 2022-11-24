@@ -1762,7 +1762,6 @@ void opentxInit()
 #endif
 
 #if defined(EEPROM)
-  TRACE("storageReadRadioSettings");
   storageReadRadioSettings();
 #endif
 
@@ -1786,7 +1785,6 @@ void opentxInit()
 #endif
 
 #if defined(EEPROM)
-  TRACE("storageReadCurrentModel");
   storageReadCurrentModel();
 #endif
 
@@ -1872,7 +1870,7 @@ void opentxInit()
   if (!globalData.unexpectedShutdown) {
     opentxStart();
   }
-  TRACE("start done");
+
   // TODO Horus does not need this
   if (!g_eeGeneral.unexpectedShutdown) {
     g_eeGeneral.unexpectedShutdown = 1;

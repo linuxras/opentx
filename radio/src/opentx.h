@@ -1200,6 +1200,7 @@ union ReusableBuffer
 
 #if defined(STM32)
   // Data for the USB mass storage driver. If USB mass storage runs no menu is not allowed to be displayed
+  // Used also by PCBI6X ExpressLRS configurator.
   uint8_t MSC_BOT_Data[MSC_MEDIA_PACKET];
 #endif
 };

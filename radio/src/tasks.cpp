@@ -74,6 +74,7 @@ bool isModuleSynchronous(uint8_t moduleIdx) {
 
 void sendSynchronousPulses(uint8_t runMask) {
   if ((runMask & (1 << EXTERNAL_MODULE)) && isModuleSynchronous(EXTERNAL_MODULE)) {
+    // Only for CRSF currently (guarded by returned value)
     if (setupPulses(EXTERNAL_MODULE)) {
       extmoduleSendNextFrame();
     }
