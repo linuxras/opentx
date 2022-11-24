@@ -34,6 +34,7 @@ void extmoduleSendNextFrame();
 //   TRACE("EnablePPMOut");
 //   SET_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
 // }
+
 inline void DisablePPMOut(void) {
   TRACE("DisablePPMOut");
   CLEAR_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
@@ -127,7 +128,7 @@ void extmodulePpmStart() {
 inline void extmoduleSendNextFrame() {
   static bool delay = true;
   static uint16_t delay_halfus = GET_PPM_DELAY(EXTERNAL_MODULE) * 2;
-  if (moduleState[EXTERNAL_MODULE].protocol == PROTO_PPM) {
+  if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM) {
     //TRACE("modulePulsesData[EXTERNAL_MODULE].ppm: %p",(void*)&modulePulsesData[EXTERNAL_MODULE].ppm);
     //DUMP((uint8_t*)(modulePulsesData[EXTERNAL_MODULE].ppm.pulses), 40);
     static uint16_t *pulsePtr = modulePulsesData[EXTERNAL_MODULE].ppm.ptr;
@@ -151,13 +152,12 @@ inline void extmoduleSendNextFrame() {
     }
     delay = !delay;
 #if defined(CROSSFIRE)
-  } else if (moduleState[EXTERNAL_MODULE].protocol == PROTO_CROSSFIRE) {
+  } else if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_CROSSFIRE) {
     if (modulePulsesData[EXTERNAL_MODULE].crossfire.length > 0) {
       sportSendBuffer(
           modulePulsesData[EXTERNAL_MODULE].crossfire.pulses,
           modulePulsesData[EXTERNAL_MODULE].crossfire.length);
     }
-
 #endif
   } else {
     EXTMODULE_TIMER->DIER |= TIM_DIER_CC2IE;
@@ -167,10 +167,13 @@ inline void extmoduleSendNextFrame() {
 extern "C" void EXTMODULE_TIMER_IRQHandler() {
   if (EXTMODULE_TIMER->SR & TIM_SR_CC2IF) {  // Compare PPM-OUT
     EXTMODULE_TIMER->SR &= ~TIM_SR_CC2IF;    // Clears interrupt on ch2
-    if ((g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_CROSSFIRE && moduleState[EXTERNAL_MODULE].protocol == PROTO_CROSSFIRE) || moduleState[EXTERNAL_MODULE].protocol == PROTO_NONE) {
+    if ((moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_CROSSFIRE && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_CROSSFIRE) ||
+        (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_PPM) ||
+         moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_NONE) {
       setupPulses(EXTERNAL_MODULE);
     }
-    if (moduleState[EXTERNAL_MODULE].protocol != PROTO_CROSSFIRE) {
+    // Only for PPM, CRSF is handled in sendSynchronousPulses
+    if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM) {
       extmoduleSendNextFrame();
     }
   }

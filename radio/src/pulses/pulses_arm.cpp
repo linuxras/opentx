@@ -27,10 +27,7 @@
 #include "mixer_scheduler.h"
 
 uint8_t s_pulses_paused = 0;
-ModuleState moduleState[NUM_MODULES] = {
-  { .protocol=255, .mode=0, .counter=100 },
-  { .protocol=255, .mode=0, .counter=100 }
-};
+ModuleState moduleState[NUM_MODULES];
 ModulePulsesData modulePulsesData[NUM_MODULES] __DMA;
 TrainerPulsesData trainerPulsesData __DMA;
 
@@ -47,7 +44,7 @@ uint8_t getRequiredProtocol(uint8_t port) {
       switch (g_model.moduleData[INTERNAL_MODULE].type) {
 #if defined(TARANIS_INTERNAL_PPM)
         case MODULE_TYPE_PPM:
-          required_protocol = PROTO_PPM;
+          required_protocol = PROTOCOL_CHANNELS_PPM;
           break;
 #endif
 #if defined(PXX)
@@ -56,10 +53,10 @@ uint8_t getRequiredProtocol(uint8_t port) {
           break;
 #endif
         case MODULE_TYPE_AFHDS2A_SPI:
-          required_protocol = PROTO_AFHDS2A_SPI;
+          required_protocol = PROTOCOL_CHANNELS_AFHDS2A_SPI;
           break;
         default:
-          required_protocol = PROTO_NONE;
+          required_protocol = PROTOCOL_CHANNELS_NONE;
           break;
       }
       break;
@@ -68,7 +65,7 @@ uint8_t getRequiredProtocol(uint8_t port) {
     default:
       switch (g_model.moduleData[EXTERNAL_MODULE].type) {
         case MODULE_TYPE_PPM:
-          required_protocol = PROTO_PPM;
+          required_protocol = PROTOCOL_CHANNELS_PPM;
           break;
 #if defined(PXX) || defined(PXX2)
         case MODULE_TYPE_XJT:
@@ -78,12 +75,12 @@ uint8_t getRequiredProtocol(uint8_t port) {
 #endif
 #if !defined(PCBI6X)
         case MODULE_TYPE_SBUS:
-          required_protocol = PROTO_SBUS;
+          required_protocol = PROTOCOL_CHANNELS_SBUS;
           break;
 #endif
 #if defined(MULTIMODULE)
         case MODULE_TYPE_MULTIMODULE:
-          required_protocol = PROTO_MULTIMODULE;
+          required_protocol = PROTOCOL_CHANNELS_MULTIMODULE;
           break;
 #endif
 #if defined(DSM2)
@@ -95,7 +92,7 @@ uint8_t getRequiredProtocol(uint8_t port) {
             if (moduleState[EXTERNAL_MODULE].mode == MODULE_MODE_BIND) {
               if (bindStartTime == 0) bindStartTime = get_tmr10ms();
               if ((tmr10ms_t)(get_tmr10ms() - bindStartTime) < 100) {
-                required_protocol = PROTO_NONE;
+                required_protocol = PROTOCOL_CHANNELS_NONE;
                 break;
               }
             } else {
@@ -106,24 +103,24 @@ uint8_t getRequiredProtocol(uint8_t port) {
 #endif
 #if defined(CROSSFIRE)
         case MODULE_TYPE_CROSSFIRE:
-          required_protocol = PROTO_CROSSFIRE;
+          required_protocol = PROTOCOL_CHANNELS_CROSSFIRE;
           break;
 #endif
         default:
-          required_protocol = PROTO_NONE;
+          required_protocol = PROTOCOL_CHANNELS_NONE;
           break;
       }
       break;
   }
 
   if (s_pulses_paused) {
-    required_protocol = PROTO_NONE;
+    required_protocol = PROTOCOL_CHANNELS_NONE;
   }
 
 #if 0
   // will need an EEPROM conversion
   if (moduleState[port].mode == MODULE_OFF) {
-    required_protocol = PROTO_NONE;
+    required_protocol = PROTOCOL_CHANNELS_NONE;
   }
 #endif
 
@@ -150,7 +147,7 @@ bool setupPulses(uint8_t port) {
   bool send = false;
 
   uint8_t required_protocol = getRequiredProtocol(port);
-  
+
   heartbeat |= (HEART_TIMER_PULSES << port);
 
   if (moduleState[port].protocol != required_protocol) {
@@ -171,7 +168,7 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(CROSSFIRE)
-      case PROTO_CROSSFIRE:
+      case PROTOCOL_CHANNELS_CROSSFIRE:
         disable_module_timer(port);
         break;
 #endif
@@ -183,17 +180,17 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(MULTIMODULE)
-      case PROTO_MULTIMODULE:
+      case PROTOCOL_CHANNELS_MULTIMODULE:
 #endif
-      case PROTO_AFHDS2A_SPI:
+      case PROTOCOL_CHANNELS_AFHDS2A_SPI:
         disable_afhds2a(port);
         break;
 #if !defined(PCBI6X)
-      case PROTO_SBUS:
+      case PROTOCOL_CHANNELS_SBUS:
         disable_serial(port);
         break;
 #endif
-      case PROTO_PPM:
+      case PROTOCOL_CHANNELS_PPM:
         disable_ppm(port);
         break;
 
@@ -214,7 +211,7 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if !defined(PCBI6X)
-    case PROTO_SBUS:
+    case PROTOCOL_CHANNELS_SBUS:
       setupPulsesSbus(port);
       scheduleNextMixerCalculation(port, SBUS_PERIOD);
       break;
@@ -230,7 +227,7 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(CROSSFIRE)
-    case PROTO_CROSSFIRE:
+    case PROTOCOL_CHANNELS_CROSSFIRE:
       if (telemetryProtocol == PROTOCOL_PULSES_CROSSFIRE && !init_needed) {
         ModuleSyncStatus& status = getModuleSyncStatus(EXTERNAL_MODULE);
         if (status.isValid())
@@ -255,21 +252,21 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(MULTIMODULE)
-    case PROTO_MULTIMODULE:
+    case PROTOCOL_CHANNELS_MULTIMODULE:
       setupPulsesMultimodule(port);
       scheduleNextMixerCalculation(port, MULTIMODULE_PERIOD);
       break;
 #endif
 
-    case PROTO_PPM:
+    case PROTOCOL_CHANNELS_PPM:
 #if defined(PCBSKY9X)
-    case PROTO_NONE:
+    case PROTOCOL_CHANNELS_NONE:
 #endif
       setupPulsesPPMModule(port);
       mixerSchedulerSetPeriod(port, PPM_PERIOD(port));
       break;
 
-    case PROTO_AFHDS2A_SPI:
+    case PROTOCOL_CHANNELS_AFHDS2A_SPI:
       // this is kept inside targets/flysky
       // setupPulsesAfhds2aSpi(port);
       break;
@@ -294,7 +291,7 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(CROSSFIRE)
-      case PROTO_CROSSFIRE:
+      case PROTOCOL_CHANNELS_CROSSFIRE:
         EXTERNAL_MODULE_ON();
         mixerSchedulerSetPeriod(EXTERNAL_MODULE, CROSSFIRE_PERIOD);
         send = true;
@@ -308,19 +305,19 @@ bool setupPulses(uint8_t port) {
 #endif
 
 #if defined(MULTIMODULE)
-      case PROTO_MULTIMODULE:
+      case PROTOCOL_CHANNELS_MULTIMODULE:
         init_serial(port, MULTIMODULE_BAUDRATE, MULTIMODULE_PERIOD * 2000);
         break;
 #endif
 #if !defined(PCBI6X)
-      case PROTO_SBUS:
+      case PROTOCOL_CHANNELS_SBUS:
         init_serial(port, SBUS_BAUDRATE, SBUS_PERIOD_HALF_US);
         break;
 #endif
-      case PROTO_PPM:
+      case PROTOCOL_CHANNELS_PPM:
         init_ppm(port);
         break;
-      case PROTO_AFHDS2A_SPI:
+      case PROTOCOL_CHANNELS_AFHDS2A_SPI:
         init_afhds2a(port);
         mixerSchedulerSetPeriod(INTERNAL_MODULE, 3860);
         break;
