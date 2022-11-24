@@ -61,9 +61,8 @@ void init_no_pulses(uint32_t port) {
   TRACE("Init no pulses");
   if (port == INTERNAL_MODULE) {    
     intmoduleNoneStart();
-  }else{
-    extmoduleTimerStart(18000, false);
   }
+  extmoduleTimerStart(18000, false);
 }
 
 void disable_no_pulses(uint32_t port) {
