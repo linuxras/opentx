@@ -195,11 +195,11 @@ extern const char STR_OPEN9X[];
 #define OFS_VVARIOCENTER        (OFS_VBEEPCOUNTDOWN + sizeof(TR_VBEEPCOUNTDOWN))
 #if !defined(PCBI6X)
   #define OFS_COUNTRYCODES        (OFS_VVARIOCENTER + sizeof(TR_VVARIOCENTER))
-  #define OFS_USBDETECTMODES      (OFS_COUNTRYCODES + sizeof(TR_COUNTRYCODES))
+  #define OFS_USBMODES            (OFS_COUNTRYCODES + sizeof(TR_COUNTRYCODES))
 #else
-  #define OFS_USBDETECTMODES      (OFS_VVARIOCENTER + sizeof(TR_VVARIOCENTER))
+  #define OFS_USBMODES            (OFS_VVARIOCENTER + sizeof(TR_VVARIOCENTER))
 #endif
-#define OFS_USBMODES            (OFS_USBDETECTMODES + sizeof(TR_USBDETECTMODES))
+
 #define OFS_VFAILSAFE           (OFS_USBMODES + sizeof(TR_USBMODES))
 #define OFS_VTRAINERMODES       (OFS_VFAILSAFE + sizeof(TR_VFAILSAFE))
 #define OFS_TARANIS_PROTOCOLS        (OFS_VTRAINERMODES + sizeof(TR_VTRAINERMODES))
@@ -313,7 +313,6 @@ extern const char STR_OPEN9X[];
   #define STR_VVARIOCENTER      (STR_OPEN9X + OFS_VVARIOCENTER)
 
   #define STR_COUNTRYCODES      (STR_OPEN9X + OFS_COUNTRYCODES)
-  #define STR_USBDETECTMODES    (STR_OPEN9X + OFS_USBDETECTMODES)
   #define STR_USBMODES          (STR_OPEN9X + OFS_USBMODES)
   #define STR_VFAILSAFE         (STR_OPEN9X + OFS_VFAILSAFE)
 
@@ -602,7 +601,7 @@ extern const char STR_NONE[];
 extern const char STR_MENUSENSOR[];
 extern const char STR_SENSOR[];
 extern const char STR_COUNTRYCODE[];
-extern const char STR_USBDETECT[];
+extern const char STR_USBCONNECT[];
 extern const char STR_USBMODE[];
 extern const char STR_DISABLE_INTERNAL[];
 

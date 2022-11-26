@@ -54,7 +54,7 @@ int usbPlugged()
   static uint8_t last_state = 0;
 
 #if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
-  if(globalData.usbDetect == USB_DETECT_ON) {
+  if (globalData.usbConnect) {
     return 1;
   }
 #endif

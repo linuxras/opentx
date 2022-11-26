@@ -38,14 +38,6 @@ enum usbMode {
 #endif
 };
 
-#if defined(PCBI6X)
-enum usbDetect {
-  USB_DETECT_AUTO,
-  USB_DETECT_ON,
-  USB_MAX_DETECT = USB_DETECT_ON
-};
-#endif
-
 int usbPlugged();
 void usbInit();
 void usbStart();

@@ -103,9 +103,6 @@ enum MenuRadioSetupItems {
   // ITEM_SETUP_IMPERIAL,
   IF_FAI_CHOICE(ITEM_SETUP_FAI)
   ITEM_SETUP_SWITCHES_DELAY,
-#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
-  ITEM_SETUP_USB_ENABLE,
-#endif
   CASE_STM32(ITEM_SETUP_USB_MODE)
   ITEM_SETUP_RX_CHANNEL_ORD,
   ITEM_SETUP_STICK_MODE_LABELS,
@@ -181,9 +178,6 @@ void menuRadioSetup(event_t event)
     IF_FAI_CHOICE(0)
     0,
     CASE_STM32(0) // USB mode
-#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
-    0,
-#endif
     0,
     COL_TX_MODE, 0, 1/*to force edit mode*/});
 
@@ -577,11 +571,6 @@ void menuRadioSetup(event_t event)
         lcdDrawText(lcdLastRightPos, y, STR_MS, attr);
         if (attr) CHECK_INCDEC_GENVAR(event, g_eeGeneral.switchesDelay, -15, 100-15);
         break;
-#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
-      case ITEM_SETUP_USB_ENABLE:
-        globalData.usbDetect = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_USBDETECT, STR_USBDETECTMODES, globalData.usbDetect, USB_DETECT_AUTO, USB_MAX_DETECT, attr, event);
-        break;
-#endif
 #if defined(STM32)
       case ITEM_SETUP_USB_MODE:
         g_eeGeneral.USBMode = editChoice(RADIO_SETUP_2ND_COLUMN, y, STR_USBMODE, STR_USBMODES, g_eeGeneral.USBMode, USB_UNSELECTED_MODE, USB_MAX_MODE, attr, event);

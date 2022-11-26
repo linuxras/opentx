@@ -105,11 +105,6 @@
 #define LEN_COUNTRYCODES               TR("\002", "\007")
 #define TR_COUNTRYCODES                TR("US""JP""EU", "America""Japan\0 ""Europe\0")
 
-#if defined(PCBI6X)
-#define LEN_USBDETECTMODES             "\004"
-#define TR_USBDETECTMODES              "Auto""Once"
-#endif
-
 #define LEN_USBMODES                   TR("\006", "\010")
 #if defined(PCBI6X)                    
 #define TR_USBMODES                    TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
@@ -964,7 +959,7 @@
 #define TR_MENUSENSOR                  "SENSOR"
 #define TR_SENSOR                      "SENSOR"
 #define TR_COUNTRYCODE                 "Country code"
-#define TR_USBDETECT                   "USB Detect"
+#define TR_USBCONNECT                  "USB Connect"
 #define TR_USBMODE                     "USB Mode"
 #define TR_VOICELANG                   "Voice language"
 #define TR_UNITSSYSTEM                 "Units"

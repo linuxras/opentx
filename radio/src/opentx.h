@@ -573,7 +573,7 @@ PACK(struct GlobalData {
   uint8_t unexpectedShutdown:1;
   uint8_t sdcardPresent:1;
 #if defined(PCBI6X)
-  uint8_t usbDetect:1;
+  uint8_t usbConnect:1;
   uint8_t cScriptRunning:1;
   uint8_t spare:4;
 #else
