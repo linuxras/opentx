@@ -199,7 +199,6 @@ extern const char STR_OPEN9X[];
 #else
   #define OFS_USBMODES            (OFS_VVARIOCENTER + sizeof(TR_VVARIOCENTER))
 #endif
-
 #define OFS_VFAILSAFE           (OFS_USBMODES + sizeof(TR_USBMODES))
 #define OFS_VTRAINERMODES       (OFS_VFAILSAFE + sizeof(TR_VFAILSAFE))
 #define OFS_TARANIS_PROTOCOLS        (OFS_VTRAINERMODES + sizeof(TR_VTRAINERMODES))

@@ -354,12 +354,13 @@ void menuMainView(event_t event)
 #if defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_SAVEALLDATA);
 #endif
-#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
-      POPUP_MENU_ADD_ITEM(STR_USBCONNECT);
-#endif
       POPUP_MENU_ADD_ITEM(STR_RESET_SUBMENU);
 
       POPUP_MENU_ADD_ITEM(STR_STATISTICS);
+
+#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
+      POPUP_MENU_ADD_ITEM(STR_USBCONNECT);
+#endif
 #if !defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_ABOUT_US);
 #endif
