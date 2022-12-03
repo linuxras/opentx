@@ -177,6 +177,9 @@ extern "C" void TELEMETRY_DMA_TX_IRQHandler(void) {
   DEBUG_INTERRUPT(INT_TELEM_DMA);
   if (DMA_GetITStatus(TELEMETRY_DMA_TX_FLAG_TC)) {
     DMA_ClearITPendingBit(TELEMETRY_DMA_TX_FLAG_TC);
+
+    // clear TC flag before enabling interrupt
+    TELEMETRY_USART->ISR &= ~USART_ISR_TC;
     TELEMETRY_USART->CR1 |= USART_CR1_TCIE;
     if (telemetryProtocol == PROTOCOL_FRSKY_SPORT) {
       outputTelemetryBufferSize = 0;
@@ -199,7 +202,7 @@ extern "C" void TELEMETRY_USART_IRQHandler(void) {
   while (status & (USART_FLAG_RXNE | USART_FLAG_ERRORS)) {
     uint8_t data = TELEMETRY_USART->RDR;
     if (status & USART_FLAG_ERRORS) {
-      //TRACE("%d E", status & USART_FLAG_ERRORS);
+      telemetryErrors++;
       if (status & USART_FLAG_ORE) {
         USART_ClearITPendingBit(TELEMETRY_USART, USART_IT_ORE);
       }
@@ -213,9 +216,7 @@ extern "C" void TELEMETRY_USART_IRQHandler(void) {
         USART_ClearITPendingBit(TELEMETRY_USART, USART_FLAG_PE);
       }
     } else {
-      //TRACE("O");
       telemetryFifo.push(data);
-
 #if defined(LUA)
     if (telemetryProtocol == PROTOCOL_FRSKY_SPORT) {
       static uint8_t prevdata;
