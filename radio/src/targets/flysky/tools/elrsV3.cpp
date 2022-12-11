@@ -66,29 +66,30 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 188; // 165 + 23 (units) => 188
-static constexpr uint8_t VALUES_BUFFER_SIZE = 255; // 154+
-static uint8_t *namesBuffer = &reusableBuffer.MSC_BOT_Data[0];
+static constexpr uint8_t NAMES_BUFFER_SIZE  = 188; // 165 + 19 (units) => 184+
+static constexpr uint8_t VALUES_BUFFER_SIZE = 252; // 242+
+static uint8_t *namesBuffer = &reusableBuffer.cToolData[0];
 uint8_t namesBufferOffset = 0;
-static uint8_t *valuesBuffer = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
+static uint8_t *valuesBuffer = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE];
 //static uint8_t valuesBuffer[VALUES_BUFFER_SIZE];
 uint8_t valuesBufferOffset = 0;
 
 // last 25b are also used for popup messages
 static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 175+
-//static uint8_t *fieldData = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE];
-static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
+static uint8_t *fieldData = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+//static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 static constexpr uint8_t POPUP_MSG_OFFSET = FIELD_DATA_BUFFER_SIZE - 24 - 1;
 // static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 uint8_t fieldDataLen = 0;
 
 static constexpr uint8_t FIELDS_MAX_COUNT = 16;
-static FieldProps fields[FIELDS_MAX_COUNT];
-//static FieldProps *fields = (FieldProps *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
+static constexpr uint8_t FIELDS_SIZE = FIELDS_MAX_COUNT * sizeof(FieldProps);
+//static FieldProps fields[FIELDS_MAX_COUNT];
+static FieldProps *fields = (FieldProps *)&reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
 uint8_t allocatedFieldsCount = 0;
 
 static constexpr uint8_t DEVICES_MAX_COUNT = 8;
-static uint8_t *deviceIds = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+static uint8_t *deviceIds = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE];
 //static uint8_t deviceIds[DEVICES_MAX_COUNT];
 uint8_t devicesLen = 0;
 uint8_t otherDevicesId = 255;
@@ -102,8 +103,8 @@ uint8_t deviceId = 0xEE;
 uint8_t handsetId = 0xEF;
 
 static constexpr uint8_t DEVICE_NAME_MAX_LEN = 20;
-static uint8_t *deviceName = &reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + DEVICES_MAX_COUNT];
-//static char deviceName[DEVICE_NAME_MAX_LEN];
+//static uint8_t *deviceName = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT];
+static char deviceName[DEVICE_NAME_MAX_LEN];
 uint8_t lineIndex = 1;
 uint8_t pageOffset = 0;
 uint8_t edit = 0;
@@ -116,20 +117,18 @@ uint8_t fieldChunk = 0;
 static char goodBadPkt[11] = "?/???    ?";
 uint8_t elrsFlags = 0;
 static constexpr uint8_t ELRS_FLAGS_INFO_MAX_LEN = 20;
-static char *elrsFlagsInfo = (char *)&reusableBuffer.MSC_BOT_Data[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + DEVICES_MAX_COUNT + DEVICE_NAME_MAX_LEN];
-//static char elrsFlagsInfo[ELRS_FLAGS_INFO_MAX_LEN] = "";
+//static char *elrsFlagsInfo = (char *)&reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT + DEVICE_NAME_MAX_LEN];
+static char elrsFlagsInfo[ELRS_FLAGS_INFO_MAX_LEN] = "";
 uint8_t expectedFieldsCount = 0;
 uint8_t backButtonId = 2;
 tmr10ms_t devicesRefreshTimeout = 50;
 uint8_t allParamsLoaded = 0;
 uint8_t folderAccess = 0; // folder id
-uint8_t statusComplete = 0;
 int8_t expectedChunks = -1;
 uint8_t deviceIsELRS_TX = 0;
 tmr10ms_t linkstatTimeout = 100;
 uint8_t titleShowWarn = 0;
 tmr10ms_t titleShowWarnTimeout = 100;
-uint8_t reloadFolder = 0;
 
 static constexpr uint8_t COL2          = 70;
 static constexpr uint8_t maxLineIndex  =  6;
@@ -398,7 +397,7 @@ static void fieldFolderOpen(FieldProps * field) {
   folderAccess = field->id;
   clearFields();
   reloadAllField();
-  if (field->type == TYPE_FOLDER) {
+  if (field->type == TYPE_FOLDER) { // guard because it is reused for devices
     fieldId = field->id + 1; // UX hack: start loading from first folder item to fetch it faster
   }
 }
@@ -562,9 +561,6 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   if (fieldDataLen == 0) {
     expectedChunks = -1;
   }
-  if (fieldId == reloadFolder) { // if we finally receive the folder id, reset the pending reload folder flag
-    reloadFolder = 0;
-  }
 
   // Get by id or use temporary one to decide later if it should be stored
   FieldProps tempField = {0};
@@ -590,7 +586,6 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
 
   if (chunksRemain > 0) {
     fieldChunk = fieldChunk + 1;
-    statusComplete = 0;
   } else {
     TRACE("%d %s %d", fieldId, &fieldData[2], fieldDataLen);
 //    DUMP(fieldData, fieldDataLen);
@@ -635,7 +630,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
       storeField(field);
     }
 
-    if (fieldPopup == 0) {
+    if (fieldPopup == nullptr) {
       if (fieldId == expectedFieldsCount) { // if we have loaded all params
         TRACE("namesBufferOffset %d", namesBufferOffset);
 //        DUMP(namesBuffer, NAMES_BUFFER_SIZE);
@@ -651,17 +646,10 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
         }
       } else if (allParamsLoaded == 0) {
         fieldId++; // fieldId = 1 + (fieldId % (fieldsLen-1));
-      } else if (reloadFolder != 0) { // if we still have to reload the folder name
-        fieldId = reloadFolder;
-        fieldChunk = 0;
-        statusComplete = 0;
       }
       fieldTimeout = getTime() + 200;
     } else {
       fieldTimeout = getTime() + fieldPopup->timeout;
-    }
-    if (reloadFolder == 0) {
-      statusComplete = 1;  // status is not complete, we got to reload the folder
     }
     fieldDataLen = 0;
   }
@@ -693,8 +681,8 @@ static void refreshNextCallback(uint8_t command, uint8_t* data, uint8_t length) 
     parseDeviceInfoMessage(data);
   } else if (command == 0x2B && folderAccess != otherDevicesId /* !devicesFolderOpened */) {
     parseParameterInfoMessage(data, length);
-    if (allParamsLoaded < 1 || statusComplete == 0) {
-      fieldTimeout = 0;
+    if (allParamsLoaded < 1) {
+      fieldTimeout = 0; // request next chunk immediately
     }
   } else if (command == 0x2E) {
     parseElrsInfoMessage(data);
@@ -712,7 +700,7 @@ static void refreshNext() {
     devicesRefreshTimeout = time + 100;
     crossfireTelemetryPing();
   } else if (time > fieldTimeout && expectedFieldsCount != 0) {
-    if (allParamsLoaded < 1 || statusComplete == 0) {
+    if (allParamsLoaded < 1) {
       crossfireTelemetryPush4(0x2C, fieldId, fieldChunk);
       fieldTimeout = time + 50; // 0.5s
     }
@@ -785,7 +773,7 @@ static void handleDevicePageEvent(event_t event) {
         if (deviceId != 0xEE) {
           changeDeviceId(0xEE); // change device id clear expectedFieldsCount, therefore the next ping will do reloadAllField()
         } else {
-          reloadAllField();
+//          reloadAllField(); // UIBackExec does it
         }
         crossfireTelemetryPing();
       }
@@ -804,19 +792,20 @@ static void handleDevicePageEvent(event_t event) {
           edit = 1 - edit;
         }
         if (!edit) {
-          if (field->type < TYPE_FOLDER || field->type == TYPE_COMMAND) {
-            // For editable field types and commands, request this field's
+          if (field->type == TYPE_COMMAND) {
+            // For commands, request this field's
             // data again, with a short delay to allow the module EEPROM to
             // commit. Do this before save() to allow save to override
             fieldTimeout = getTime() + 20;
             fieldId = field->id;
             fieldChunk = 0;
-            statusComplete = 0;
-            if (field->parent) {
-              // if it is inside a folder, then we reload the folder
-              reloadFolder = field->parent;
-            }
             fieldDataLen = 0;
+          } else if (field->type < TYPE_FOLDER) {
+            // For editable field types reload whole folder
+            fieldTimeout = getTime() + 20;
+            clearFields();
+            reloadAllField();
+            fieldId = field->parent + 1; // Start loading from first folder item
           }
           functions[field->type].save(field);
         }
@@ -919,7 +908,7 @@ void ELRSV3_stop() {
 
 //  if (globalData.cToolRunning) {
     globalData.cToolRunning = 0;
-    memclear(reusableBuffer.MSC_BOT_Data, 512);
+    memclear(reusableBuffer.cToolData, CTOOL_DATA_SIZE);
     popMenu();
 //  }
 }

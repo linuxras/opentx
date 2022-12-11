@@ -365,7 +365,7 @@ void registerCrossfireTelemetryCallback(void (*callback)(uint8_t, uint8_t*, uint
 }
 
 inline void runCrossfireTelemetryCallback(uint8_t command, uint8_t* data, uint8_t length) {
-  if (crossfireTelemetryCallback != 0) {
+  if (crossfireTelemetryCallback != nullptr) {
     crossfireTelemetryCallback(command, data, length);
   }
 }

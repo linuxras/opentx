@@ -206,6 +206,10 @@
   #define RADIO_TOOLS
 #endif
 
+#if defined(PCBI6X_ELRSV3)
+  #define CTOOL_DATA_SIZE 800
+#endif
+
 // RESX range is used for internal calculation; The menu says -100.0 to 100.0; internally it is -1024 to 1024 to allow some optimizations
 #define RESX_SHIFT 10
 #define RESX       1024
@@ -1202,8 +1206,11 @@ union ReusableBuffer
 
 #if defined(STM32)
   // Data for the USB mass storage driver. If USB mass storage runs no menu is not allowed to be displayed
-  // Used also by PCBI6X ExpressLRS configurator.
   uint8_t MSC_BOT_Data[MSC_MEDIA_PACKET];
+#endif
+
+#if defined(PCBI6X_ELRSV3)
+  uint8_t cToolData[CTOOL_DATA_SIZE];
 #endif
 };
 
