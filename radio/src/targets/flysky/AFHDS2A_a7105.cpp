@@ -89,14 +89,9 @@ void AFHDS2A_update_telemetry() {
     // auxSerialPutc('M');
     // auxSerialPutc('P');
     uint8_t len = 0;
-    if (type == 0xAA) {
-      while (len < 7 && packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
-        len++;
-      }
-    } else if (type == 0xAC) {
-      while (len < 26 && packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
-        len++;
-      }
+    uint8_t maxLen = (type == 0xAC) ? 26 : 7;
+    while (len < maxLen && packet[len + 8] != 0xFF) { // AFHDS2A_ID_END
+      len++;
     }
     auxSerialPutc(type);
     auxSerialPutc(len);
