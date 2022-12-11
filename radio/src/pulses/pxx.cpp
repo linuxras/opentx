@@ -131,18 +131,18 @@ template <class PxxTransport>
 uint8_t PxxPulses<PxxTransport>::addFlag1(uint8_t port)
 {
   uint8_t flag1 = (g_model.moduleData[port].rfProtocol << 6);
-  if (moduleFlag[port] == MODULE_BIND) {
+  if (moduleState[port].mode == MODULE_MODE_BIND) {
     flag1 |= (g_eeGeneral.countryCode << 1) | PXX_SEND_BIND;
   }
-  else if (moduleFlag[port] == MODULE_RANGECHECK) {
+  else if (moduleState[port].mode == MODULE_MODE_RANGECHECK) {
     flag1 |= PXX_SEND_RANGECHECK;
   }
   else if (g_model.moduleData[port].failsafeMode != FAILSAFE_NOT_SET && g_model.moduleData[port].failsafeMode != FAILSAFE_RECEIVER) {
-    if (failsafeCounter[port]-- == 0) {
-      failsafeCounter[port] = 1000;
+    if (moduleState[port].counter-- == 0) {
+      moduleState[port].counter = 1000;
       flag1 |= PXX_SEND_FAILSAFE;
     }
-    if (failsafeCounter[port] == 0 && g_model.moduleData[port].channelsCount > 0) {
+    if (moduleState[port]counter == 0 && g_model.moduleData[port].channelsCount > 0) {
       flag1 |= PXX_SEND_FAILSAFE;
     }
   }

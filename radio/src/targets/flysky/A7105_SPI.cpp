@@ -27,25 +27,18 @@ uint8_t prev_power=0xFD; // unused power value
 
 // test telemetry
 
-int16_t telem_AFHDS2A [6];
-uint8_t telem_status = 0;
+// int16_t telem_AFHDS2A [6];
+// uint8_t telem_status = 0;
 
 uint8_t  packet[AFHDS2A_TXPACKET_SIZE]; 
 
-//#define NUM_CHN 16
-
-// Servo data
-//uint16_t Channel_data[NUM_CHN];
 //Protocol variables
 ID_t ID;
 uint8_t  packet_count = 0;
-//uint8_t  phase;
 uint8_t  bind_phase;
 uint8_t  hopping_frequency[AFHDS2A_NUMFREQ];
 uint8_t  hopping_frequency_no;
-//uint8_t  rx_id[5];
 uint8_t option;   // option value should be between 0 and 70 which gives a value between 50 and 400Hz
-uint8_t sub_protocol;
 
 
 /******************************************************************************/
@@ -129,9 +122,8 @@ void A7105_AntSwitch(void) {
 
 }
 
-void A7105_SetTxRxMode(uint8_t mode)
-{
-TX_RX_PutVal(mode);
+void A7105_SetTxRxMode(uint8_t mode) {
+	TX_RX_PutVal(mode);
 }
 
 void A7105_Strobe(uint8_t address) {
@@ -353,8 +345,8 @@ static void __attribute__((unused)) A7105_SetVCOBand(uint8_t vb1, uint8_t vb2)
 // #endif
 
 void A7105_Sleep(void) {
-	A7105_SetTxRxMode(TXRX_OFF);
-    A7105_Strobe(A7105_SLEEP);
+	A7105_WriteReg(A7105_0B_GPIO1_PIN1, 0x33);
+	A7105_WriteReg(A7105_0C_GPIO2_PIN_II, 0x33);
 }
 
 #define ID_NORMAL 0x55201041

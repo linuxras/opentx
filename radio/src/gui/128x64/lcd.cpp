@@ -292,7 +292,7 @@ uint8_t getTextWidth(const char * s, uint8_t len, LcdFlags flags)
 {
   uint8_t width = 0;
   for (int i=0; len==0 || i<len; ++i) {
-    unsigned char c = (flags & ZCHAR) ? idx2char(*s) : *s;
+    unsigned char c = (flags & ZCHAR) ? zchar2char(*s) : *s;
     if (!c) {
       break;
     }
@@ -328,7 +328,7 @@ void lcdDrawSizedText(coord_t x, coord_t y, const char * s, uint8_t len, LcdFlag
     switch (flags & ZCHAR) {
 #if !defined(BOOT)
       case ZCHAR:
-        c = idx2char(*s);
+        c = zchar2char(*s);
         break;
 #endif
       default:
@@ -694,11 +694,11 @@ void drawSource(coord_t x, coord_t y, uint32_t idx, LcdFlags att)
     idx = idx - MIXSRC_Rud;
     if (ZEXIST(g_eeGeneral.anaNames[idx])) {
       if (idx < MIXSRC_FIRST_POT-MIXSRC_Rud )
-        lcdDrawChar(x, y, '\307', att); // stick symbol
+        lcdDrawText(x, y, "\307", att); // stick symbol
       else if (idx <= MIXSRC_LAST_POT-MIXSRC_Rud )
-        lcdDrawChar(x, y, '\310', att); // pot symbol
+        lcdDrawText(x, y, "\310", att); // pot symbol
       else
-        lcdDrawChar(x, y, '\311', att); // slider symbol
+        lcdDrawText(x, y, "\311", att); // slider symbol
       lcdDrawSizedText(lcdNextPos, y, g_eeGeneral.anaNames[idx], LEN_ANA_NAME, ZCHAR|att);
     }
     else {
@@ -708,7 +708,7 @@ void drawSource(coord_t x, coord_t y, uint32_t idx, LcdFlags att)
   else if (idx >= MIXSRC_FIRST_SWITCH && idx <= MIXSRC_LAST_SWITCH) {
     idx = idx-MIXSRC_FIRST_SWITCH;
     if (ZEXIST(g_eeGeneral.switchNames[idx])) {
-      lcdDrawChar(x, y, '\312', att); //switch symbol
+      lcdDrawText(x, y, "\312", att); //switch symbol
       lcdDrawSizedText(lcdNextPos, y, g_eeGeneral.switchNames[idx], LEN_SWITCH_NAME, ZCHAR|att);
     }
     else {
@@ -770,7 +770,7 @@ void putsModelName(coord_t x, coord_t y, char *name, uint8_t id, LcdFlags att)
 void drawSwitch(coord_t x, coord_t y, swsrc_t idx, LcdFlags flags, bool autoBold)
 {
   char s[8];
-  getSwitchString(s, idx);
+  getSwitchPositionName(s, idx);
   if (autoBold && idx != SWSRC_NONE && getSwitch(idx))
     flags |= BOLD;
   lcdDrawText(x, y, s, flags);

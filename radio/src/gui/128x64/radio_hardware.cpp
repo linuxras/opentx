@@ -169,10 +169,10 @@ enum MenuRadioHardwareItems {
 #else
 #define BLUETOOTH_ROWS
 #endif
-#if defined(PCBXLITE) || defined(PCBI6X)
+#if defined(PCBXLITE)
 #define SWITCH_TYPE_MAX(sw)            (SWITCH_3POS)
-// #elif defined(PCBI6X)
-// #define SWITCH_TYPE_MAX(sw)            ((MIXSRC_SC-MIXSRC_FIRST_SWITCH == sw) ? SWITCH_3POS : SWITCH_2POS)
+#elif defined(PCBI6X)
+#define SWITCH_TYPE_MAX(sw)            ((MIXSRC_SC-MIXSRC_FIRST_SWITCH == sw) ? SWITCH_3POS : SWITCH_2POS)
 #else
 #define SWITCH_TYPE_MAX(sw)            ((MIXSRC_SF-MIXSRC_FIRST_SWITCH == sw || MIXSRC_SH-MIXSRC_FIRST_SWITCH == sw) ? SWITCH_2POS : SWITCH_3POS)
 #endif
@@ -215,11 +215,13 @@ void menuRadioHardware(event_t event)
 #if defined(CROSSFIRE)
     0 /* max bauds */,
 #endif
+    0 /* Aux serial mode */,
     BLUETOOTH_ROWS
     0 /*jitter filter*/,
 #if defined(MENU_DIAG_ANAS_KEYS)
     1 /* debugs */,
 #endif
+    0 /* factory reset */
   });
 
   uint8_t sub = menuVerticalPosition - HEADER_LINE;

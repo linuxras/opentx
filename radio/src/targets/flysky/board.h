@@ -111,6 +111,10 @@ extern uint16_t sessionTimer;
 void boardInit(void);
 void boardOff(void);
 
+// Timers driver
+void init2MhzTimer();
+void init5msTimer();
+
 // Delays driver
 #ifdef __cplusplus
 extern "C" {
@@ -209,17 +213,11 @@ void extmoduleSendNextFrame();
 
 // Trainer driver
 #define SLAVE_MODE()                    (false) // (g_model.trainerMode == TRAINER_MODE_SLAVE)
-#if defined(PCBX9E) || defined(PCBI6X)
-  #define TRAINER_CONNECTED()           (true)
-#elif defined(PCBX7)
-  #define TRAINER_CONNECTED()           (GPIO_ReadInputDataBit(TRAINER_DETECT_GPIO, TRAINER_DETECT_GPIO_PIN) == Bit_SET)
-#elif defined(PCBXLITE)
-  #define TRAINER_CONNECTED()           false // there is no Trainer jack on Taranis X-Lite
-#else
-  #define TRAINER_CONNECTED()           (GPIO_ReadInputDataBit(TRAINER_DETECT_GPIO, TRAINER_DETECT_GPIO_PIN) == Bit_RESET)
-#endif
+#define TRAINER_CONNECTED()           (true)
+
 #if defined(TRAINER_GPIO)
   void init_trainer_capture(void);
+  void stop_trainer_capture(void);
 #else
   #define init_trainer_capture()
 #endif
@@ -237,7 +235,6 @@ void extmoduleSendNextFrame();
 
 // SBUS
 int sbusGetByte(uint8_t * byte);
-
 
 // Keys driver
 enum EnumKeys
@@ -394,9 +391,10 @@ uint32_t pwrPressedDuration(void);
 void backlightInit(void);
 void backlightDisable(void);
 #define BACKLIGHT_DISABLE()             backlightDisable()
+#define BACKLIGHT_FORCED_ON             101
 uint8_t isBacklightEnabled(void);
-void backlightEnable();
-#define BACKLIGHT_ENABLE()            backlightEnable()
+void backlightEnable(uint8_t level);
+#define BACKLIGHT_ENABLE()            backlightEnable(currentBacklightBright)
 
 #if !defined(SIMU)
   void usbJoystickUpdate();
@@ -473,21 +471,6 @@ void auxSerialStop(void);
 #endif
 #define USART_FLAG_ERRORS (USART_FLAG_ORE | USART_FLAG_PE) // | USART_FLAG_FE, USART_FLAG_NE
 
-// BT driver
-#define BLUETOOTH_DEFAULT_BAUDRATE      115200
-
-void bluetoothInit(uint32_t baudrate);
-void bluetoothWriteWakeup(void);
-uint8_t bluetoothIsWriting(void);
-void bluetoothDone(void);
-
-// LED driver
-void ledInit(void);
-void ledOff(void);
-void ledRed(void);
-void ledGreen(void);
-void ledBlue(void);
-
 // LCD driver
 #define LCD_W                           128
 #define LCD_H                           64
@@ -499,7 +482,6 @@ void ledBlue(void);
 #define lcdRefreshWait()
 
 void lcdInit(void);
-void lcdInitFinish(void);
 void lcdOff(void);
 void lcdSetRefVolt(unsigned char val);
 void lcdSetContrast(void);
@@ -510,7 +492,9 @@ void checkTrainerSettings(void);
 
 #if defined(__cplusplus)
 //#include "fifo.h"
-//#include "dmafifo.h"
+#if defined(AUX_SERIAL_DMA_Channel_RX)
+#include "dmafifo.h"
+#endif // AUX_SERIAL_DMA_Channel_RX
 
 #if defined(CROSSFIRE)
 #define TELEMETRY_FIFO_SIZE             128
@@ -518,8 +502,10 @@ void checkTrainerSettings(void);
 #define TELEMETRY_FIFO_SIZE             64
 #endif
 
-//extern Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryFifo;
-//extern DMAFifo<32> auxSerialRxFifo;
+// extern Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryFifo;
+#if defined(AUX_SERIAL_DMA_Channel_RX)
+extern DMAFifo<32> auxSerialRxFifo;
+#endif // AUX_SERIAL_DMA_Channel_RX
 #endif
 
 

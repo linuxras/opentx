@@ -77,7 +77,7 @@
   #define MAX_EXPOS                    14
   #define MAX_LOGICAL_SWITCHES         12
   #define MAX_SPECIAL_FUNCTIONS        11 // number of functions assigned to switches
-  #define MAX_TRAINER_CHANNELS         8
+  #define MAX_TRAINER_CHANNELS         16
   #define MAX_INPUTS                   16
   #define MAX_TELEMETRY_SENSORS        26 // 48b each
   #define MAX_SCRIPTS				           0
@@ -209,7 +209,9 @@ enum BeeperMode {
   };
   enum TrainerMode {
     TRAINER_MODE_MASTER_TRAINER_JACK,
+#if !defined(PCBI6X)
     TRAINER_MODE_SLAVE,
+#endif
 #if defined(PCBTARANIS)
     TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE,
     TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE,
@@ -232,6 +234,8 @@ enum BeeperMode {
   #define TRAINER_MODE_MAX()             TRAINER_MODE_SLAVE_BLUETOOTH
 #elif defined(PCBX7) || defined(PCBXLITE)
   #define TRAINER_MODE_MAX()             TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE
+#elif defined(PCBI6X)
+  #define TRAINER_MODE_MAX()             TRAINER_MODE_MASTER_BATTERY_COMPARTMENT
 #else
   #define TRAINER_MODE_MAX()             HAS_WIRELESS_TRAINER_HARDWARE() ? TRAINER_MODE_MASTER_BATTERY_COMPARTMENT : TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE
 #endif
@@ -253,7 +257,11 @@ enum UartModes {
   UART_MODE_TELEMETRY_MIRROR,
 #if !defined(PCBI6X)
   UART_MODE_TELEMETRY,
+#endif
+#if defined(SBUS)
   UART_MODE_SBUS_TRAINER,
+#endif
+#if defined(LUA)
   UART_MODE_LUA,
 #endif
   UART_MODE_COUNT,

@@ -22,6 +22,8 @@
 #define _DEFINITIONS_H_
 
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #if !defined(UNUSED)
   #define UNUSED(x)           ((void)(x)) /* to avoid warnings */
@@ -63,6 +65,10 @@
 #else
   #define CONVERT_PTR_UINT(x) ((uint32_t)(x))
   #define CONVERT_UINT_PTR(x) ((uint32_t *)(x))
+#endif
+
+#if !defined(DIM)
+  #define DIM(__arr) (sizeof((__arr)) / sizeof((__arr)[0]))
 #endif
 
 #endif // _DEFINITIONS_H_

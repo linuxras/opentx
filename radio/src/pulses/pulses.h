@@ -21,20 +21,19 @@
 #ifndef _PULSES_H_
 #define _PULSES_H_
 
-enum ModuleFlag
+enum ModuleSettingsMode
 {
-  MODULE_NORMAL_MODE,
-  MODULE_RANGECHECK,
-  MODULE_BIND,
-  // MODULE_OFF, // will need an EEPROM conversion
+  MODULE_MODE_NORMAL,
+  MODULE_MODE_RANGECHECK,
+  MODULE_MODE_BIND
 };
 
-  extern uint8_t moduleFlag[NUM_MODULES];
+//extern ModuleState moduleState[NUM_MODULES];
 
 #if NUM_MODULES > 1
-  #define IS_RANGECHECK_ENABLE()             (moduleFlag[0] == MODULE_RANGECHECK || moduleFlag[1] == MODULE_RANGECHECK)
+  #define IS_RANGECHECK_ENABLE()             (moduleState[0].mode == MODULE_MODE_RANGECHECK || moduleState[1].mode == MODULE_MODE_RANGECHECK)
 #else
-  #define IS_RANGECHECK_ENABLE()             (moduleFlag[0] == MODULE_RANGECHECK)
+  #define IS_RANGECHECK_ENABLE()             (moduleState[0].mode == MODULE_MODE_RANGECHECK)
 #endif
 
 #if defined(DSM2) && !defined(PCBTARANIS)
@@ -42,7 +41,7 @@ enum ModuleFlag
   extern uint8_t dsm2BindTimer;
 #endif
 
-  #define IS_PPM_PROTOCOL(protocol)          (protocol==PROTO_PPM)
+  #define IS_PPM_PROTOCOL(protocol)          (protocol==PROTOCOL_CHANNELS_PPM)
 
 #if defined(PXX)
   #define IS_PXX_PROTOCOL(protocol)          (protocol==PROTO_PXX)
@@ -63,7 +62,7 @@ enum ModuleFlag
 #endif
 
 #if defined(MULTIMODULE)
-  #define IS_MULTIMODULE_PROTOCOL(protocol)  (protocol==PROTO_MULTIMODULE)
+  #define IS_MULTIMODULE_PROTOCOL(protocol)  (protocol==PROTOCOL_CHANNELS_MULTIMODULE)
   #if !defined(DSM2)
      #error You need to enable DSM2 = PPM for MULTIMODULE support
   #endif
@@ -71,7 +70,7 @@ enum ModuleFlag
   #define IS_MULTIMODULE_PROTOCOL(protocol)  (0)
 #endif
 
-  #define IS_SBUS_PROTOCOL(protocol)         (protocol == PROTO_SBUS)
+  #define IS_SBUS_PROTOCOL(protocol)         (protocol == PROTOCOL_CHANNELS_SBUS)
 
   #include "pulses_arm.h"
 

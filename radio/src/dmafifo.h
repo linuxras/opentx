@@ -27,7 +27,11 @@ template <int N>
 class DMAFifo
 {
   public:
-    DMAFifo(DMA_Stream_TypeDef * stream):
+#if defined(STM32F0)
+    explicit DMAFifo(DMA_Channel_TypeDef * stream):
+#else
+    explicit DMAFifo(DMA_Stream_TypeDef * stream):
+#endif
       stream(stream),
       ridx(0)
     {
@@ -45,7 +49,11 @@ class DMAFifo
 
     uint8_t last(int index)
     {
+#if defined(STM32F0)
+      return fifo[(2*N - stream->CNDTR - index) & (N-1)];
+#else
       return fifo[(2*N - stream->NDTR - index) & (N-1)];
+#endif
     }
 
     bool isEmpty()
@@ -53,7 +61,11 @@ class DMAFifo
 #if defined(SIMU)
       return true;
 #endif
+#if defined(STM32F0)
+      return (ridx == N - stream->CNDTR);
+#else
       return (ridx == N - stream->NDTR);
+#endif
     }
 
     bool pop(uint8_t & element)
@@ -73,9 +85,13 @@ class DMAFifo
       return fifo;
     }
 
+#if defined(STM32F0)
+    DMA_Channel_TypeDef * stream;
+#else
+    DMA_Stream_TypeDef * stream;
+#endif
   protected:
     uint8_t fifo[N];
-    DMA_Stream_TypeDef * stream;
     volatile uint32_t ridx;
 };
 

@@ -1,8 +1,7 @@
 /**
  * According to: https://jeelabs.org/2018/hardware-crc
- * HW CRC is about 16x faster than lookup table implementation
+ * HW CRC can be 16x faster than lookup table implementation
  * 
- * It looks like in OpentTX context this is only possible on STM32F072 ;)
  * Only crc8, (crc16 is used in frsky fw update)
  */
 #include "stm32f0xx_crc.h"

@@ -638,7 +638,7 @@ void checkSwitches()
     }
 
     LED_ERROR_BEGIN();
-    backlightOn();
+    resetBacklightTimeout();
 
     // first - display warning
 #if defined(PCBTARANIS) || defined(PCBHORUS)|| defined(PCBI6X)
@@ -675,6 +675,7 @@ void checkSwitches()
           LcdFlags attr = ((states & mask) == (switches_states & mask)) ? 0 : INVERS;
           if (attr) {
 #if defined(PCBI6X)
+            UNUSED(numWarnings);
             char c = "\300-\301"[(states & mask) >> (i*2)];
             drawSource(x, y, MIXSRC_FIRST_SWITCH+i, attr);
             lcdDrawChar(lcdNextPos, y, c, attr);

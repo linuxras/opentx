@@ -187,59 +187,6 @@ void initBuzzerTimer()
   TIM1->BDTR |= TIM_BDTR_MOE;
 }
 
-// Starts TIMER at 2MHz
-void init2MhzTimer()
-{
-  TIMER_2MHz_TIMER->PSC = (PERI1_FREQUENCY * TIMER_MULT_APB1) / 2000000 - 1; // 0.5 uS, 2 MHz
-  TIMER_2MHz_TIMER->ARR = 65535;
-  TIMER_2MHz_TIMER->CR2 = 0;
-  TIMER_2MHz_TIMER->CR1 = TIM_CR1_CEN;
-}
-
-// Starts TIMER at 200Hz (5ms)
-void init5msTimer()
-{
-  INTERRUPT_xMS_TIMER->ARR = 4999;                                              // 5mS in uS
-  INTERRUPT_xMS_TIMER->PSC = (PERI1_FREQUENCY * TIMER_MULT_APB1) / 1000000 - 1; // 1uS
-  INTERRUPT_xMS_TIMER->CCER = 0;
-  INTERRUPT_xMS_TIMER->CCMR1 = 0;
-  INTERRUPT_xMS_TIMER->EGR = 0;
-  INTERRUPT_xMS_TIMER->CR1 = 5;
-  INTERRUPT_xMS_TIMER->DIER |= 1;
-
-  NVIC_EnableIRQ(INTERRUPT_xMS_IRQn);
-  NVIC_SetPriority(INTERRUPT_xMS_IRQn, 7);
-}
-
-void stop5msTimer(void)
-{
-  INTERRUPT_xMS_TIMER->CR1 = 0; // stop timer
-  NVIC_DisableIRQ(INTERRUPT_xMS_IRQn);
-}
-
-void interrupt5ms()
-{
-  static uint32_t pre_scale; // Used to get 10 Hz counter
-  if (++pre_scale >= 2)
-  {
-    BUZZER_HEARTBEAT();
-    pre_scale = 0;
-    DEBUG_TIMER_START(debugTimerPer10ms);
-    DEBUG_TIMER_SAMPLE(debugTimerPer10msPeriod);
-    per10ms();
-    DEBUG_TIMER_STOP(debugTimerPer10ms);
-  }
-}
-
-#if !defined(SIMU)
-extern "C" void INTERRUPT_xMS_IRQHandler()
-{
-  INTERRUPT_xMS_TIMER->SR &= ~TIM_SR_UIF;
-  interrupt5ms();
-  DEBUG_INTERRUPT(INT_5MS);
-}
-#endif
-
 void boardInit()
 {
 #if defined(STM32F0) && defined(BOOT)
@@ -256,18 +203,18 @@ void boardInit()
   RCC_APB1PeriphClockCmd(RCC_APB1_LIST, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2_LIST, ENABLE);
 
-#if defined(DEBUG) && defined(AUX_SERIAL_GPIO)
-  auxSerialInit(UART_MODE_DEBUG, 0); // default serial mode (None if DEBUG not defined)
-  TRACE("\ni6X board started :)");
-  TRACE("RCC->CSR = %08x", RCC->CSR);
-#endif
-
   pwrInit();
   keysInit();
 
   if (readTrims() == BOOTLOADER_KEYS) {
     SystemBootloaderJump();
   }
+
+#if defined(DEBUG) && defined(AUX_SERIAL_GPIO)
+  auxSerialInit(UART_MODE_DEBUG, 0); // default serial mode (None if DEBUG not defined)
+  TRACE("\ni6X board started :)");
+  // TRACE("RCC->CSR = %08x", RCC->CSR);
+#endif
 
   crcInit();
   adcInit();
@@ -297,6 +244,7 @@ void boardInit()
 
 void boardOff()
 {
+#if !defined(PWR_BUTTON_SWITCH) // not really useful on i6X
   BACKLIGHT_DISABLE();
 
 //#if defined(PWR_BUTTON_PRESS)
@@ -308,69 +256,11 @@ void boardOff()
   lcdOff();
   SysTick->CTRL = 0; // turn off systick
   pwrOff();
-}
 
-uint8_t currentTrainerMode = 0xff;
-
-void checkTrainerSettings()
-{
-  uint8_t requiredTrainerMode = g_model.trainerMode;
-  if (requiredTrainerMode != currentTrainerMode)
-  {
-    switch (currentTrainerMode)
-    {
-    case TRAINER_MODE_MASTER_TRAINER_JACK:
-      //stop_trainer_capture();
-      break;
-    /*
-    case TRAINER_MODE_SLAVE:
-      stop_trainer_ppm();
-      break;
-
-      case TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE:
-        stop_cppm_on_heartbeat_capture() ;
-        break;
-      case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
-        stop_sbus_on_heartbeat_capture() ;
-        break;*/
-#if defined(TRAINER_BATTERY_COMPARTMENT)
-    case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
-      //auxSerialStop();
-      break;
-#endif
-    }
-
-    currentTrainerMode = requiredTrainerMode;
-    switch (requiredTrainerMode)
-    {
-    /*
-    case TRAINER_MODE_SLAVE:
-      init_trainer_ppm();
-      break;
-
-      case TRAINER_MODE_MASTER_CPPM_EXTERNAL_MODULE:
-         init_cppm_on_heartbeat_capture();
-         break;
-      case TRAINER_MODE_MASTER_SBUS_EXTERNAL_MODULE:
-         init_sbus_on_heartbeat_capture();
-         break;
-    */
-
-#if defined(TRAINER_BATTERY_COMPARTMENT)
-    case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
-      /*
-        if (g_eeGeneral.auxSerialMode == UART_MODE_SBUS_TRAINER) {
-          auxSerialSbusInit();
-          break;
-      }*/
-      // no break
-#endif
-    default:
-      // master is default
-      init_trainer_capture();
-      break;
-    }
-  }
+  // disable interrupts
+  __disable_irq();
+#endif // PWR_BUTTON_SWITCH
+  // this function must not return!
 }
 
 uint16_t getBatteryVoltage()

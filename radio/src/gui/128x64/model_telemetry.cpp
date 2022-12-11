@@ -133,7 +133,9 @@ enum SensorFields {
   SENSOR_FIELD_ONLYPOSITIVE,
   SENSOR_FIELD_FILTER,
   SENSOR_FIELD_PERSISTENT,
+#if defined(SDCARD)
   SENSOR_FIELD_LOGS,
+#endif
   SENSOR_FIELD_MAX
 };
 
@@ -296,7 +298,7 @@ void menuModelSensor(event_t event)
       case SENSOR_FIELD_PARAM2:
         if (sensor->type == TELEM_TYPE_CALCULATED) {
           if (sensor->formula == TELEM_FORMULA_CELL) {
-            sensor->cell.index = editChoice(SENSOR_2ND_COLUMN, y, STR_CELLINDEX, STR_VCELLINDEX, sensor->cell.index, 0, 8, attr, event);
+            sensor->cell.index = editChoice(SENSOR_2ND_COLUMN, y, STR_CELLINDEX, STR_VCELLINDEX, sensor->cell.index, TELEM_CELL_INDEX_LOWEST, TELEM_CELL_INDEX_LAST, attr, event);
             break;
           }
           else if (sensor->formula == TELEM_FORMULA_DIST) {
@@ -315,7 +317,7 @@ void menuModelSensor(event_t event)
           break;
         }
         else {
-          lcdDrawTextAlignedLeft(y, NO_INDENT(STR_OFFSET));
+          lcdDrawTextAlignedLeft(y, STR_OFFSET);
           if (attr) CHECK_INCDEC_MODELVAR(event, sensor->custom.offset, -30000, +30000);
           if (sensor->prec > 0) attr |= (sensor->prec == 2 ? PREC2 : PREC1);
           lcdDrawNumber(SENSOR_2ND_COLUMN, y, sensor->custom.offset, LEFT|attr);
@@ -328,17 +330,17 @@ void menuModelSensor(event_t event)
 
       case SENSOR_FIELD_PARAM4:
       {
-        drawStringWithIndex(0, y, NO_INDENT(STR_SOURCE), k-SENSOR_FIELD_PARAM1+1);
-        int8_t & source = sensor->calc.sources[k-SENSOR_FIELD_PARAM1];
+        drawStringWithIndex(0, y, STR_SOURCE, k-SENSOR_FIELD_PARAM1+1);
+        int8_t * source = &sensor->calc.sources[k-SENSOR_FIELD_PARAM1];
         if (attr) {
-          source = checkIncDec(event, source, -MAX_TELEMETRY_SENSORS, MAX_TELEMETRY_SENSORS, EE_MODEL|NO_INCDEC_MARKS, isSensorAvailable);
+          *source = checkIncDec(event, *source, -MAX_TELEMETRY_SENSORS, MAX_TELEMETRY_SENSORS, EE_MODEL|NO_INCDEC_MARKS, isSensorAvailable);
         }
-        if (source < 0) {
+        if (*source < 0) {
           lcdDrawChar(SENSOR_2ND_COLUMN, y, '-', attr);
-          drawSource(lcdNextPos, y, MIXSRC_FIRST_TELEM+3*(-1-source), attr);
+          drawSource(lcdNextPos, y, MIXSRC_FIRST_TELEM+3*(-1-*source), attr);
         }
         else {
-          drawSource(SENSOR_2ND_COLUMN, y, source ? MIXSRC_FIRST_TELEM+3*(source-1) : 0, attr);
+          drawSource(SENSOR_2ND_COLUMN, y, *source ? MIXSRC_FIRST_TELEM+3*(*source-1) : 0, attr);
         }
         break;
       }
@@ -362,14 +364,14 @@ void menuModelSensor(event_t event)
         }
         break;
 
+#if defined(SDCARD)
       case SENSOR_FIELD_LOGS:
         ON_OFF_MENU_ITEM(sensor->logs, SENSOR_2ND_COLUMN, y, STR_LOGS, attr, event);
         if (attr && checkIncDec_Ret) {
-#if defined(SDCARD)
           logsClose();
-#endif
         }
         break;
+#endif
 
     }
   }
@@ -575,7 +577,7 @@ void menuModelTelemetryFrsky(event_t event)
         break;
 
       case ITEM_TELEMETRY_VARIO_SOURCE:
-        lcdDrawTextAlignedLeft(y, STR_SOURCE);
+        lcdDrawTextAlignedLeft(y, INDENT TR_SOURCE);
         drawSource(TELEM_COL2, y, g_model.frsky.varioSource ? MIXSRC_FIRST_TELEM+3*(g_model.frsky.varioSource-1) : 0, attr);
         if (attr) {
           g_model.frsky.varioSource = checkIncDec(event, g_model.frsky.varioSource, 0, MAX_TELEMETRY_SENSORS, EE_MODEL|NO_INCDEC_MARKS, isSensorAvailable);

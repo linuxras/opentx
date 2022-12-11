@@ -33,7 +33,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint32_t ADDRESS=0;
-uint8_t USBD_StrDesc[USB_MAX_STR_DESC_SIZ] ;
+extern uint8_t USBD_StrDesc[USB_MAX_STR_DESC_SIZ];
 
 /* Private function prototypes -----------------------------------------------*/
 static void USBD_GetDescriptor(USB_CORE_HANDLE  *pdev, 

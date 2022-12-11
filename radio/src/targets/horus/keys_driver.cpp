@@ -73,7 +73,7 @@ void checkRotaryEncoder()
     }
 #if !defined(BOOT)
     if (g_eeGeneral.backlightMode & e_backlight_mode_keys)
-      backlightOn();
+      resetBacklightTimeout();
 #endif
   }
 }
@@ -169,7 +169,7 @@ void readKeysAndTrims()
 
   if ((keys_input || trims_input) && (g_eeGeneral.backlightMode & e_backlight_mode_keys)) {
     // on keypress turn the light on
-    backlightOn();
+    resetBacklightTimeout();
   }
 }
 

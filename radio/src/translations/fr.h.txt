@@ -65,16 +65,25 @@
 #define TR_VBLMODE                     TR("OFF\0""Btns""Ctrl""Tous""ON\0","OFF\0     ""Touches\0 ""Controles""Tous\0    ""ON\0      ")
 
 #define LEN_TRNMODE                    "\003"
-#define TR_TRNMODE                     "OFF"" +="" :="
+#define TR_TRNMODE                     "OFF""+=\0"":="
 
 #define LEN_TRNCHN                     "\003"
 #define TR_TRNCHN                      "CH1CH2CH3CH4"
 
-#define LEN_AUX_SERIAL_MODES           "\016"
+#if defined(PCBI6X)
+#define LEN_AUX_SERIAL_MODES                 "\015"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0        ""Recopie S-Port""Télémétrie\0   ""Ecolage SBUS\0 ""LUA\0          "
+#define TR_AUX_SERIAL_MODES                  "Debug\0       ""Recopie Télém""Ecolage SBUS\0"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0          ""Recopie S-Port""Télémétrie\0   ""Ecolage SBUS\0 ""LUA\0          "
+#define TR_AUX_SERIAL_MODES                  "OFF\0         ""Recopie Télém""Ecolage SBUS\0"
+#endif
+#else
+#define LEN_AUX_SERIAL_MODES           "\015"
+#if defined(CLI) || defined(DEBUG)
+#define TR_AUX_SERIAL_MODES                  "Debug\0        ""Recopie Télém""Télémétrie\0  ""Ecolage SBUS\0""LUA\0         "
+#else
+#define TR_AUX_SERIAL_MODES                  "OFF\0          ""Recopie Télém""Télémétrie\0  ""Ecolage SBUS\0""LUA\0         "
+#endif
 #endif
 
 #define LEN_SWTYPES                    "\006"
@@ -99,7 +108,11 @@
 #define TR_COUNTRYCODES                TR("US""JP""EU", "USA\0  ""Japon\0""Europe")
 
 #define LEN_USBMODES                   TR("\006", "\010")
+#if defined(PCBI6X)
+#define TR_USBMODES                    TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
+#else
 #define TR_USBMODES                    TR("Popup\0""Joyst\0""Storag""Série\0", "Demander""Joystick""Stockage""Série\0  ")
+#endif
 
 #define LEN_TARANIS_PROTOCOLS  "\004"
 #if defined(PCBI6X)
@@ -180,7 +193,7 @@
 
   #define TR_XPPM
 
-#define TR_VPROTOS                     "PPM\0  " TR_XPPM TR_PXX TR_DSM2 TR_IRPROTOS
+#define TR_VPROTOS                     "PPM\0  " TR_DSM2
 
 #define LEN_POSNEG                     "\003"
 #define TR_POSNEG                      "POS""NEG"
@@ -232,7 +245,7 @@
   #define TR_VVARIO                    "[Vario]\0     "
 #endif
 
-#if defined(AUDIO)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND                     "Jouer son\0   "
 #else
   #define TR_SOUND                     "Bip\0         "
@@ -300,7 +313,7 @@
 
 #define TR_SF_RESERVE                  "[reserve]\0   "
 
-  #define TR_VFSWFUNC                  TR_SF_SAFETY "Ecolage\0     ""Trim instant.""Remise à 0\0  ""Déf.\0        " TR_ADJUST_GVAR "Volume\0      " "DéfFailsafe\0 " "Test Port.\0  " "Bind\0        " TR_SOUND TR_PLAY_TRACK TR_PLAY_VALUE TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE TR_SF_BG_MUSIC TR_VVARIO TR_HAPTIC TR_SDCLOGS "Rétroécl.\0   " TR_SF_SCREENSHOT TR_SF_TEST
+  #define TR_VFSWFUNC                  TR_SF_SAFETY "Ecolage\0     ""Trim instant.""Remise à 0\0  ""Déf.\0        " TR_ADJUST_GVAR "Volume\0      " "DéfFailsafe\0 " "Test Port.\0  " "Bind\0        " TR_SOUND /*TR_PLAY_TRACK TR_PLAY_VALUE*/ TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE /*TR_SF_BG_MUSIC*/ TR_VVARIO TR_HAPTIC /*TR_SDCLOGS*/ "Rétroécl.\0   " TR_SF_SCREENSHOT TR_SF_TEST
 
 #define LEN_VFSWRESET                  TR("\004", "\012")
 
@@ -382,8 +395,13 @@
   #define TR_VARIOSRC                  "Alti\0""Alti+""Vario""A1\0  ""A2\0"
 #endif
 
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\007"
+  #define TR_VTELEMSCREENTYPE          "Rien\0  ""Valeurs""Barres\0"
+#else
   #define LEN_VTELEMSCREENTYPE         "\007"
   #define TR_VTELEMSCREENTYPE          "Rien\0  ""Valeurs""Barres\0""Script\0"
+#endif
 
 #define LEN_GPSFORMAT                  "\004"
 #define TR_GPSFORMAT                   "DMS\0""NMEA"
@@ -439,7 +457,10 @@
 #elif defined(PCBX9E)
   #define TR_POTS_VSRCRAW              "\310F1\0""\310F2\0""\310F3\0""\310F4\0""\311S1\0""\311S2\0""\311LS\0""\311RS\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0""\312SE\0""\312SF\0""\312SG\0""\312SH\0""\312SI\0""\312SJ\0""\312SK\0""\312SL\0""\312SM\0""\312SN\0""\312SO\0""\312SP\0""\312SQ\0""\312SR\0"
-#elif defined(PCBXLITE) || defined(PCBI6X)
+#elif defined(PCBI6X)
+  #define TR_POTS_VSRCRAW              "\310P1\0""\310P2\0"
+  #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
+#elif defined(PCBXLITE)
   #define TR_POTS_VSRCRAW              "\310S1\0""\310S2\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
 #elif defined(PCBX7)
@@ -550,12 +571,16 @@
 
 #if defined(PCBTARANIS) || defined(PCBHORUS)
   #define TR_ENTER                     "[ENTER]"
+#elif defined(PCBI6X)
+  #define TR_ENTER                     "[ OK ]"
 #else
   #define TR_ENTER                     "[MENU]"
 #endif
 
 #if defined(PCBHORUS)
   #define TR_EXIT                      "[RTN]"
+#elif defined(PCBI6X)
+  #define TR_EXIT                      "[CANCEL]"
 #else
   #define TR_EXIT                      "[EXIT]"
 #endif
@@ -616,12 +641,12 @@
 #define TR_SUBTYPE                     INDENT "Sous-type"
 #define TR_NOFREEEXPO                  "Max expos atteint!"
 #define TR_NOFREEMIXER                 "Max mixages atteint!"
-#define TR_SOURCE                      INDENT "Source"
+#define TR_SOURCE                       "Source"
 #define TR_WEIGHT                      "Ratio"
 #define TR_EXPO                        TR("Expo", "Exponentiel")
 #define TR_SIDE                        "Coté"
 #define TR_DIFFERENTIAL                "Différentiel"
-#define TR_OFFSET                      INDENT "Décalage"
+#define TR_OFFSET                       "Décalage"
 #define TR_TRIM                        "Trim"
 #define TR_DREX                        "DRex"
 #define DREX_CHBOX_OFFSET              30
@@ -948,6 +973,7 @@
 #define TR_MENUSENSOR                  "CAPTEUR"
 #define TR_SENSOR                      "SENSOR"
 #define TR_COUNTRYCODE                 TR("Zone géo.", "Zone géographique")
+#define TR_USBCONNECT                  "USB Connect"
 #define TR_USBMODE                     "USB Mode"
 #define TR_VOICELANG                   TR("Langue voix", "Langue annonces vocales")
 #define TR_UNITSSYSTEM                 "Unités"
@@ -966,9 +992,9 @@
 #define TR_RESET_TELEMETRY             TR("Réinit. Télém.", "Réinit. Télémétrie")
 #define TR_STATISTICS                  "Statistiques"
 #define TR_ABOUT_US                    "A propos"
-#define TR_USB_JOYSTICK                "USB Joystick (HID)"
-#define TR_USB_MASS_STORAGE            "Stockage USB (SD)"
-#define TR_USB_SERIAL                  "Port série (Debug)"
+#define TR_USB_JOYSTICK                "USB Joystick"
+#define TR_USB_MASS_STORAGE            "Stockage USB"
+#define TR_USB_SERIAL                  "Port série"
 #define TR_SETUP_SCREENS               "Configuration écrans"
 #define TR_MONITOR_SCREENS             "Moniteurs"
 #define TR_AND_SWITCH                  "ET suppl."
@@ -1042,8 +1068,8 @@
 #define TR_EEBACKUP                    "[ENTER Long]:Sauvegarde"
 #define TR_FACTORYRESET                "[\300ENTER Long]: RAZ usine"
 #else
-#define TR_EEBACKUP                    TR("[ENTER Long]:Sauvegarde", "\004[ENTER Long]: Sauvegarder l'EEPROM")
-#define TR_FACTORYRESET                TR("\001[MENU Long]: RAZ d'usine", "\016[MENU Long]: RAZ d'usine")
+#define TR_EEBACKUP                    TR("Sauvegarde", "Sauvegarder l'EEPROM")
+#define TR_FACTORYRESET                TR("RAZ d'usine", "RAZ d'usine")
 #endif
 #define TR_CONFIRMRESET                TR("Effacer TOUT?","Effacer TOUS modèles/réglages?")
 #define TR_TO_MANY_LUA_SCRIPTS         "Trop de scripts lua!"
@@ -1240,6 +1266,7 @@
 #define ZSTR_CURR                      "Curr"
 #define ZSTR_CAPACITY                  "Capa"
 #define ZSTR_VFAS                      "VFAS"
+#define ZSTR_BATT_PERCENT              "Bat%"
 #define ZSTR_ASPD                      "ASpd"
 #define ZSTR_GSPD                      "GSpd"
 #define ZSTR_HDG                       "Hdg"

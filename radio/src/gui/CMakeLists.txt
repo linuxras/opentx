@@ -9,29 +9,17 @@ set(GUI_SRC
   menu_model.cpp
   model_select.cpp
   model_setup.cpp
+  model_outputs.cpp
   model_logical_switches.cpp
   model_special_functions.cpp
   model_telemetry.cpp
   menu_radio.cpp
   radio_setup.cpp
-  radio_trainer.cpp
   radio_version.cpp
   radio_calibration.cpp
   view_main.cpp
   view_statistics.cpp
   )
-
-if(GUI_DIR STREQUAL 128x64)
-   set(GUI_SRC
-      ${GUI_SRC}
-      model_outputs_arm.cpp
-      )
-else()
-  set(GUI_SRC
-    ${GUI_SRC}
-    model_outputs.cpp
-    )
-endif()
 
 set(SRC
   ${SRC}

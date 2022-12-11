@@ -31,3 +31,21 @@ void init_trainer_capture() {
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;  // erfly6: GPIO_PuPd_UP
   GPIO_Init(TRAINER_GPIO, &GPIO_InitStructure);
 }
+
+void stop_trainer_capture()
+{
+  // disable PPM input capture
+  // nothing to do because it would stop EXTMODULE_TIMER
+}
+
+int sbusGetByte(uint8_t * byte)
+{
+  switch (currentTrainerMode) {
+#if defined(AUX_SERIAL_USART)
+    case TRAINER_MODE_MASTER_BATTERY_COMPARTMENT:
+      return auxSerialRxFifo.pop(*byte);
+#endif
+    default:
+      return false;
+  }
+}

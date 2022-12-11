@@ -27,8 +27,6 @@ ModelData g_model;
 Clipboard clipboard;
 #endif
 
-uint8_t unexpectedShutdown = 0;
-
 GlobalData globalData;
 
 uint16_t maxMixerDuration; // step = 0.01ms
@@ -51,13 +49,13 @@ const uint8_t bchout_ar[] = {
     0x87, 0x8D, 0x93, 0x9C, 0xB1, 0xB4,
     0xC6, 0xC9, 0xD2, 0xD8, 0xE1, 0xE4};
 
-uint8_t channel_order(uint8_t setup, uint8_t x)
+uint8_t channelOrder(uint8_t setup, uint8_t x)
 {
   return ((*(bchout_ar + setup) >> (6 - (x - 1) * 2)) & 3) + 1;
 }
 
-uint8_t channel_order(uint8_t x) {
-  return channel_order(g_eeGeneral.templateSetup, x);
+uint8_t channelOrder(uint8_t x) {
+  return channelOrder(g_eeGeneral.templateSetup, x);
 }
 
 /*
@@ -168,7 +166,7 @@ void per10ms()
 #endif
 
 #if defined(TELEMETRY_FRSKY) || defined(TELEMETRY_JETI)
-  if (!IS_DSM2_SERIAL_PROTOCOL(s_current_protocol[0])) {
+  if (!IS_DSM2_SERIAL_PROTOCOL(moduleState[0].protocol)) {
     telemetryInterrupt10ms();
   }
 #endif
@@ -286,7 +284,7 @@ void generalDefault() {
 
   for (int i = 0; i < NUM_STICKS; ++i) {
     g_eeGeneral.trainer.mix[i].mode = 2;
-    g_eeGeneral.trainer.mix[i].srcChn = channel_order(i + 1) - 1;
+    g_eeGeneral.trainer.mix[i].srcChn = channelOrder(i + 1) - 1;
     g_eeGeneral.trainer.mix[i].studWeight = 100;
   }
 
@@ -333,7 +331,7 @@ void defaultInputs() {
   clearInputs();
 
   for (int i = 0; i < NUM_STICKS; i++) {
-    uint8_t stick_index = channel_order(i + 1);
+    uint8_t stick_index = channelOrder(i + 1);
     ExpoData *expo = expoAddress(i);
     expo->srcRaw = MIXSRC_Rud - 1 + stick_index;
     expo->curve.type = CURVE_REF_EXPO;
@@ -468,8 +466,8 @@ void modelDefault(uint8_t id) {
   g_model.moduleData[INTERNAL_MODULE].type = MODULE_TYPE_AFHDS2A_SPI;
   g_model.moduleData[INTERNAL_MODULE].channelsStart = 0;
   g_model.moduleData[INTERNAL_MODULE].channelsCount = MAX_OUTPUT_CHANNELS;
-  g_model.moduleData[INTERNAL_MODULE].servoFreq = 50;
   g_model.moduleData[INTERNAL_MODULE].subType = AFHDS2A_SUBTYPE_PWM_IBUS;
+  g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq = 50;
 #endif
 
 #if defined(PCBXLITE)
@@ -701,21 +699,35 @@ void checkBacklight() {
     if (inputsMoved()) {
       inactivity.counter = 0;
       if (g_eeGeneral.backlightMode & e_backlight_mode_sticks) {
-        backlightOn();
+        resetBacklightTimeout();
       }
     }
 
-    bool backlightOn = (g_eeGeneral.backlightMode == e_backlight_mode_on || lightOffCounter || isFunctionActive(FUNCTION_BACKLIGHT));
-    if (flashCounter)
-      backlightOn = !backlightOn;
-    if (backlightOn)
+    if (requiredBacklightBright == BACKLIGHT_FORCED_ON) {
+      currentBacklightBright = g_eeGeneral.backlightBright;
       BACKLIGHT_ENABLE();
-    else
-      BACKLIGHT_DISABLE();
+    }
+    else {
+      bool backlightOn = ((g_eeGeneral.backlightMode == e_backlight_mode_on) ||
+                          (g_eeGeneral.backlightMode != e_backlight_mode_off && lightOffCounter) ||
+                          (g_eeGeneral.backlightMode == e_backlight_mode_off && isFunctionActive(FUNCTION_BACKLIGHT)));
+
+      if (flashCounter) {
+        backlightOn = !backlightOn;
+      }
+
+      if (backlightOn) {
+        currentBacklightBright = requiredBacklightBright;
+        BACKLIGHT_ENABLE();
+      }
+      else {
+        BACKLIGHT_DISABLE();
+      }
+    }
   }
 }
 
-void backlightOn() {
+void resetBacklightTimeout() {
   lightOffCounter = ((uint16_t)g_eeGeneral.lightAutoOff * 250) << 1;
 }
 
@@ -738,7 +750,7 @@ void doSplash() {
 #endif
 
   if (SPLASH_NEEDED()) {
-    backlightOn();
+    resetBacklightTimeout();
     drawSplash();
 
 #if defined(PCBSKY9X)
@@ -841,6 +853,18 @@ void checkFailsafe() {
     }
   }
 }
+#elif defined(PCBI6X)
+void checkFailsafe() {
+  for (int i = 0; i < NUM_MODULES; i++) {
+    if (isModuleA7105(i)) {
+      ModuleData &moduleData = g_model.moduleData[i];
+      if (HAS_RF_PROTOCOL_FAILSAFE(moduleData.rfProtocol) && moduleData.failsafeMode == FAILSAFE_NOT_SET) {
+        ALERT(STR_FAILSAFEWARN, STR_NO_FAILSAFE, AU_ERROR);
+        break;
+      }
+    }
+  }
+}
 #else
 #define checkFailsafe()
 #endif
@@ -868,7 +892,7 @@ void checkAll() {
   checkSDVersion();
 #endif
 
-#if !defined(PCBI6X)
+#if defined(SDCARD)
   if (g_model.displayChecklist && modelHasNotes()) {
     readModelNotes();
   }
@@ -938,12 +962,12 @@ void checkThrottleStick()
     }
 
 #if defined(PWR_BUTTON_PRESS)
-    uint32_t pwr_check = pwrCheck();
-    if (pwr_check == e_power_off) {
+    uint32_t power = pwrCheck();
+    if (power == e_power_off) {
       break;
-    } else if (pwr_check == e_power_press) {
+    } else if (power == e_power_press) {
       refresh = true;
-    } else if (pwr_check == e_power_on && refresh) {
+    } else if (power == e_power_on && refresh) {
       RAISE_ALERT(STR_THROTTLEWARN, STR_THROTTLENOTIDLE, STR_PRESSANYKEYTOSKIP, AU_NONE);
       refresh = false;
     }
@@ -1408,11 +1432,7 @@ void doMixerPeriodicUpdates()
         s_cnt_1s -= 10;
         sessionTimer += 1;
         inactivity.counter++;
-#if defined(PCBI6X)
         if ((((uint8_t)inactivity.counter) & 0x07) == 0x01 && g_eeGeneral.inactivityTimer && inactivity.counter > ((uint16_t)g_eeGeneral.inactivityTimer * 60))
-#else
-        if ((((uint8_t)inactivity.counter) & 0x07) == 0x01 && g_eeGeneral.inactivityTimer && g_vbat100mV > 50 && inactivity.counter > ((uint16_t)g_eeGeneral.inactivityTimer * 60))
-#endif
           AUDIO_INACTIVITY();
 
 #if defined(AUDIO) || defined(PCBI6X)
@@ -1459,9 +1479,9 @@ void doMixerPeriodicUpdates()
     static uint8_t countRangecheck = 0;
     for (uint8_t i = 0; i < NUM_MODULES; ++i) {
 #if defined(MULTIMODULE)
-      if (moduleFlag[i] != MODULE_NORMAL_MODE || (i == EXTERNAL_MODULE && multiModuleStatus.isBinding())) {
+      if (moduleState[i].mode != MODULE_MODE_NORMAL || (i == EXTERNAL_MODULE && multiModuleStatus.isBinding())) {
 #else
-      if (moduleFlag[i] != MODULE_NORMAL_MODE) {
+      if (moduleState[i].mode != MODULE_MODE_NORMAL) {
 #endif
         if (++countRangecheck >= 250) {
           countRangecheck = 0;
@@ -1544,14 +1564,27 @@ void opentxClose(uint8_t shutdown) {
   logsClose();
 #endif
 
+  saveAllData();
+
+  while (IS_PLAYING(ID_PLAY_PROMPT_BASE + AU_BYE)) {
+    RTOS_WAIT_MS(10);
+  }
+
+  RTOS_WAIT_MS(100);
+
+#if defined(SDCARD)
+  sdDone();
+#endif
+}
+
+void saveAllData() {
+
   storageFlushCurrentModel();
 
-#if !defined(REVA)
   if (sessionTimer > 0) {
     g_eeGeneral.globalTimer += sessionTimer;
     sessionTimer = 0;
   }
-#endif
 
 #if defined(PCBSKY9X)
   uint32_t mAhUsed = g_eeGeneral.mAhUsed + Current_used * (488 + g_eeGeneral.txCurrentCalibration) / 8192 / 36;
@@ -1563,16 +1596,6 @@ void opentxClose(uint8_t shutdown) {
   g_eeGeneral.unexpectedShutdown = 0;
   storageDirty(EE_GENERAL);
   storageCheck(true);
-
-  while (IS_PLAYING(ID_PLAY_PROMPT_BASE + AU_BYE)) {
-    RTOS_WAIT_MS(10);
-  }
-
-  RTOS_WAIT_MS(100);
-
-#if defined(SDCARD)
-  sdDone();
-#endif
 }
 
 #if defined(STM32)
@@ -1723,9 +1746,8 @@ volatile rotenc_t rotencValue[1] = {0};
 uint8_t rotencSpeed;
 #endif
 
-#define OPENTX_INIT_ARGS
-
-void opentxInit(OPENTX_INIT_ARGS) {
+void opentxInit()
+{
   TRACE("opentxInit");
 
 #if defined(GUI)
@@ -1740,7 +1762,6 @@ void opentxInit(OPENTX_INIT_ARGS) {
 #endif
 
 #if defined(EEPROM)
-  TRACE("storageReadRadioSettings");
   storageReadRadioSettings();
 #endif
 
@@ -1764,7 +1785,6 @@ void opentxInit(OPENTX_INIT_ARGS) {
 #endif
 
 #if defined(EEPROM)
-  TRACE("storageReadCurrentModel");
   storageReadCurrentModel();
 #endif
 
@@ -1817,6 +1837,7 @@ void opentxInit(OPENTX_INIT_ARGS) {
 #endif
 #if defined(AUDIO)
   currentSpeakerVolume = requiredSpeakerVolume = g_eeGeneral.speakerVolume + VOLUME_LEVEL_DEF;
+  currentBacklightBright = requiredBacklightBright = g_eeGeneral.backlightBright;
 #if !defined(SOFTWARE_VOLUME)
   setScaledVolume(currentSpeakerVolume);
 #endif
@@ -1843,13 +1864,13 @@ void opentxInit(OPENTX_INIT_ARGS) {
 
   if (g_eeGeneral.backlightMode != e_backlight_mode_off) {
     // on Tx start turn the light on
-    backlightOn();
+    resetBacklightTimeout();
   }
 
   if (!globalData.unexpectedShutdown) {
     opentxStart();
   }
-  TRACE("start done");
+
   // TODO Horus does not need this
   if (!g_eeGeneral.unexpectedShutdown) {
     g_eeGeneral.unexpectedShutdown = 1;
@@ -1859,11 +1880,8 @@ void opentxInit(OPENTX_INIT_ARGS) {
 #if defined(GUI)
   lcdSetContrast();
 #endif
-  backlightOn();
-  
-#if defined(PCBSKY9X) && !defined(SIMU)
-  init_trainer_capture();
-#endif
+  resetBacklightTimeout();
+
   startPulses();
 
   wdt_enable(WDTO_500MS);

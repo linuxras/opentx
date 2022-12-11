@@ -36,6 +36,7 @@ void testFunc()
 }
 #endif
 
+#if !defined(PCBI6X)
 PLAY_FUNCTION(playValue, source_t idx)
 {
   if (IS_FAI_FORBIDDEN(idx))
@@ -86,6 +87,7 @@ PLAY_FUNCTION(playValue, source_t idx)
     PLAY_NUMBER(val, 0, 0);
   }
 }
+#endif
 
 #if defined(VOICE)
 void playCustomFunctionFile(const CustomFunctionData * sd, uint8_t id)
@@ -130,8 +132,10 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
   MASK_FUNC_TYPE newActiveFunctions  = 0;
   MASK_CFN_TYPE  newActiveSwitches = 0;
 
+#if !defined(PCBI6X)
   uint8_t playFirstIndex = (functions == g_model.customFn ? 1 : 1+MAX_SPECIAL_FUNCTIONS);
   #define PLAY_INDEX   (i+playFirstIndex)
+#endif
 
 #if defined(ROTARY_ENCODERS) && defined(GVARS)
   static rotenc_t rePreviousValues[ROTARY_ENCODERS];
@@ -239,7 +243,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
           {
             unsigned int moduleIndex = CFN_PARAM(cfn);
             if (moduleIndex < NUM_MODULES) {
-              moduleFlag[moduleIndex] = 1 + CFN_FUNC(cfn) - FUNC_RANGECHECK;
+              moduleState[moduleIndex].mode = 1 + CFN_FUNC(cfn) - FUNC_RANGECHECK;
             }
             break;
           }
@@ -274,7 +278,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
             }
             break;
 #endif
-
+#if !defined(PCBI6X)
           case FUNC_VOLUME:
           {
             getvalue_t raw = getValue(CFN_PARAM(cfn));
@@ -285,7 +289,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
             requiredSpeakerVolume = ((1024 + requiredSpeakerVolumeRawLast) * VOLUME_LEVEL_MAX) / 2048;
             break;
           }
-
+#endif
 #if defined(SDCARD) || defined(PCBI6X)
           case FUNC_PLAY_SOUND:
           // case FUNC_PLAY_TRACK:
@@ -367,7 +371,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
 
 #if defined(TELEMETRY_FRSKY) && defined(VARIO)
           case FUNC_VARIO:
-            newActiveFunctions |= (1 << FUNCTION_VARIO);
+            newActiveFunctions |= (1u << FUNCTION_VARIO);
             break;
 #endif
 
@@ -375,15 +379,28 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
 #if defined(SDCARD)
           case FUNC_LOGS:
             if (CFN_PARAM(cfn)) {
-              newActiveFunctions |= (1 << FUNCTION_LOGS);
+              newActiveFunctions |= (1u << FUNCTION_LOGS);
               logDelay = CFN_PARAM(cfn);
             }
             break;
 #endif
 
           case FUNC_BACKLIGHT:
-            newActiveFunctions |= (1 << FUNCTION_BACKLIGHT);
+          {
+            newActiveFunctions |= (1u << FUNCTION_BACKLIGHT);
+            if (!CFN_PARAM(cfn)) {  // When no source is set, backlight works like original backlight and turn on regardless of backlight settings
+              requiredBacklightBright = BACKLIGHT_FORCED_ON;
+              break;
+            }
+
+            getvalue_t raw = getValue(CFN_PARAM(cfn));
+#if defined(COLORLCD)
+            requiredBacklightBright = (1024 - raw) * (BACKLIGHT_LEVEL_MAX - BACKLIGHT_LEVEL_MIN) / 2048;
+#else
+            requiredBacklightBright = (1024 - raw) * 100 / 2048;
+#endif
             break;
+          }
 
 #if defined(PCBTARANIS)
           case FUNC_SCREENSHOT:
@@ -412,7 +429,7 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
             {
               unsigned int moduleIndex = CFN_PARAM(cfn);
               if (moduleIndex < NUM_MODULES) {
-                moduleFlag[moduleIndex] = 0;
+                moduleState[moduleIndex].mode = 0;
               }
               break;
             }

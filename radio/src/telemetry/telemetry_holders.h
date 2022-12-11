@@ -25,7 +25,7 @@
 
 #define TELEMETRY_AVERAGE_COUNT   3     // we actually average one more reading!
 #define RAW_FRSKY_MINMAX(v)       v.values[TELEMETRY_AVERAGE_COUNT-1]
-#define MAX_CELLS                 6
+#define MAX_CELLS                 6 // 8, PCBI6X, uses RAM and I don't think someone will use 8S with i6X
 
 class TelemetryValueWithMin {
   public:

@@ -63,7 +63,7 @@
 #define TR_VBLMODE                     TR("OFF\0""Keys""Ctrl""Both""ON\0 ", "OFF\0    ""Keys\0   ""Controls""Both\0   ""ON\0     ")
 
 #define LEN_TRNMODE                    "\003"
-#define TR_TRNMODE                     "OFF"" +="" :="
+#define TR_TRNMODE                     "OFF""+=\0"":=\0"
 
 #define LEN_TRNCHN                     "\003"
 #define TR_TRNCHN                      "CH1CH2CH3CH4"
@@ -71,9 +71,9 @@
 #if defined(PCBI6X)
 #define LEN_AUX_SERIAL_MODES                 "\014"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror""SBUS Trainer"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror""SBUS Trainer"
 #endif
 #else
 #define LEN_AUX_SERIAL_MODES           "\015"
@@ -104,11 +104,6 @@
 
 #define LEN_COUNTRYCODES               TR("\002", "\007")
 #define TR_COUNTRYCODES                TR("US""JP""EU", "America""Japan\0 ""Europe\0")
-
-#if defined(PCBI6X)
-#define LEN_USBDETECTMODES             TR("\004", "\004")
-#define TR_USBDETECTMODES              TR("Auto""Once", "Auto""Once")
-#endif
 
 #define LEN_USBMODES                   TR("\006", "\010")
 #if defined(PCBI6X)                    
@@ -196,7 +191,7 @@
 
   #define TR_XPPM
 
-#define TR_VPROTOS                     "PPM\0  " TR_XPPM TR_PXX TR_DSM2 TR_IRPROTOS
+#define TR_VPROTOS                     "PPM\0  " TR_DSM2
 
 #define LEN_POSNEG                     "\003"
 #define TR_POSNEG                      "POS""NEG"
@@ -630,12 +625,12 @@
 #define TR_SUBTYPE                     INDENT "Subtype"
 #define TR_NOFREEEXPO                  "No free expo!"
 #define TR_NOFREEMIXER                 "No free mixer!"
-#define TR_SOURCE                      INDENT "Source"
+#define TR_SOURCE                      "Source"
 #define TR_WEIGHT                      "Weight"
 #define TR_EXPO                        TR("Expo", "Exponential")
 #define TR_SIDE                        "Side"
 #define TR_DIFFERENTIAL                "Differ"
-#define TR_OFFSET                      INDENT "Offset"
+#define TR_OFFSET                      "Offset"
 #define TR_TRIM                        "Trim"
 #define TR_DREX                        "DRex"
 #define DREX_CHBOX_OFFSET              30
@@ -964,7 +959,7 @@
 #define TR_MENUSENSOR                  "SENSOR"
 #define TR_SENSOR                      "SENSOR"
 #define TR_COUNTRYCODE                 "Country code"
-#define TR_USBDETECT                   "USB Detect"
+#define TR_USBCONNECT                  "USB Connect"
 #define TR_USBMODE                     "USB Mode"
 #define TR_VOICELANG                   "Voice language"
 #define TR_UNITSSYSTEM                 "Units"

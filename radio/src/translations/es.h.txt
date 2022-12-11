@@ -65,7 +65,7 @@
 #define TR_VBLMODE             "OFF ""Keys""Stks""Both""ON\0"
 
 #define LEN_TRNMODE            "\003"
-#define TR_TRNMODE             "OFF"" +="" :="
+#define TR_TRNMODE             "OFF""+=\0"":="
 
 #define LEN_TRNCHN             "\003"
 #define TR_TRNCHN              "CH1CH2CH3CH4"
@@ -73,9 +73,9 @@
 #if defined(PCBI6X)
 #define LEN_AUX_SERIAL_MODES                 "\014"
 #if defined(CLI) || defined(DEBUG)
-#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "Debug\0      ""Telem Mirror""SBUS Trainer"
 #else
-#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror"
+#define TR_AUX_SERIAL_MODES                  "OFF\0        ""Telem Mirror""SBUS Trainer"
 #endif
 #else
 #define LEN_AUX_SERIAL_MODES   "\015"
@@ -106,11 +106,6 @@
 
 #define LEN_COUNTRYCODES       TR("\002", "\007")
 #define TR_COUNTRYCODES        TR("US""JP""EU", "America""Japon\0 ""Europa\0")
-
-#if defined(PCBI6X)
-#define LEN_USBDETECTMODES             TR("\004", "\004")
-#define TR_USBDETECTMODES              TR("Auto""Once", "Auto""Once")
-#endif
 
 #define LEN_USBMODES                   TR("\006", "\010")
 #if defined(PCBI6X)
@@ -188,8 +183,7 @@
 
 #if defined(DSM2)
   #define TR_DSM2              "LP45\0 ""DSM2\0 ""DSMX\0 "
-#elif defined(IRPROTOS)
-  #define TR_DSM2              "[LP45]""[DSM2]""[DSMX]"
+
 #else
   #define TR_DSM2
 #endif
@@ -202,7 +196,7 @@
 
   #define TR_XPPM
 
-#define TR_VPROTOS             "PPM\0  " TR_XPPM TR_PXX TR_DSM2 TR_IRPROTOS
+#define TR_VPROTOS             "PPM\0  " TR_DSM2
 
 #define LEN_POSNEG             "\003"
 #define TR_POSNEG              "POS""NEG"
@@ -320,7 +314,7 @@
 
 #define TR_SF_RESERVE         "[reserve]\0"
 
-  #define TR_VFSWFUNC          TR_SF_SAFETY "Aprendiz\0 ""Inst. Trim""Reset\0    ""Set \0     " TR_ADJUST_GVAR "Volumen\0  " "SetFailsfe" "RangeCheck" "ModuleBind" TR_SOUND TR_PLAY_TRACK TR_PLAY_VALUE TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE TR_SF_BG_MUSIC TR_VVARIO TR_HAPTIC TR_SDCLOGS "Luz fondo\0" TR_SF_SCREENSHOT TR_SF_TEST
+  #define TR_VFSWFUNC          TR_SF_SAFETY "Aprendiz\0 ""Inst. Trim""Reset\0    ""Set \0     " TR_ADJUST_GVAR "Volumen\0  " "SetFailsfe" "RangeCheck" "ModuleBind" TR_SOUND /*TR_PLAY_TRACK TR_PLAY_VALUE*/ TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE /*TR_SF_BG_MUSIC*/ TR_VVARIO TR_HAPTIC /*TR_SDCLOGS*/ "Luz fondo\0" TR_SF_SCREENSHOT TR_SF_TEST
 
 #define LEN_VFSWRESET          TR("\004", "\011")
 
@@ -639,12 +633,12 @@
 #define TR_SUBTYPE             INDENT "Subtype"
 #define TR_NOFREEEXPO          "No expo libre!"
 #define TR_NOFREEMIXER         "No mezcla lib!"
-#define TR_SOURCE              INDENT"Fuente"
+#define TR_SOURCE              "Fuente"
 #define TR_WEIGHT              "Cantidad"
 #define TR_EXPO                TR("Expo","Exponencial")
 #define TR_SIDE                "Lado"
 #define TR_DIFFERENTIAL        "Diferenc"
-#define TR_OFFSET              INDENT"Offset"
+#define TR_OFFSET              "Offset"
 #define TR_TRIM                "Trim"
 #define TR_DREX                "DRex"
 #define DREX_CHBOX_OFFSET      30
@@ -976,7 +970,7 @@
 #define TR_MENUSENSOR          "SENSOR"
 #define TR_SENSOR              "SENSOR"
 #define TR_COUNTRYCODE         "Codigo Pais"
-#define TR_USBDETECT           "USB Detect"
+#define TR_USBCONNECT          "USB Connect"
 #define TR_USBMODE             "USB Mode"
 #define TR_VOICELANG           "Idioma voces"
 #define TR_UNITSSYSTEM         "Unidades"

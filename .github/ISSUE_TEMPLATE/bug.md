@@ -26,6 +26,5 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **General information**
- - OpenTX version (e.g. 2.1.23 or N123)
- - Hardware (e.g. Frsky X9D+ or 9X Pro)
- - OpenTX Companion (e.g. 2.1.23 on Ubuntu 16.04)
+ - OpenI6X version (e.g. 1.8.0)
+ - Hardware (e.g. external module model)

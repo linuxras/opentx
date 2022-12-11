@@ -65,8 +65,8 @@ void buzzerEvent(unsigned int index);
 #define AUDIO_RAS_RED()          buzzerEvent(AU_RAS_RED)
 #define AUDIO_TELEMETRY_LOST()   buzzerEvent(AU_TELEMETRY_LOST)
 #define AUDIO_TELEMETRY_BACK()   buzzerEvent(AU_TELEMETRY_BACK)
-#define AUDIO_TRAINER_LOST()     buzzerEvent(AU_TRAINER_LOST)
-#define AUDIO_TRAINER_BACK()     buzzerEvent(AU_TRAINER_BACK)
+#define AUDIO_TRAINER_LOST()     //buzzerEvent(AU_TRAINER_LOST)
+#define AUDIO_TRAINER_BACK()     //buzzerEvent(AU_TRAINER_BACK)
 
 #define AUDIO_RESET()
 #define AUDIO_FLUSH()

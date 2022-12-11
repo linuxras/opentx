@@ -24,7 +24,7 @@ void drawStringWithIndex(coord_t x, coord_t y, const char * str, uint8_t idx, Lc
 {
   if (flags & RIGHT) {
     lcdDrawNumber(x, y, idx, flags);
-    lcdDrawText(x-FWNUM, y, str, flags & ~LEADING0);
+    lcdDrawText(lcdNextPos, y, str, flags & ~LEADING0);
   }
   else {
     lcdDrawText(x, y, str, flags & ~LEADING0);
@@ -160,7 +160,7 @@ void editName(coord_t x, coord_t y, char * name, uint8_t size, event_t event, ui
       }
       
       if (attr == ZCHAR) {
-        lcdDrawChar(x+editNameCursorPos*FW, y, idx2char(v), ERASEBG|INVERS|FIXEDWIDTH);
+        lcdDrawChar(x+editNameCursorPos*FW, y, zchar2char(v), ERASEBG|INVERS|FIXEDWIDTH);
       }
       else {
         lcdDrawChar(x+editNameCursorPos*FW, y, v, ERASEBG|INVERS|FIXEDWIDTH);

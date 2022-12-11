@@ -1,16 +1,21 @@
 option(SHUTDOWN_CONFIRMATION "Shutdown confirmation" OFF)
-option(LCD_DUAL_BUFFER "Dual LCD Buffer" OFF)
-option(TARANIS_INTERNAL_PPM "Taranis internal module hack to output PPM" OFF)
-option(PCBI6X_ELRSV2 "Enable ExpressLRS v2 configuration tool" OFF) # ~4kB FLASH
+option(PCBI6X_ELRSV3 "Enable ExpressLRS v3 configuration tool" NO) # ~4kB
+option(PCBI6X_HELLO "Enable Hello World example tool" NO)
+option(PCBI6X_USB_VBUS "Remove manual USB connection, just auto using VBUS, requires wiring USB VBUS to PA15 pad" NO)
+option(PCBI6X_BACKLIGHT_MOD "Enable adjustable backlight, requires wiring BL pad to PC9 pad" NO)
+option(AFHDS2A_LQI_CH "Send RSSI at channel 1-17" 17)
 
 if(PCB STREQUAL I6X)
-  set(PWR_BUTTON "PRESS")
-  set(SPLASH "OFF")
+  set(PWR_BUTTON "SWITCH" CACHE STRING "Pwr button type (PRESS/SWITCH)")
+  if(TRANSLATIONS STREQUAL EN)
+    set(SPLASH "ON") # ~650B
+  else()
+    set(SPLASH "OFF")
+  endif()
   set(CPU_TYPE STM32F0)
   set(CPU_TYPE_FULL STM32F072)  # for size report
   set(LINKER_SCRIPT targets/flysky/STM32F072VB_FLASH.ld)
   set(HAPTIC NO)
-  set(LUA_EXPORT lua_export_x7)
   set(FLAVOUR i6x)
   set(NANO YES)
   set(FRSKY_HUB NO)
@@ -26,21 +31,46 @@ if(PCB STREQUAL I6X)
   set(DEFAULT_TEMPLATE_SETUP "0" CACHE STRING "Default channel order")
 
   add_definitions(-DTELEMETRY_FRSKY)
+  # add_definitions(-DGPS)
   add_definitions(-DCROSSFIRE)
-  add_definitions(-DNAVIGATION_POT1)
+  # add_definitions(-DNAVIGATION_POT1) # ~324B
   # add_definitions(-DNAVIGATION_POT2)
   add_definitions(-DSTM32F072)
   add_definitions(-DPWR_BUTTON_${PWR_BUTTON})
   add_definitions(-DEEPROM_VARIANT=0)
   add_definitions(-DSOFTWARE_VOLUME)
-  add_definitions(-DAFHDS2A_LQI_CH=17) # inject LQI at channel
 endif()
 
-if(PCBI6X_ELRSV2)
-  add_definitions(-DPCBI6X_ELRSV2)
-else() # features disabled for ELRSV2
-  add_definitions(-DPCBI6X_USB_MSD)
+if(NOT AFHDS2A_LQI_CH)
+  set(AFHDS2A_LQI_CH 17)
 endif()
+add_definitions(-DAFHDS2A_LQI_CH=${AFHDS2A_LQI_CH})
+
+if(PCBI6X_USB_VBUS STREQUAL YES)
+  add_definitions(-DPCBI6X_USB_VBUS)
+endif()
+
+if(PCBI6X_BACKLIGHT_MOD STREQUAL YES)
+  add_definitions(-DPCBI6X_BACKLIGHT_MOD)
+endif()
+
+if(PCBI6X_ELRSV3 STREQUAL YES)
+  add_definitions(-DPCBI6X_ELRSV3)
+  set(TARGET_SRC
+    ${TARGET_SRC}
+    tools/elrsV3.cpp
+    )
+endif()
+
+if(PCBI6X_HELLO STREQUAL YES)
+  add_definitions(-DPCBI6X_HELLO)
+set(TARGET_SRC
+  ${TARGET_SRC}
+  tools/hello.cpp
+  )
+endif()
+
+add_definitions(-DPCBI6X_USB_MSD) # 3620B
 
 set(TARGET_SRC
   ${TARGET_SRC}
@@ -48,10 +78,17 @@ set(TARGET_SRC
   AFHDS2A_a7105.cpp
   intmodule_pulses_driver.cpp
   trainer_driver.cpp
+  ../common/arm/stm32/timers_driver.cpp
+  )
+
+add_definitions(-DSBUS)
+set(PULSES_SRC
+  ${PULSES_SRC}
+  ../sbus.cpp
   )
 
 set(HSE_VALUE 8000000)
-set(SDCARD NO) # ~24kB FLASH
+set(SDCARD NO) # ~24kB
 set(EEPROM EEPROM_RLC)
 set(TARGET_DIR flysky)
 set(PPM_LIMITS_SYMETRICAL YES)
@@ -87,7 +124,6 @@ set(TARGET_SRC
   adc_driver.cpp
   i2c_driver.cpp
   crc_driver.cpp
-  tools/elrsV2.cpp
   ../common/arm/stm32/mixer_scheduler_driver.cpp
   )
 

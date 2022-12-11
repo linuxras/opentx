@@ -22,18 +22,19 @@
 
 void extmoduleSendNextFrame();
 
-inline void EnablePPMTim(void) {
-  TRACE("EnablePPMTim");
-  SET_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
-}
-inline void DisablePPMTim(void) {
-  TRACE("DisablePPMTim");
-  CLEAR_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
-}
-inline void EnablePPMOut(void) {
-  TRACE("EnablePPMOut");
-  SET_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
-}
+//inline void EnablePPMTim(void) {
+//  TRACE("EnablePPMTim");
+//  SET_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
+//}
+//inline void DisablePPMTim(void) {
+//  TRACE("DisablePPMTim");
+//  CLEAR_BIT(EXTMODULE_TIMER->CR1, TIM_CR1_CEN);
+//}
+// inline void EnablePPMOut(void) {
+//   TRACE("EnablePPMOut");
+//   SET_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
+// }
+
 inline void DisablePPMOut(void) {
   TRACE("DisablePPMOut");
   CLEAR_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
@@ -99,7 +100,7 @@ void extmoduleTimerStart(uint32_t period, uint8_t state) {
   NVIC_EnableIRQ(EXTMODULE_TIMER_IRQn);
   NVIC_SetPriority(EXTMODULE_TIMER_IRQn, 2);
 
-  EnablePPMTim();
+  EXTMODULE_TIMER->CR1 |= TIM_CR1_CEN; // Start counter
 }
 
 void extmodulePpmStart() {
@@ -121,13 +122,13 @@ void extmodulePpmStart() {
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(EXTMODULE_TX_GPIO, &GPIO_InitStructure);
 
-  EnablePPMOut();
+  EXTMODULE_TIMER->CCER |= TIM_CCER_CC2E;
 }
 
 inline void extmoduleSendNextFrame() {
   static bool delay = true;
   static uint16_t delay_halfus = GET_PPM_DELAY(EXTERNAL_MODULE) * 2;
-  if (s_current_protocol[EXTERNAL_MODULE] == PROTO_PPM) {
+  if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM) {
     //TRACE("modulePulsesData[EXTERNAL_MODULE].ppm: %p",(void*)&modulePulsesData[EXTERNAL_MODULE].ppm);
     //DUMP((uint8_t*)(modulePulsesData[EXTERNAL_MODULE].ppm.pulses), 40);
     static uint16_t *pulsePtr = modulePulsesData[EXTERNAL_MODULE].ppm.ptr;
@@ -151,13 +152,12 @@ inline void extmoduleSendNextFrame() {
     }
     delay = !delay;
 #if defined(CROSSFIRE)
-  } else if (s_current_protocol[EXTERNAL_MODULE] == PROTO_CROSSFIRE) {
+  } else if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_CROSSFIRE) {
     if (modulePulsesData[EXTERNAL_MODULE].crossfire.length > 0) {
       sportSendBuffer(
           modulePulsesData[EXTERNAL_MODULE].crossfire.pulses,
           modulePulsesData[EXTERNAL_MODULE].crossfire.length);
     }
-
 #endif
   } else {
     EXTMODULE_TIMER->DIER |= TIM_DIER_CC2IE;
@@ -167,10 +167,13 @@ inline void extmoduleSendNextFrame() {
 extern "C" void EXTMODULE_TIMER_IRQHandler() {
   if (EXTMODULE_TIMER->SR & TIM_SR_CC2IF) {  // Compare PPM-OUT
     EXTMODULE_TIMER->SR &= ~TIM_SR_CC2IF;    // Clears interrupt on ch2
-    if ((g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_CROSSFIRE && s_current_protocol[EXTERNAL_MODULE] == PROTO_CROSSFIRE) || s_current_protocol[EXTERNAL_MODULE] == PROTO_NONE) {
+    if ((moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_CROSSFIRE && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_CROSSFIRE) ||
+        (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_PPM) ||
+         moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_NONE) {
       setupPulses(EXTERNAL_MODULE);
     }
-    if (s_current_protocol[EXTERNAL_MODULE] != PROTO_CROSSFIRE) {
+    // Only for PPM, CRSF is handled in sendSynchronousPulses
+    if (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM) {
       extmoduleSendNextFrame();
     }
   }

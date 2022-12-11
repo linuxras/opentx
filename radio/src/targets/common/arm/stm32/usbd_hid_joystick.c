@@ -483,7 +483,10 @@ static uint8_t  USBD_HID_DataIn (void  *pdev,
                               uint8_t epnum)
 {
   ReportSent = 1;
-#if !defined(STM32F0)
+#if defined(STM32F0)
+  // ((USBD_HID_HandleTypeDef *)pdev->pClassData)->state = HID_IDLE;
+  // if (epnum == 1) PrevXferDone = 1;
+#else
   /* Ensure that the FIFO is empty before a new transfer, this condition could 
   be caused by  a new transfer before the end of the previous transfer */
   DCD_EP_Flush(pdev, HID_IN_EP);

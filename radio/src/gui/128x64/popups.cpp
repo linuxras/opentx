@@ -51,11 +51,12 @@ const unsigned char ASTERISK_BITMAP[]  = {
 void drawAlertBox(const char * title, const char * text, const char * action)
 {
   lcdClear();
-#if !defined(PCBI6X)
-  lcdDraw1bitBitmap(2, 0, ASTERISK_BITMAP, 0, 0);
-#else
+
+#if defined(PCBI6X_ELRSV3) && defined(TRANSLATIONS_PT) // not enough flash space
   lcdDrawRect(2, 2, 32 - 4, 32 - 4);
   lcdDrawText(11, 6, "x", DBLSIZE);
+#else
+  lcdDraw1bitBitmap(2, 0, ASTERISK_BITMAP, 0, 0);
 #endif
 
 #define MESSAGE_LCD_OFFSET   6*FW
@@ -88,7 +89,7 @@ void showAlertBox(const char * title, const char * text, const char * action , u
   lcdRefresh();
   lcdSetContrast();
   clearKeyEvents();
-  backlightOn();
+  resetBacklightTimeout();
   checkBacklight();
 }
 

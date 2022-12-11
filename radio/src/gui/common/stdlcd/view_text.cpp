@@ -175,6 +175,7 @@ void menuTextView(event_t event)
   #endif
 }
 
+#if defined(SDCARD)
 void pushMenuTextView(const char *filename)
 {
   if (strlen(filename) < TEXT_FILENAME_MAXLEN) {
@@ -182,6 +183,7 @@ void pushMenuTextView(const char *filename)
     pushMenu(menuTextView);
   }
 }
+#endif
 
 #undef EVT_KEY_NEXT_LINE
 #undef EVT_KEY_PREVIOUS_LINE

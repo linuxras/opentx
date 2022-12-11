@@ -99,7 +99,7 @@ extern uint8_t telemetryState;
 #define TELEMETRY_SERIAL_DEFAULT       0
 #define TELEMETRY_SERIAL_8E2           1
 #define TELEMETRY_SERIAL_WITHOUT_DMA   2
-#define TELEMETRY_OUTPUT_FIFO_SIZE     16
+#define TELEMETRY_OUTPUT_FIFO_SIZE     20
 #define TELEMETRY_AVERAGE_COUNT        3
 
 #if defined(CROSSFIRE) || defined(MULTIMODULE)
@@ -125,8 +125,11 @@ enum {
   TELEM_CELL_INDEX_4,
   TELEM_CELL_INDEX_5,
   TELEM_CELL_INDEX_6,
+//  TELEM_CELL_INDEX_7, // PCBI6X: uses more RAM and I don't think someone will use 8S with i6X
+//  TELEM_CELL_INDEX_8,
   TELEM_CELL_INDEX_HIGHEST,
   TELEM_CELL_INDEX_DELTA,
+  TELEM_CELL_INDEX_LAST = TELEM_CELL_INDEX_DELTA
 };
 
 PACK(struct CellValue

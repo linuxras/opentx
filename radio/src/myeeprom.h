@@ -35,7 +35,7 @@
 #define WARN_MEM (!(g_eeGeneral.warnOpts & WARN_MEM_BIT))
 #define BEEP_VAL ((g_eeGeneral.warnOpts & WARN_BVAL_BIT) >> 3)
 
-#define EEPROM_VER 220
+#define EEPROM_VER 221
 #define FIRST_CONV_EEPROM_VER 216
 
 #define GET_PPM_POLARITY(idx) g_model.moduleData[idx].ppm.pulsePol
@@ -70,7 +70,7 @@
 #define IS_HAPTIC_FUNC(func) (0)
 #endif
 
-#define HAS_ENABLE_PARAM(func) ((func) < FUNC_FIRST_WITHOUT_ENABLE)
+#define HAS_ENABLE_PARAM(func) ((func) < FUNC_FIRST_WITHOUT_ENABLE || (func == FUNC_BACKLIGHT))
 #define HAS_REPEAT_PARAM(func) (IS_PLAY_FUNC(func) || IS_HAPTIC_FUNC(func))
 
 #define CFN_EMPTY(p) (!(p)->swtch)
@@ -313,8 +313,10 @@ enum SwashType {
 #define TIMER_COUNTDOWN_START(x) 10
 #endif
 
-enum Protocols {
-  PROTO_PPM,
+enum ChannelsProtocols {
+  PROTOCOL_CHANNELS_UNINITIALIZED,
+  PROTOCOL_CHANNELS_NONE,
+  PROTOCOL_CHANNELS_PPM,
 #if defined(PXX) || defined(DSM2) || defined(IRPROTOS)
   PROTO_PXX,
 #endif
@@ -323,28 +325,15 @@ enum Protocols {
   PROTO_DSM2_DSM2,
   PROTO_DSM2_DSMX,
 #endif
-#if defined(CROSSFIRE)
-  PROTO_CROSSFIRE,
-#endif
-#if defined(IRPROTOS)
-  // only used on AVR
-  // we will need 4 bits for proto :(
-  PROTO_SILV,
-  PROTO_TRAC09,
-  PROTO_PICZ,
-  PROTO_SWIFT,
-#endif
-#if defined(MULTIMODULE)
-  PROTO_MULTIMODULE,
-#endif
-  PROTO_SBUS,
+  PROTOCOL_CHANNELS_CROSSFIRE,
+  PROTOCOL_CHANNELS_MULTIMODULE,
+  PROTOCOL_CHANNELS_SBUS,
 #if defined(PXX2)
   PROTO_PXX2,
 #endif
 #if defined(PCBI6X)
-  PROTO_AFHDS2A_SPI,
+  PROTOCOL_CHANNELS_AFHDS2A_SPI
 #endif
-  PROTO_NONE
 };
 
 #if defined(PXX2)
@@ -352,7 +341,7 @@ enum Protocols {
 #elif defined(PXX)
 #define PROTO_PXX_EXTERNAL_MODULE PROTO_PXX
 #else
-#define PROTO_PXX_EXTERNAL_MODULE PROTO_NONE
+#define PROTO_PXX_EXTERNAL_MODULE PROTOCOL_CHANNELS_NONE
 #endif
 
 enum XJTRFProtocols {
@@ -445,10 +434,11 @@ enum MMRFrskySubtypes {
   MM_RF_FRSKY_SUBTYPE_D16_LBT_8CH
 };
 
-#define HAS_RF_PROTOCOL_FAILSAFE(rf) ((rf) == RF_PROTO_X16)
 #if defined(PCBI6X)
+#define HAS_RF_PROTOCOL_FAILSAFE(rf) ((rf) == RF_I6X_PROTO_AFHDS2A)
 #define HAS_RF_PROTOCOL_MODELINDEX(rf) (1)
 #else
+#define HAS_RF_PROTOCOL_FAILSAFE(rf) ((rf) == RF_PROTO_X16)
 #define HAS_RF_PROTOCOL_MODELINDEX(rf) (((rf) == RF_PROTO_X16) || ((rf) == RF_PROTO_LR12))
 #endif
 

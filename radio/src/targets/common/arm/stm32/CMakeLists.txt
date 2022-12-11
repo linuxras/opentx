@@ -92,7 +92,7 @@ if(DEBUG OR CLI OR USB_SERIAL)
     ${FIRMWARE_TARGET_SRC}
     # ../common/arm/stm32/usbd_cdc.cpp
   )
-  add_definitions(-DUSB_SERIAL)
+  #add_definitions(-DUSB_SERIAL)
 endif()
 set(STM32USB_SRC
   ${STM32USB_SRC}

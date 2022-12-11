@@ -30,9 +30,16 @@
 #define MODULES_INIT(...) __VA_ARGS__
 #endif
 
-extern uint8_t s_current_protocol[NUM_MODULES];
 extern uint8_t s_pulses_paused;
-extern uint16_t failsafeCounter[NUM_MODULES];
+
+PACK(struct ModuleState {
+  uint8_t protocol; // :4
+//  uint8_t paused; // :1 not used?
+  uint8_t mode; // :3
+  uint16_t counter;
+});
+
+extern ModuleState moduleState[NUM_MODULES];
 
 template <class T>
 struct PpmPulsesData {
@@ -58,12 +65,18 @@ PACK(struct Dsm2TimerPulsesData {
 });
 #endif
 
-#define PPM_PERIOD_HALF_US(module) ((g_model.moduleData[module].ppm.frameLength * 5 + 225) * 200) /*half us*/
+#define PPM_DEF_PERIOD               225 /* 22.5ms */
+#define PPM_STEP_SIZE                5 /*0.5ms*/
+#define PPM_PERIOD_HALF_US(module)   ((g_model.moduleData[module].ppm.frameLength * PPM_STEP_SIZE + PPM_DEF_PERIOD) * 200) /*half us*/
 #define PPM_PERIOD(module) (PPM_PERIOD_HALF_US(module) / 2)                                       /*us*/
 #define DSM2_BAUDRATE 125000
 #define DSM2_PERIOD 22 /*ms*/
 #define SBUS_BAUDRATE 100000
-#define SBUS_PERIOD_HALF_US ((g_model.moduleData[EXTERNAL_MODULE].sbus.refreshRate * 5 + 225) * 200) /*half us*/
+#define SBUS_MIN_PERIOD              60  /*6.0ms 1/10ms*/
+#define SBUS_MAX_PERIOD              325 /*Overflows uint16_t if set higher*/
+#define SBUS_DEF_PERIOD              225
+#define SBUS_STEPSIZE                5   /* SBUS Step Size 0.5ms */
+#define SBUS_PERIOD_HALF_US          ((g_model.moduleData[EXTERNAL_MODULE].sbus.refreshRate * SBUS_STEPSIZE + SBUS_DEF_PERIOD) * 200) /*half us*/
 #define SBUS_PERIOD (SBUS_PERIOD_HALF_US / 2000)                                                     /*ms*/
 #define MULTIMODULE_BAUDRATE 100000
 #define MULTIMODULE_PERIOD 7 /*ms*/
@@ -151,15 +164,15 @@ inline void startPulses() {
 #endif
 }
 
-inline bool pulsesStarted() { return s_current_protocol[0] != 255; }
+inline bool pulsesStarted() { return moduleState[0].protocol != 255; }
 inline void pausePulses() { s_pulses_paused = true; }
 inline void resumePulses() { s_pulses_paused = false; }
 
-#define SEND_FAILSAFE_NOW(idx) failsafeCounter[idx] = 1
+#define SEND_FAILSAFE_NOW(idx) moduleState[idx].counter = 1
 
 inline void SEND_FAILSAFE_1S() {
   for (int i = 0; i < NUM_MODULES; i++) {
-    failsafeCounter[i] = 100;
+    moduleState[i].counter = 100;
   }
 }
 

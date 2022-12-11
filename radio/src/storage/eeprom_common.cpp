@@ -107,7 +107,6 @@ void storageReadRadioSettings()
 
 void storageReadCurrentModel()
 {
-  TRACE("currentmodel size: %d", sizeof(g_eeGeneral.currModel));
   eeLoadModel(g_eeGeneral.currModel);
 }
 

@@ -22,11 +22,12 @@
 
 uint8_t currentSpeakerVolume = 255;
 uint8_t requiredSpeakerVolume = 255;
+uint8_t currentBacklightBright = 0;
+uint8_t requiredBacklightBright = 0;
 uint8_t mainRequestFlags = 0;
 
-#if defined(PCBI6X_ELRSV2)
-extern void ELRSV2_stop();
-uint8_t cScriptRunning = 0;
+#if defined(PCBI6X_ELRSV3)
+extern void ELRSV3_stop();
 #endif
 
 #if defined(STM32)
@@ -71,8 +72,8 @@ void handleUsbConnection()
     else {
       #if !defined(PCBI6X) || defined(PCBI6X_USB_MSD)
       if (getSelectedUsbMode() == USB_MASS_STORAGE_MODE) {
-        #if defined(PCBI6X_ELRSV2)
-        ELRSV2_stop();
+        #if defined(PCBI6X_ELRSV3)
+        ELRSV3_stop();
         #endif
         opentxClose(false);
         usbPluggedIn();
@@ -340,8 +341,8 @@ void handleGui(event_t event) {
     // todo     drawStatusLine(); here???
   }
   else
-#elif defined(PCBI6X_ELRSV2)
-  if (cScriptRunning == 1) {
+#elif defined(PCBI6X) && defined(RADIO_TOOLS)
+  if (globalData.cToolRunning == 1) {
     // standalone c script is active
     menuHandlers[menuLevel](event);
   }
@@ -430,8 +431,9 @@ void perMain()
 #if defined(PCBSKY9X) && !defined(REVA)
   calcConsumption();
 #endif
-
+#if !defined(PCBI6X)
   checkSpeakerVolume();
+#endif
 
   if (!usbPlugged()) {
     checkEeprom();

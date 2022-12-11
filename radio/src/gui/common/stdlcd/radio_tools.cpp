@@ -20,7 +20,7 @@
 
 #include "opentx.h"
 
-#if defined(PCBI6X_ELRSV2)
+#if defined(RADIO_TOOLS)
 void addRadioTool(uint8_t index, const char * label, void (* tool)(event_t event), event_t event)
 {
   int8_t sub = menuVerticalPosition - HEADER_LINE;
@@ -34,12 +34,21 @@ void addRadioTool(uint8_t index, const char * label, void (* tool)(event_t event
   }
 }
 
-void ELRSV2_run(event_t event);
+void ELRSV3_run(event_t event);
+void hello_run(event_t event);
 
 void menuRadioTools(event_t event)
 {
-  SIMPLE_MENU("TOOLS", menuTabGeneral, MENU_RADIO_TOOLS, HEADER_LINE + 1);
+  uint8_t index = 0;
 
-  addRadioTool(0, "ExpressLRS", ELRSV2_run, event);
-}
+#if defined(PCBI6X_ELRSV3)
+  addRadioTool(index++, "ExpressLRS", ELRSV3_run, event);
 #endif
+
+#if defined(PCBI6X_HELLO)
+  addRadioTool(index++, "Hello World", hello_run, event);
+#endif
+
+  SIMPLE_MENU("TOOLS", menuTabGeneral, MENU_RADIO_TOOLS, HEADER_LINE + index);
+}
+#endif // RADIO_TOOLS

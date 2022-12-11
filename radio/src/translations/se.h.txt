@@ -70,11 +70,20 @@
 #define LEN_TRNCHN             "\003"
 #define TR_TRNCHN              "KN1KN2KN3KN4"
 
+#if defined(PCBI6X)
+#define LEN_AUX_SERIAL_MODES   "\022"
+#if defined(CLI) || defined(DEBUG)
+#define TR_AUX_SERIAL_MODES    "Debug\0      ""Spegling av S-Port""SBUS Trainer\0     "
+#else
+#define TR_AUX_SERIAL_MODES    "OFF\0        ""Spegling av S-Port""SBUS Trainer\0     "
+#endif
+#else
 #define LEN_AUX_SERIAL_MODES   "\022"
 #if defined(CLI) || defined(DEBUG)
 #define TR_AUX_SERIAL_MODES    "Debug\0            ""Spegling av S-Port""Telemetri\0        ""SBUS Trainer\0     ""LUA\0              "
 #else
 #define TR_AUX_SERIAL_MODES    "Av\0               ""Spegling av S-Port""Telemetri\0        ""SBUS Trainer\0     ""LUA\0              "
+#endif
 #endif
 
 #define LEN_SWTYPES            "\006"
@@ -99,7 +108,11 @@
 #define TR_COUNTRYCODES        TR("US""JP""EU", "Amerika""Japan\0 ""Europa\0")
 
 #define LEN_USBMODES           TR("\006", "\010")
+#if defined(PCBI6X)
+#define TR_USBMODES                    TR("Ask\0  ""Joyst\0""Storag", "Ask\0    ""Joystick""Storage\0")
+#else
 #define TR_USBMODES            TR("Ask\0  ""Joyst\0""Storag""Serial", "Ask\0    ""Joystick""Storage\0""Serial\0 ")
+#endif
 
 #define LEN_TARANIS_PROTOCOLS  "\004"
 #if defined(PCBI6X)
@@ -164,8 +177,7 @@
 
 #if defined(DSM2)
   #define TR_DSM2              "LP45\0 ""DSM2\0 ""DSMX\0 "
-#elif defined(IRPROTOS)
-  #define TR_DSM2              "[LP45]""[DSM2]""[DSMX]"
+
 #else
   #define TR_DSM2
 #endif
@@ -176,7 +188,9 @@
   #define TR_IRPROTOS
 #endif
 
-#define TR_VPROTOS             "PPM\0  " TR_XPPM TR_PXX TR_DSM2 TR_IRPROTOS
+#define TR_XPPM
+
+#define TR_VPROTOS             "PPM\0  " TR_DSM2
 
 #define LEN_POSNEG             "\003"
 #define TR_POSNEG              "Pos""Neg"
@@ -228,7 +242,7 @@
   #define TR_VVARIO            "[Vario]   "
 #endif
 
-#if defined(AUDIO)
+#if defined(AUDIO) || defined(PCBI6X)
   #define TR_SOUND             "Spela Ljud"
 #else
   #define TR_SOUND             "Pip\0      "
@@ -296,7 +310,7 @@
 
 #define TR_SF_RESERVE         "[reserve]\0"
 
-  #define TR_VFSWFUNC          TR_SF_SAFETY "Trainer\0  ""Sätt Trim\0""Nollställ\0""Sätt\0     " TR_ADJUST_GVAR "Volym\0    " "SetFailsfe" "RangeCheck" "ModuleBind" TR_SOUND TR_PLAY_TRACK TR_PLAY_VALUE TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE TR_SF_BG_MUSIC TR_VVARIO TR_HAPTIC TR_SDCLOGS "Belysning\0" TR_SF_SCREENSHOT TR_SF_TEST
+  #define TR_VFSWFUNC          TR_SF_SAFETY "Trainer\0  ""Sätt Trim\0""Nollställ\0""Sätt\0     " TR_ADJUST_GVAR "Volym\0    " "SetFailsfe" "RangeCheck" "ModuleBind" TR_SOUND /*TR_PLAY_TRACK TR_PLAY_VALUE*/ TR_SF_RESERVE TR_SF_PLAY_SCRIPT TR_SF_RESERVE /*TR_SF_BG_MUSIC*/ TR_VVARIO TR_HAPTIC /*TR_SDCLOGS*/ "Belysning\0" TR_SF_SCREENSHOT TR_SF_TEST
 
 #define LEN_VFSWRESET          TR("\004", "\011")
 
@@ -378,8 +392,13 @@
   #define TR_VARIOSRC          "Alti\0""Alti+""Vario""A1\0  ""A2\0"
 #endif
 
+#if defined(PCBI6X)
+  #define LEN_VTELEMSCREENTYPE         "\007"
+  #define TR_VTELEMSCREENTYPE          "Inget\0 ""Siffror""Staplar"
+#else
   #define LEN_VTELEMSCREENTYPE   "\007"
   #define TR_VTELEMSCREENTYPE    "Inget\0 ""Siffror""Staplar""Script\0"
+#endif
 
 #define LEN_GPSFORMAT          "\004"
 #define TR_GPSFORMAT           "HMS NMEA"
@@ -433,7 +452,10 @@
 #elif defined(PCBX9E)
   #define TR_POTS_VSRCRAW              "\310F1\0""\310F2\0""\310F3\0""\310F4\0""\311S1\0""\311S2\0""\311LS\0""\311RS\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0""\312SE\0""\312SF\0""\312SG\0""\312SH\0""\312SI\0""\312SJ\0""\312SK\0""\312SL\0""\312SM\0""\312SN\0""\312SO\0""\312SP\0""\312SQ\0""\312SR\0"
-#elif defined(PCBXLITE) || defined(PCBI6X)
+#elif defined(PCBI6X)
+  #define TR_POTS_VSRCRAW              "\310P1\0""\310P2\0"
+  #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
+#elif defined(PCBXLITE)
   #define TR_POTS_VSRCRAW              "\310S1\0""\310S2\0"
   #define TR_SW_VSRCRAW                "\312SA\0""\312SB\0""\312SC\0""\312SD\0"
 #elif defined(PCBX7)
@@ -546,12 +568,16 @@
 
 #if defined(PCBTARANIS) || defined(PCBHORUS)
   #define TR_ENTER             "[ENTER]"
+#elif defined(PCBI6X)
+  #define TR_ENTER                     "[ OK ]"
 #else
   #define TR_ENTER             "[MENU]"
 #endif
 
 #if defined(PCBHORUS)
   #define TR_EXIT              "[RTN]"
+#elif defined(PCBI6X)
+  #define TR_EXIT                      "[CANCEL]"
 #else
   #define TR_EXIT              "[EXIT]"
 #endif
@@ -563,7 +589,6 @@
   #define OFS_EXIT             sizeof(TR_ENTER)
 #endif
 
-#define TR_MENUWHENDONE        CENTER "\011" TR_ENTER " Avslutar "
 #define TR_FREE                "kvar"
 #define TR_DELETEMODEL         "Radera Modell"
 #define TR_COPYINGMODEL        "Kopierar Modell "
@@ -616,12 +641,12 @@
 #define TR_SUBTYPE             INDENT "Subtype"
 #define TR_NOFREEEXPO          "Expo saknas!"
 #define TR_NOFREEMIXER         "Mixer saknas!"
-#define TR_SOURCE              INDENT"Källa"
+#define TR_SOURCE              "Källa"
 #define TR_WEIGHT              "Vikt"
 #define TR_EXPO                TR("Expo","Exponentiell")
 #define TR_SIDE                "Sida"
 #define TR_DIFFERENTIAL        "Diff."
-#define TR_OFFSET              INDENT"Offset"
+#define TR_OFFSET              "Offset"
 #define TR_TRIM                "Trim"
 #define TR_DREX                "DRex"
 #define DREX_CHBOX_OFFSET      30
@@ -702,10 +727,12 @@
   #define TR_MENUTOSTART       TR_ENTER " Startar "
   #define TR_SETMIDPOINT       "Centrera Allt"
   #define TR_MOVESTICKSPOTS    "Rör Spakar/Rattar"
+  #define TR_MENUWHENDONE              TR_ENTER " Avslutar"
 #else
   #define TR_MENUTOSTART       CENTER "\011" TR_ENTER " Startar "
   #define TR_SETMIDPOINT       TR(CENTER "\012Centrera Allt",CENTER "\013Centrera Allt")
   #define TR_MOVESTICKSPOTS    TR(CENTER "\005Rör Spakar/Rattar",CENTER "\006Rör Spakar/Rattar")
+  #define TR_MENUWHENDONE              CENTER "\006" TR_ENTER " Avslutar"
 #endif
 #define TR_RXBATT              "Rx Batt:"
 #define TR_TXnRX               "Tx:\0Rx:"
@@ -950,6 +977,7 @@
 #define TR_MENUSENSOR          "SENSOR"
 #define TR_SENSOR              "SENSOR"
 #define TR_COUNTRYCODE         "Landskod"
+#define TR_USBCONNECT          "USB Connect"
 #define TR_USBMODE             "USB Mode"
 #define TR_VOICELANG           "Röstspråk"
 #define TR_UNITSSYSTEM         "Enheter"
@@ -968,9 +996,9 @@
 #define TR_RESET_TELEMETRY     "Nollställ Telemetri"
 #define TR_STATISTICS          "Statistik"
 #define TR_ABOUT_US            "Om Oss"
-#define TR_USB_JOYSTICK        "USB Joystick (HID)"
-#define TR_USB_MASS_STORAGE    "USB Storage (SD)"
-#define TR_USB_SERIAL          "USB Serial (Debug)"
+#define TR_USB_JOYSTICK        "USB Joystick"
+#define TR_USB_MASS_STORAGE    "USB Storage"
+#define TR_USB_SERIAL          "USB Serial"
 #define TR_SETUP_SCREENS       "Setup screens"
 #define TR_MONITOR_SCREENS     "Monitors"
 #define TR_AND_SWITCH          "OCH Brytare"
@@ -1037,8 +1065,8 @@
 #define TR_SCRIPT              "Programkod"
 #define TR_INPUTS              "Input"
 #define TR_OUTPUTS             "Outputs"
-#define TR_EEBACKUP            "\004[ENTER Lång] säkerhetskopiera EEPROM"
-#define TR_FACTORYRESET        "\012[MENU Long]: Factory reset"
+#define TR_EEBACKUP            "säkerhetskopiera EEPROM"
+#define TR_FACTORYRESET        "Factory reset"
 #define TR_CONFIRMRESET        "Erase ALL models and settings?"
 #define TR_TO_MANY_LUA_SCRIPTS "För många Lua-scripts!"
 
@@ -1235,6 +1263,7 @@
 #define ZSTR_CURR              "Curr"
 #define ZSTR_CAPACITY          "Capa"
 #define ZSTR_VFAS              "VFAS"
+#define ZSTR_BATT_PERCENT      "Bat%"
 #define ZSTR_ASPD              "ASpd"
 #define ZSTR_GSPD              "GSpd"
 #define ZSTR_HDG               "Hdg"

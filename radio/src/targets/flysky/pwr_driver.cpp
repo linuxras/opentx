@@ -40,20 +40,23 @@ void pwrOn() {
 }
 
 void pwrOff() {
-  GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN);
+#if defined(PWR_BUTTON_PRESS)
+  GPIO_ResetBits(EXTMODULE_PWR_GPIO, EXTMODULE_PWR_GPIO_PIN); // power off ext module
   
   for (;;) {
     // Wait for switch off
   }
+#endif
 }
 
 #define PWR_PRESS_DURATION_MIN 200 // 2s
 
 /**
- * i6X dont have a dedicated power trigger
- * so use CANCEL (KEY_EXIT) to emulate it.
+ * i6X dont have a dedicated power trigger so use CANCEL (KEY_EXIT) to emulate it
+ * or on SWITCH mode ignore it completelly, saving data is done in main screen popup.
  */
 uint32_t pwrPressed() {
+#if defined(PWR_BUTTON_PRESS)
   static tmr10ms_t pwr_trigger_time = 0;
 
   if ((readKeys() & (1 << KEY_EXIT))) {
@@ -66,5 +69,9 @@ uint32_t pwrPressed() {
   } else {
     pwr_trigger_time = 0;
   }
+
   return 0;
+#else // SWITCH
+ return 1;
+#endif // PWR_BUTTON_PRESS
 }

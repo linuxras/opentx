@@ -1,77 +1,124 @@
-# OpenI6X
+# OpenI6X: OpenTX for Flysky FS-i6X
 
 ![OpenI6X](https://circleci.com/gh/OpenI6X/opentx.svg?style=shield)
-[![Release](https://img.shields.io/github/v/release/OpenI6X/opentx?include_prereleases)](https://github.com/OpenI6X/opentx/releases)
+[![Release](https://img.shields.io/github/v/release/OpenI6X/opentx?include_prereleases)](https://github.com/OpenI6X/opentx/releases/latest)
 [![GitHub all releases](https://img.shields.io/github/downloads/OpenI6X/opentx/total)](https://github.com/OpenI6X/opentx/releases)
+[![Discord](https://img.shields.io/discord/973289741862727741.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/3vKfYNTVa2)
 
-**OpenTX** port for the venerable Flysky FS-i6X RC radio transmitter.
+You can find instructions and videos contributed by fellow early adopters in the [RCGroups](https://www.rcgroups.com/forums/showthread.php?3916435-FlySky-I6X-port-of-OpenTX), [Telegram](https://t.me/otx_flysky_i6x), [Discord](https://discord.gg/3vKfYNTVa2) and [Rakish Rc](https://www.youtube.com/playlist?list=PLfzAEbvn4Bgr3ndNrwp87UimoKVhXkzBa) youtube tutorials. 
 
+For new contributions and how to build details see [developers guide](https://github.com/OpenI6X/opentx/wiki/Contribute).
 
-You can find instructions and videos contributed by fellow early adopters in the [RCGroups thread](https://www.rcgroups.com/forums/showthread.php?3916435-FlySky-I6X-port-of-OpenTX), [Telegram group](https://t.me/otx_flysky_i6x) and [Rakish Rc](https://www.youtube.com/c/RakishRc) youtube channel. 
+## Table of Contents
 
-New contributions are highly welcome! See [developers guide](https://github.com/OpenI6X/opentx/wiki/Contribute).
-
-### Nightly builds
-If you want to have all the latest features, fixes (and bugs) you can download latest build here:
-1. Go to: https://github.com/OpenI6X/opentx.
-2. Click on ✓ icon next to latest commit id.
-3. Click on "Details" next to build of your choice.
-4. Click on "ARTIFACTS" tab.
-5. Download .bin file with preferred language.
+[How to install](#installation)<br>
+[Features](#features)<br>
+[Navigation](#navigation)<br>
+[Proper shutdown (I see square icon)](#shutdown)<br>
+[USB connection](#usb-connection)<br>
+[Mode 1 and Mode 3 radios](#mode-1--mode-3-radios)<br>
+[All optional hardware connections](#all-optional-hardware-connections)<br>
+[Adjustable backlight level mod](#adjustable-backlight-level-mod)<br>
+[Contributors](#contributors)<br>
 
 ## Installation
 
 Go to the [wiki](https://github.com/OpenI6X/opentx/wiki) for detailed steps.
 
-## Features 
+## Features
+
+Comparison with original firmware:
+
+| Feature                   | FlySky i6X | OpenTX i6X                   |
+|---------------------------|------------|------------------------------|
+| Channels                  | 6/10       | 16                           |
+| Mixers                    | 3          | 32                           |
+| Models                    | 20         | 16 / unlimited<sup>[1]</sup> |
+| Protocols                 | AFHDS, AFHDS2A, PPM | AFHDS2A, PPM, CRSF                    |
+| Logical switches          | _          | ✓                            |
+| Global variables          | _          | ✓                            |
+| Timers                    | _          | ✓                            |
+| Nicer sounds              | _          | ✓                            |
+| Use trims as buttons      | _          | ✓                            |
+| ExpressLRS ready          | _          | ✓                            |
+
+<sup>[1] Unlimited by using USB mass storage mode eeprom backup restore.</sup>
 
 * Protocols:
   * AFHDS2A with SBUS, IBUS and extended SBUS16, IBUS16 - 16 channels modes
   * PPM in/out
-  * CRSF with ExpressLRS and Crossfire modules, CRSFshot enabled
+  * CRSF with ExpressLRS and Crossfire modules:
+    * CRSFshot
     * MEGA Bauds up to 1.8M
-    * ExpressLRS V2 configuration (ELRSV2.lua port)
+    * ExpressLRS V3 configuration (ELRSV3.lua port)
 * 16 channels
-* Telemetry, up to 26 sensors
-* Telemetry mirror on AUX Serial
+* Telemetry
+* Adjustable backlight brightness level (requires basic [modification](#adjustable-backlight-level-mod) & backlight_mod build)
 * Audio tones, alarms and vario sound custom implementation
 * DFU bootloader - Start by pushing trims to the center, like regular OpenTX one
-* USB Joystick & Storage modes (To enable on standard cable: General Settings > USB Detect: Once)
-
+* USB Joystick & Storage modes
+* AUX Serial port with modes:
+  * CRSF Telemetry mirror
+  * SBUS Trainer
+  * Debug (on DEBUG builds)
+  
 ## Navigation
 
-| Key | Function                                                                           |
-| --- |------------------------------------------------------------------------------------|
-| UP     | Up. Hold on main screen for stats.                                                 |                              
-| DOWN   | Down. Hold on main screen for telemetry                                            |                                  
-| OK     | Confirm. Hold on main screen for model menu.                                       |
-| CANCEL | Exit.                                                                              |                      
+| Key | Function                                                                                           |
+| --- |----------------------------------------------------------------------------------------------------|
+| UP     | Up. Scroll values. Hold on main screen for stats.                                                  |                              
+| DOWN   | Down. Scroll values. Hold on main screen for telemetry.                                            |                                  
+| OK     | Confirm. Hold on main screen for model menu. Short press on main screen for popup menu.            |
+| CANCEL | Exit/Back/Cancel.                                                                                  |                      
 | BIND   | Scroll pages right or left (long press), go right in a line. Hold on main screen for general menu. |
-| LEFT POT | Change edited value.                                                               |
-
 
 ## Shutdown
 
-Do not switch off you device when you see small square icon in top right corner of main screen - it indicates that there are settings not yet stored. Wait until it disappears or use graceful shutdown method.
+FlySky FS-i6X don't have a software controlled shutdown button, therefore do not switch off radio when you see `▫` icon in top right corner of main screen - it indicates that settings are not yet saved. Wait until it disappears or use "Save all" option from main screen popup menu.
 
-FlySky FS-i6X don't have graceful shutdown button like other OpenTX devices, but you can trigger it by holding CANCEL button until screen turns off, then use switch.
-
-When to use this method:
+When to use "Save all" option:
+* When you don't want to wait until square icon disapper before shutdown.
 * With USB connected - when USB is connected then settings are not stored with standard delay.
 * To save timers.
 
-## Mode 1
+## USB connection
 
-With Mode 1 radio you may experience inverted gimbal movement and swapped gimbals on main screen. To fix this swap gimbal connectors (red-white one with black-white one).
+FlySky FS-i6X don't have a USB VBUS making it impossible to detect USB connection. Without modification, you need to press OK on main screen and select "USB Connect" everytime you've connected USB (In version 1.8.0 or earlier it's in: Radio Setup -> "USB Detect").<br>
+Automatic connection detection can be added by wiring `PA15` pad to USB VBUS preferably with a resistor (I have used 1K).
 
-## Hardware connections (optional)
+
+## Mode 1 & Mode 3 radios
+
+With Mode 1 & Mode 3 radios you may experience inverted gimbal movement and swapped gimbals on main screen. To fix this swap gimbal connectors (red-white one with black-white one).
+
+## All optional hardware connections
+
+| PCB Pad    | Function                                              |
+|------------|-------------------------------------------------------|
+| `TX2`      | S.Port (CRSF)                                         |
+| `PA9`      | AUX Serial port TX                                    |
+| `PA10`     | AUX Serial port RX                                    |
+| `PA15`     | USB VBUS (USB connection detection)                   |
+| `PC13`     | External module power control (it was `PC9` up to OpenI6X 1.5.0) |
+| `PC9`+`BL` | Wiring those together allows for adjustable backlight |
 
 ![hw](https://github.com/OpenI6X/opentx/raw/master/doc/flysky/openi6x_hardware.jpeg?raw=true)
 
+## Adjustable backlight level mod
+
+Wire `PC9` and `BL` pads together.
+
+![hw](https://github.com/OpenI6X/opentx/raw/master/doc/flysky/backlight_mod.jpg?raw=true)
+
 ## Contributors
 
-* ExpressLRS V2 config, USB support, sound support, bootloader, backporting, bugfixing - Janek ([ajjjjjjjj](https://github.com/ajjjjjjjj)) ongoing collaboration.
-* All the RF code was taken from the great KotelloRC's [erfly6: Er9X for i6 and i6x](https://bitbucket.org/KotelloRC/erfly6/src/master/).
+* Janek ([ajjjjjjjj](https://github.com/ajjjjjjjj)), continues Mariano's work, added sound, USB, ExpressLRS V2/V3 configuration, telemetry mirror, SBUS trainer, new/fixed drivers, ports, bugfixes.
+* Mariano ([marianomd](https://github.com/marianomd)), continued Kuba's work and made it up to useable condition! Added AFHDS2A, PPM, CRSF.
+* Kuba ([qba667](https://github.com/qba667)), started this work and made this project possible, it is forked from his repo.
+* Wilhelm ([wimalopaan](https://github.com/wimalopaan)) added 16 channels SBUS16 / IBUS16 modes.
+* The internal RF code was taken from the great KotelloRC's [erfly6: Er9X for i6 and i6x](https://bitbucket.org/KotelloRC/erfly6/src/master/).
+* Some of the internal RF fixes are a result of analysing [pascallanger's](https://github.com/pascallanger) [DIY-Multiprotocol-TX-Module](https://github.com/pascallanger/DIY-Multiprotocol-TX-Module).
+* ExpressLRS configurator is based on elrsV2/V3.lua from [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
+* Some of the ports are from [EdgeTX](https://github.com/EdgeTX/edgetx/).
 * ADC code taken from [OpenGround](https://github.com/fishpepper/OpenGround).
-* This work is based on Jakub's ([qba667](https://github.com/qba667)) work and is forked from his repo.
 * All the contributors of [OpenTX](https://github.com/opentx/opentx/). 

@@ -211,7 +211,7 @@ bool isSourceAvailableInCustomSwitches(int source) {
   return result;
 }
 
-bool isInputSourceAvailable(int source) {
+bool isSourceAvailableInInputs(int source) {
   if (source >= MIXSRC_FIRST_POT && source <= MIXSRC_LAST_POT) {
     return IS_POT_SLIDER_AVAILABLE(POT1 + source - MIXSRC_FIRST_POT);
   }
@@ -411,6 +411,9 @@ bool isAssignableFunctionAvailable(int function) {
 #else
       return false;
 #endif
+#if defined(PCBI6X) // volume function unsupported
+    case FUNC_VOLUME:
+#endif
 #if !defined(HAPTIC)
     case FUNC_HAPTIC:
 #endif
@@ -540,7 +543,7 @@ bool isTelemetryProtocolAvailable(int protocol) {
   return true;
 }
 
-#if defined(PCBHORUS)
+#if defined(PCBHORUS) || defined(PCBI6X)
 bool isTrainerModeAvailable(int mode) {
   return true;
 }

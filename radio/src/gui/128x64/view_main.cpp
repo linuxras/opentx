@@ -268,7 +268,7 @@ void onMainViewMenu(const char *result)
     timerReset(2);
   }
 #endif
-#if !defined(PCBI6X)
+#if defined(SDCARD)
   else if (result == STR_VIEW_NOTES) {
     pushModelNotes();
   }
@@ -293,6 +293,15 @@ void onMainViewMenu(const char *result)
   else if (result == STR_STATISTICS) {
     chainMenu(menuStatisticsView);
   }
+  else if (result == STR_SAVEALLDATA) {
+    watchdogSuspend(200); // 2s
+    saveAllData();
+  }
+#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
+  else if (result == STR_USBCONNECT) {
+    globalData.usbConnect = 1;
+  }
+#endif
 #if !defined(PCBI6X)
   else if (result == STR_ABOUT_US) {
     chainMenu(menuAboutView);
@@ -342,9 +351,16 @@ void menuMainView(event_t event)
       }
 #endif
 
+#if defined(PCBI6X)
+      POPUP_MENU_ADD_ITEM(STR_SAVEALLDATA);
+#endif
       POPUP_MENU_ADD_ITEM(STR_RESET_SUBMENU);
 
       POPUP_MENU_ADD_ITEM(STR_STATISTICS);
+
+#if defined(PCBI6X) && !defined(PCBI6X_USB_VBUS)
+      POPUP_MENU_ADD_ITEM(STR_USBCONNECT);
+#endif
 #if !defined(PCBI6X)
       POPUP_MENU_ADD_ITEM(STR_ABOUT_US);
 #endif

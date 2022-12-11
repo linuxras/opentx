@@ -202,8 +202,12 @@
   #define IS_SLAVE_TRAINER()           (g_model.trainerMode == TRAINER_MODE_SLAVE)
 #endif
 
-#if defined(PCBI6X_ELRSV2) || defined(LUA) || defined(PXX2) || defined(MULTIMODULE)
+#if defined(PCBI6X_ELRSV3) || defined(PCBI6X_HELLO) || defined(LUA) || defined(PXX2) || defined(MULTIMODULE)
   #define RADIO_TOOLS
+#endif
+
+#if defined(PCBI6X_ELRSV3)
+  #define CTOOL_DATA_SIZE 800
 #endif
 
 // RESX range is used for internal calculation; The menu says -100.0 to 100.0; internally it is -1024 to 1024 to allow some optimizations
@@ -355,7 +359,7 @@ extern const uint8_t modn12x3[];
   #define CONVERT_MODE_TRIMS(x)  CONVERT_MODE(x)
 #endif
 
-extern uint8_t channel_order(uint8_t x);
+extern uint8_t channelOrder(uint8_t x);
 
 #define THRCHK_DEADBAND                16
 
@@ -369,7 +373,7 @@ extern uint8_t channel_order(uint8_t x);
 
 #if defined(PCBHORUS)
   #define SPLASH_TIMEOUT               0 /* we use the splash duration to load stuff from the SD */
-#elif defined(PCBTARANIS)
+#elif defined(PCBTARANIS) || defined(PCBI6X)
   #define SPLASH_TIMEOUT               (g_eeGeneral.splashMode==-4 ? 1500 : (g_eeGeneral.splashMode<=0 ? (400-g_eeGeneral.splashMode*200) : (400-g_eeGeneral.splashMode*100)))
 #else
   #define SPLASH_TIMEOUT               (4*100)  // 4 seconds
@@ -429,7 +433,7 @@ extern InactivityData inactivity;
 #endif
 
 char hex2zchar(uint8_t hex);
-char idx2char(int8_t idx);
+char zchar2char(int8_t idx);
 int8_t char2idx(char c);
 void str2zchar(char *dest, const char *src, int size);
 int zchar2str(char *dest, const char *src, int size);
@@ -490,6 +494,7 @@ void doMixerPeriodicUpdates();
 void scheduleNextMixerCalculation(uint8_t module, uint16_t period_ms);
 
 void checkTrims();
+extern uint8_t currentBacklightBright;
 void perMain();
 void per10ms();
 
@@ -572,8 +577,9 @@ PACK(struct GlobalData {
   uint8_t unexpectedShutdown:1;
   uint8_t sdcardPresent:1;
 #if defined(PCBI6X)
-  uint8_t usbDetect:1;
-  uint8_t spare:5;
+  uint8_t usbConnect:1;
+  uint8_t cToolRunning:1;
+  uint8_t spare:4;
 #else
   uint8_t spare:6;
 #endif
@@ -646,13 +652,10 @@ static inline void GET_ADC_IF_MIXER_NOT_RUNNING()
 
 #include "sbus.h"
 
-void backlightOn();
+void resetBacklightTimeout();
 void checkBacklight();
 
 #define BITMASK(bit) (1<<(bit))
-
-/// returns the number of elements of an array
-#define DIM(arr) (sizeof((arr))/sizeof((arr)[0]))
 
 template<class t> inline t min(t a, t b) { return a<b?a:b; }
 template<class t> inline t max(t a, t b) { return a>b?a:b; }
@@ -753,7 +756,7 @@ extern uint8_t g_vbat100mV;
 #define g_blinkTmr10ms    (*(uint8_t*)&g_tmr10ms)
 extern uint8_t            g_beepCnt;
 
-#include "trainer_input.h"
+#include "trainer.h"
 
 extern int32_t            chans[MAX_OUTPUT_CHANNELS];
 extern int16_t            ex_chans[MAX_OUTPUT_CHANNELS]; // Outputs (before LIMITS) of the last perMain
@@ -939,12 +942,12 @@ enum FunctionsActive {
   FUNCTION_TRAINER,
   FUNCTION_INSTANT_TRIM = FUNCTION_TRAINER+4,
   FUNCTION_VARIO,
-  FUNCTION_BACKLIGHT,
 #if defined(SDCARD)
   FUNCTION_LOGS,
 #endif
   FUNCTION_BACKGND_MUSIC,
   FUNCTION_BACKGND_MUSIC_PAUSE,
+  FUNCTION_BACKLIGHT,
 };
 
 #define VARIO_FREQUENCY_ZERO   700/*Hz*/
@@ -1086,6 +1089,7 @@ void clearMFP();
 #endif
 
 extern uint8_t requiredSpeakerVolume;
+extern uint8_t requiredBacklightBright;
 
 enum MainRequest {
   REQUEST_SCREENSHOT,
@@ -1096,6 +1100,7 @@ extern uint8_t mainRequestFlags;
 
 void checkBattery();
 void opentxClose(uint8_t shutdown=true);
+void saveAllData();
 void opentxInit();
 void opentxResume();
 
@@ -1176,11 +1181,13 @@ union ReusableBuffer
     uint8_t stickMode;
   } generalSettings;
 
+#if defined(SDCARD)
   struct {
     char filename[TEXT_FILENAME_MAXLEN];
     char lines[NUM_BODY_LINES][LCD_COLS + 1];
     int linesCount;
   } viewText;
+#endif
 
   struct {
     bool longNames;
@@ -1200,6 +1207,10 @@ union ReusableBuffer
 #if defined(STM32)
   // Data for the USB mass storage driver. If USB mass storage runs no menu is not allowed to be displayed
   uint8_t MSC_BOT_Data[MSC_MEDIA_PACKET];
+#endif
+
+#if defined(PCBI6X_ELRSV3)
+  uint8_t cToolData[CTOOL_DATA_SIZE];
 #endif
 };
 

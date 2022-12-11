@@ -116,6 +116,7 @@ else()
     ${TARGET_SRC}
     intmodule_pulses_driver.cpp
     trainer_driver.cpp
+    ../common/arm/stm32/timers_driver.cpp
     )
   add_definitions(-DSBUS)
   set(PULSES_SRC

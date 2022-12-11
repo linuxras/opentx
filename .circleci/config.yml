@@ -22,67 +22,73 @@ jobs:
             build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw_output ./tools/commit-tests.sh -Wno-error
       - sonarcloud/scan
 
-  build-elrsv2:
+  build-elrsv3:
     docker:
-      - image: cimg/python:3.10.4
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
     steps:
       - checkout
       - run: |
-          wget https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2 -P /tmp
-          tar -C /tmp -xjf /tmp/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-          export PATH=$PATH:/tmp/gcc-arm-none-eabi-4_7-2013q3/bin
-          pip3 install pillow libclang-py3 pyqt5
-          sudo apt-get update
-          sudo apt-get install -y libclang-6.0-dev
-          python3 ./tools/build-flysky.py -bI6X_ELRSV2 -tALL /home/circleci/project/
+          python3 ./tools/build-flysky.py -bI6X_ELRSV3 -tALL $PWD/
+      - store_artifacts:
+          path: output
+
+  build-elrsv3-backlight:
+    docker:
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
+    steps:
+      - checkout
+      - run: |
+          python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -tALL $PWD/
       - store_artifacts:
           path: output
 
   build-heli:
     docker:
-      - image: cimg/python:3.10.4
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
     steps:
       - checkout
       - run: |
-          wget https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2 -P /tmp
-          tar -C /tmp -xjf /tmp/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-          export PATH=$PATH:/tmp/gcc-arm-none-eabi-4_7-2013q3/bin
-          pip3 install pillow libclang-py3 pyqt5
-          sudo apt-get update
-          sudo apt-get install -y libclang-6.0-dev
-          python3 ./tools/build-flysky.py -bI6X_HELI -tALL /home/circleci/project/
+          python3 ./tools/build-flysky.py -bI6X_HELI -tALL $PWD/
+      - store_artifacts:
+          path: output
+
+  build-heli-backlight:
+    docker:
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
+    steps:
+      - checkout
+      - run: |
+          python3 ./tools/build-flysky.py -bI6X_HELI_BACKLIGHT_MOD -tALL $PWD/
       - store_artifacts:
           path: output
 
   build-std:
     docker:
-      - image: cimg/python:3.10.4
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
     steps:
       - checkout
       - run: |
-          wget https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2 -P /tmp
-          tar -C /tmp -xjf /tmp/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-          export PATH=$PATH:/tmp/gcc-arm-none-eabi-4_7-2013q3/bin
-          pip3 install pillow libclang-py3 pyqt5
-          sudo apt-get update
-          sudo apt-get install -y libclang-6.0-dev
-          python3 ./tools/build-flysky.py -bI6X -tALL /home/circleci/project/
+          python3 ./tools/build-flysky.py -bI6X -tALL $PWD/
+      - store_artifacts:
+          path: output
+
+  build-std-backlight:
+    docker:
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
+    steps:
+      - checkout
+      - run: |
+          python3 ./tools/build-flysky.py -bI6X_BACKLIGHT_MOD -tALL $PWD/
       - store_artifacts:
           path: output
 
   build-en:
     docker:
-      - image: cimg/python:3.10.4
+      - image: ajjjjjjjj/opentx-docker-i6x:1.0.0
     steps:
       - checkout
       - run: |
-          wget https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2 -P /tmp
-          tar -C /tmp -xjf /tmp/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-          export PATH=$PATH:/tmp/gcc-arm-none-eabi-4_7-2013q3/bin
-          pip3 install pillow libclang-py3 pyqt5
-          sudo apt-get update
-          sudo apt-get install -y libclang-6.0-dev
-          python3 ./tools/build-flysky.py -bI6X_ELRSV2 -bI6X_HELI -bI6X -tEN /home/circleci/project/
+          python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN $PWD/
       - store_artifacts:
           path: output
 
@@ -98,49 +104,66 @@ jobs:
 #            ls -la
 #            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete nightly-latest $CIRCLE_ARTIFACTS/
 
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.3
+#orbs:
+#  sonarcloud: sonarsource/sonarcloud@1.0.3
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   openi6x-release-workflow:
     jobs:
-      - sonar-scan:
-          context: SonarCloud
+#      - sonar-scan:
+#          context: SonarCloud
       - build-en:
           filters:
             branches:
               ignore:
                 - master
-          requires:
-            - sonar-scan
-      - build-elrsv2:
+#          requires:
+#            - sonar-scan
+      - build-elrsv3:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
+      - build-elrsv3-backlight:
+          filters:
+            branches:
+              only:
+                - master
+#          requires:
+#            - sonar-scan
       - build-heli:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+#          requires:
+#            - sonar-scan
+      - build-heli-backlight:
+          filters:
+            branches:
+              only:
+                - master
+#          requires:
+#            - sonar-scan
       - build-std:
           filters:
             branches:
               only:
                 - master
-          requires:
-            - sonar-scan
+      - build-std-backlight:
+          filters:
+            branches:
+              only:
+                - master
+#          requires:
+#            - sonar-scan
 #      - publish-github-release:
 ##          filters:
 ##            branches:
 ##              only: master
 #          requires:
-#            - build-elrsv2
+#            - build-elrsv3
 #            - build-gvars
 #            - build-heli

@@ -109,12 +109,12 @@ bool getCrossfireTelemetryValue(uint8_t index, int32_t &value) {
 }
 
 void processCrossfireTelemetryFrame() {
-  if (!checkCrossfireTelemetryFrameCRC()) {
-    TRACE("[XF] CRC error");
-    telemetryErrors++;
-    return;
+
+  if (telemetryState == TELEMETRY_INIT && moduleState[EXTERNAL_MODULE].counter != CRSF_FRAME_MODELID_SENT) {
+    moduleState[EXTERNAL_MODULE].counter = CRSF_FRAME_MODELID;
   }
 
+  uint8_t crsfPayloadLen = telemetryRxBuffer[1];
   uint8_t id = telemetryRxBuffer[2];
   int32_t value;
   switch (id) {
@@ -151,6 +151,10 @@ void processCrossfireTelemetryFrame() {
         }
         processCrossfireTelemetryValue(BARO_ALTITUDE_INDEX, value);
       }
+      // Length of TBS BARO_ALT has 4 payload bytes with just 2 bytes of altitude
+      // but support including VARIO if the declared payload length is 6 bytes or more
+      if (crsfPayloadLen > 5 && getCrossfireTelemetryValue<2>(5, value))
+        processCrossfireTelemetryValue(VERTICAL_SPEED_INDEX, value);
       break;
 
     case LINK_ID:
@@ -255,6 +259,43 @@ bool isCrossfireOutputBufferAvailable() {
   return outputTelemetryBufferSize == 0;
 }
 
+bool crossfireLenIsSane(uint8_t len)
+{
+  // packet len must be at least 3 bytes (type+payload+crc) and 2 bytes < MAX (hdr+len)
+  return (len > 2 && len < TELEMETRY_RX_PACKET_SIZE-1);
+}
+
+void crossfireTelemetrySeekStart(uint8_t *rxBuffer, uint8_t &rxBufferCount)
+{
+  // Bad telemetry packets frequently are just truncated packets, with the start
+  // of a new packet contained in the data. This causes multiple packet drops as
+  // the parser tries to resync.
+  // Search through the rxBuffer for a sync byte, shift the contents if found
+  // and reduce rxBufferCount
+  for (uint8_t idx=1; idx<rxBufferCount; ++idx) {
+    uint8_t data = rxBuffer[idx];
+    if (data == RADIO_ADDRESS || data == UART_SYNC) {
+      uint8_t remain = rxBufferCount - idx;
+      // If there's at least 2 bytes, check the length for validity too
+      if (remain > 1 && !crossfireLenIsSane(rxBuffer[idx+1]))
+        continue;
+
+      //TRACE("Found 0x%02x with %u remain", data, remain);
+      TRACE("Found 0x%02x with %u remain", data, remain);
+      // copy the data to the front of the buffer
+      for (uint8_t src=idx; src<rxBufferCount; ++src) {
+        rxBuffer[src-idx] = rxBuffer[src];
+      }
+
+      rxBufferCount = remain;
+      return;
+    } // if found sync
+  }
+
+  // Not found, clear the buffer
+  rxBufferCount = 0;
+}
+
 void processCrossfireTelemetryData(uint8_t data) {
 
 #if defined(AUX_SERIAL)
@@ -265,14 +306,12 @@ void processCrossfireTelemetryData(uint8_t data) {
 
   if (telemetryRxBufferCount == 0 && data != RADIO_ADDRESS) {
     TRACE("[XF] address 0x%02X error", data);
-    telemetryErrors++;
     return;
   }
 
-  if (telemetryRxBufferCount == 1 && (data < 2 || data > TELEMETRY_RX_PACKET_SIZE - 2)) {
+  if (telemetryRxBufferCount == 1 && !crossfireLenIsSane(data)) {
     TRACE("[XF] length 0x%02X error", data);
     telemetryRxBufferCount = 0;
-    telemetryErrors++;
     return;
   }
 
@@ -281,14 +320,17 @@ void processCrossfireTelemetryData(uint8_t data) {
   } else {
     TRACE("[XF] array size %d error", telemetryRxBufferCount);
     telemetryRxBufferCount = 0;
-    telemetryErrors++;
   }
 
-  if (telemetryRxBufferCount > 4) {
-    uint8_t length = telemetryRxBuffer[1];
-    if (length + 2 == telemetryRxBufferCount) {
+  // telemetryRxBuffer[1] holds the packet length-2, check if the whole packet was received
+  while (telemetryRxBufferCount > 4 && (telemetryRxBuffer[1]+2) == telemetryRxBufferCount) {
+    if (checkCrossfireTelemetryFrameCRC()) {
       processCrossfireTelemetryFrame();
       telemetryRxBufferCount = 0;
+    }
+    else {
+      TRACE("[XF] CRC error ");
+      crossfireTelemetrySeekStart(telemetryRxBuffer, telemetryRxBufferCount); // adjusts telemetryRxBufferCount
     }
   }
 }
@@ -323,7 +365,7 @@ void registerCrossfireTelemetryCallback(void (*callback)(uint8_t, uint8_t*, uint
 }
 
 inline void runCrossfireTelemetryCallback(uint8_t command, uint8_t* data, uint8_t length) {
-  if (crossfireTelemetryCallback != 0) {
+  if (crossfireTelemetryCallback != nullptr) {
     crossfireTelemetryCallback(command, data, length);
   }
 }

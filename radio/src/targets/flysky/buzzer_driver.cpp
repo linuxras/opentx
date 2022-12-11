@@ -208,15 +208,15 @@ void buzzerEvent(unsigned int index)
       case AU_SPECIAL_SOUND_TICK:
         playTone(BEEP_DEFAULT_FREQ + 1500, 40, 400, PLAY_REPEAT(2));
         break;
-      case AU_TRAINER_LOST:
       case AU_TELEMETRY_LOST:
         playTone(BEEP_DEFAULT_FREQ + 200, 40, 20);
+      case AU_TRAINER_LOST:
         playTone(BEEP_DEFAULT_FREQ, 40, 20);
         playTone(BEEP_DEFAULT_FREQ - 200, 40, 20);
         break;
-      case AU_TRAINER_BACK:
       case AU_TELEMETRY_BACK:
         playTone(BEEP_DEFAULT_FREQ - 200, 40, 20);
+      case AU_TRAINER_BACK:
         playTone(BEEP_DEFAULT_FREQ, 40, 20);
         playTone(BEEP_DEFAULT_FREQ + 200, 40, 20);
         break;

@@ -128,6 +128,7 @@ static void lcdSendCtl(uint8_t data) {
     LCD_RD_LO();
     LCD_CS_HI();
 }
+
 static void lcdSendGFX(uint8_t data) {
     LCD_RS_HI(); //gfx
 	LCD_RW_LO();
@@ -138,9 +139,7 @@ static void lcdSendGFX(uint8_t data) {
     LCD_CS_HI();
 }
 
-
-void lcdInit()
-{
+void lcdInit() {
   //RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE | RCC_AHBPeriph_GPIOD | RCC_AHBPeriph_GPIOB, ENABLE);
   //RCC_AHBPeriphClockCmd(LCD_RCC_AHB1Periph, ENABLE);
   GPIO_InitTypeDef gpio_init;
@@ -169,7 +168,6 @@ void lcdInit()
   lcdRefresh();
 }
 
-
 void lcdRefresh() {
     uint8_t *p = displayBuf;
     int page = 0xB0;
@@ -185,7 +183,7 @@ void lcdRefresh() {
 	} while (page < 0xB8);
 }
 
-void lcdOff(){
+void lcdOff() {
     // switch display off
     lcdSendCtl(LCD_CMD_DISPLAY_OFF);
     // all pixels on
@@ -198,7 +196,7 @@ void lcdSetRefVolt(uint8_t val){
     lcdSendCtl(val);
 }
 
-void lcdReset(){
+void lcdReset() {
     // wait for voltages to be stable
     delay_ms(20);
     LCD_RST_LO();

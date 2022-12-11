@@ -139,7 +139,7 @@ static void AFHDS2A_build_bind_packet(void) {
     case AFHDS2A_BIND4:
       packet[0] = 0xbc;
       if (phase == AFHDS2A_BIND4) {
-        memcpy(&packet[5], &g_model.moduleData[INTERNAL_MODULE].rxID, 4);
+        memcpy(&packet[5], &g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]], 4);
         memset(&packet[11], 0xff, 16);
       }
       packet[9] = phase - 1;
@@ -153,7 +153,7 @@ static void AFHDS2A_build_bind_packet(void) {
 
 void AFHDS2A_build_packet(const uint8_t type) {
   memcpy(&packet[1], ID.rx_tx_addr, sizeof(ID.rx_tx_addr));
-  memcpy(&packet[5], g_model.moduleData[INTERNAL_MODULE].rxID, sizeof(g_model.moduleData[INTERNAL_MODULE].rxID));
+  memcpy(&packet[5], &g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]], 4);
   switch (type) {
     case AFHDS2A_PACKET_STICKS:
       packet[0] = 0x58;
@@ -194,14 +194,8 @@ void AFHDS2A_build_packet(const uint8_t type) {
       packet[0] = 0xaa;
       packet[9] = 0xfd;
       packet[10] = 0xff;
-
-      if (g_model.moduleData[INTERNAL_MODULE].servoFreq < 50 ||
-          g_model.moduleData[INTERNAL_MODULE].servoFreq > 400) {
-        g_model.moduleData[INTERNAL_MODULE].servoFreq = 50;  // default is 50Hz
-      }
-
-      packet[11] = g_model.moduleData[INTERNAL_MODULE].servoFreq;
-      packet[12] = g_model.moduleData[INTERNAL_MODULE].servoFreq >> 8;
+      packet[11] = g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq;
+      packet[12] = g_model.moduleData[INTERNAL_MODULE].afhds2a.servoFreq >> 8;
       if (g_model.moduleData[INTERNAL_MODULE].subType & (AFHDS2A_SUBTYPE_PPM_IBUS & AFHDS2A_SUBTYPE_PPM_SBUS)) {
         packet[13] = 0x01;  // PPM output enabled
       } else {
@@ -230,11 +224,11 @@ void AFHDS2A_build_packet(const uint8_t type) {
 void ActionAFHDS2A(void) {
   uint8_t Channel;
   static uint8_t packet_type;
-  static uint16_t telem_counter;
+  // static uint16_t telem_counter;
   static uint16_t packet_counter = 0;
   A7105_AdjustLOBaseFreq();
 
-  if (moduleFlag[INTERNAL_MODULE] == MODULE_BIND) {
+  if (moduleState[INTERNAL_MODULE].mode == MODULE_MODE_BIND) {
     if (IS_BIND_DONE && IS_BIND_STOP) {
       TRACE("Binding in progress...");
       // __disable_irq(); crashes
@@ -244,9 +238,9 @@ void ActionAFHDS2A(void) {
     } else {
       if (IS_BIND_DONE) {
         TRACE("Bind done!");
-        moduleFlag[INTERNAL_MODULE] = MODULE_NORMAL_MODE;
+        moduleState[INTERNAL_MODULE].mode = MODULE_MODE_NORMAL;
         s_editMode = EDIT_SELECT_MENU;
-        storageDirty(EE_MODEL);  // Save RX_ID
+        storageDirty(EE_GENERAL);  // Save receiverId
         BIND_STOP;
       }
     }
@@ -261,10 +255,10 @@ void ActionAFHDS2A(void) {
       // __enable_irq();
     }
   }
-  if (moduleFlag[INTERNAL_MODULE] == MODULE_RANGECHECK && !IS_RANGE_FLAG_on) {
+  if (moduleState[INTERNAL_MODULE].mode == MODULE_MODE_RANGECHECK && !IS_RANGE_FLAG_on) {
     RANGE_FLAG_on;
   }
-  if (moduleFlag[INTERNAL_MODULE] != MODULE_RANGECHECK && IS_RANGE_FLAG_on) {
+  if (moduleState[INTERNAL_MODULE].mode != MODULE_MODE_RANGECHECK && IS_RANGE_FLAG_on) {
     RANGE_FLAG_off;
   }
   //----------------------------------------------------------------------------
@@ -334,7 +328,7 @@ EndSendBIND123_:  //-----------------------------------------------------------
 ResBIND123_:  //-----------------------------------------------------------
   A7105_ReadData(AFHDS2A_RXPACKET_SIZE);
   if ((packet[0] == 0xbc) & (packet[9] == 0x01)) {
-    memcpy(&g_model.moduleData[INTERNAL_MODULE].rxID, &packet[5], sizeof(g_model.moduleData[INTERNAL_MODULE].rxID));
+    memcpy(&g_eeGeneral.receiverId[g_model.header.modelId[INTERNAL_MODULE]], &packet[5], 4);
     RadioState = (RadioState & 0xF0) | AFHDS2A_BIND4;
     bind_phase = 0;
     SETBIT(RadioState, SEND_RES, SEND);
@@ -359,10 +353,10 @@ EndSendData_:  //-----------------------------------------------------------
     packet_type = AFHDS2A_PACKET_STICKS;
   SETBIT(RadioState, SEND_RES, RES);
   EnableGIO();
-  if (telem_counter < 100)
-    telem_counter++;
-  else
-    telem_status = 0;
+  // if (telem_counter < 100)
+  //   telem_counter++;
+  // else
+  //   telem_status = 0;
   SETBIT(RadioState, SEND_RES, RES);
   return;
 ResData_:  //-----------------------------------------------------------
@@ -374,7 +368,7 @@ ResData_:  //-----------------------------------------------------------
   if (packet[0] == 0xAA || packet[0] == 0xAC) {
     if (!memcmp(&packet[1], ID.rx_tx_addr, 4)) {  // Validate TX address
       AFHDS2A_update_telemetry();
-      telem_counter = 0;
+      // telem_counter = 0;
     }
   }
   SETBIT(RadioState, SEND_RES, SEND);
