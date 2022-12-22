@@ -76,10 +76,10 @@
   #define MAX_MIXERS                   32 
   #define MAX_EXPOS                    14
   #define MAX_LOGICAL_SWITCHES         12
-  #define MAX_SPECIAL_FUNCTIONS        11 // number of functions assigned to switches
+  #define MAX_SPECIAL_FUNCTIONS        16 // number of functions assigned to switches
   #define MAX_TRAINER_CHANNELS         16
   #define MAX_INPUTS                   16
-  #define MAX_TELEMETRY_SENSORS        26 // 48b each
+  #define MAX_TELEMETRY_SENSORS        28 // 48b each
   #define MAX_SCRIPTS				           0
 #else
   #define MAX_MODELS                   16

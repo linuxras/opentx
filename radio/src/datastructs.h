@@ -154,21 +154,26 @@ PACK(struct CustomFunctionData {
   int16_t swtch : 9;
   uint16_t func : 7;
   PACK(union {
+#if !defined(PCBI6X) // SDCARD + VOICE
     NOBACKUP(PACK(struct {
       char name[LEN_FUNCTION_NAME];
     }) play);
-
+#endif
     PACK(struct {
       int16_t val;
       uint8_t mode;
       uint8_t param;
+#if !defined(PCBI6X) // SDCARD + VOICE
       NOBACKUP(CFN_SPARE_TYPE spare);
+#endif
     })
     all;
 
     NOBACKUP(PACK(struct {
       int32_t val1;
+#if !defined(PCBI6X) // SDCARD + VOICE
       NOBACKUP(CFN_SPARE_TYPE val2);
+#endif
     }) clear);
   });
   uint8_t active;
@@ -891,7 +896,7 @@ static inline void check_struct() {
   CHKSIZE(LimitData, 11);
   CHKSIZE(MixData, 20);
   CHKSIZE(ExpoData, 17);
-  CHKSIZE(CustomFunctionData, 9);
+  CHKSIZE(CustomFunctionData, 7);
   CHKSIZE(FlightModeData, 36);
   CHKSIZE(TimerData, 11);
   CHKSIZE(SwashRingData, 8);
@@ -932,8 +937,8 @@ static inline void check_struct() {
   CHKSIZE(TrainerData, 16);
 
 #if defined(PCBI6X)
-  CHKSIZE(RadioData, 291);
-  CHKSIZE(ModelData, 2765);
+  CHKSIZE(RadioData, 304);
+  CHKSIZE(ModelData, 2806);
 #elif defined(PCBXLITE)
   CHKSIZE(RadioData, 844);
   CHKSIZE(ModelData, 6025);
