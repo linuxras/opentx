@@ -79,7 +79,6 @@ static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 175+
 static uint8_t *fieldData = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
 //static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 static constexpr uint8_t POPUP_MSG_OFFSET = FIELD_DATA_BUFFER_SIZE - 24 - 1;
-// static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 uint8_t fieldDataLen = 0;
 
 static constexpr uint8_t FIELDS_MAX_COUNT = 16;
@@ -907,7 +906,7 @@ void ELRSV3_stop() {
 
 //  if (globalData.cToolRunning) {
     globalData.cToolRunning = 0;
-    memclear(reusableBuffer.cToolData, CTOOL_DATA_SIZE);
+    memclear(reusableBuffer.cToolData, sizeof(reusableBuffer.cToolData));
     popMenu();
 //  }
 }

@@ -206,9 +206,7 @@
   #define RADIO_TOOLS
 #endif
 
-#if defined(PCBI6X_ELRSV3)
-  #define CTOOL_DATA_SIZE 800
-#endif
+#define CTOOL_DATA_SIZE 800
 
 // RESX range is used for internal calculation; The menu says -100.0 to 100.0; internally it is -1024 to 1024 to allow some optimizations
 #define RESX_SHIFT 10
@@ -1209,7 +1207,7 @@ union ReusableBuffer
   uint8_t MSC_BOT_Data[MSC_MEDIA_PACKET];
 #endif
 
-#if defined(PCBI6X_ELRSV3)
+#if defined(RADIO_TOOLS)
   uint8_t cToolData[CTOOL_DATA_SIZE];
 #endif
 };
