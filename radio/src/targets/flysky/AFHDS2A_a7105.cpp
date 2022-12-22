@@ -83,10 +83,7 @@ void AFHDS2A_update_telemetry() {
 
   if (packet[0] == 0xAA) {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
-    if (tx_rssi < 0)
-      tx_rssi = 0;
-    else if (tx_rssi > 255)
-      tx_rssi = 255;
+    tx_rssi = limit<int16_t>(0, tx_rssi, 255);
     packet[8] = tx_rssi;
     processFlySkyPacket(packet + 8);
   } else if (packet[0] == 0xAC) {
@@ -132,7 +129,7 @@ void AFHDS2A_build_packet(const uint8_t type) {
   switch (type) {
     case AFHDS2A_PACKET_STICKS:
       packet[0] = 0x58;
-      for (uint8_t ch = 0; ch < num_ch; ++ch) {
+      for (uint32_t ch = 0; ch < num_ch; ++ch) {
         // channelOutputs: -1024 to 1024
 #if defined(AFHDS2A_LQI_CH)
         const uint16_t channelMicros = (ch == (AFHDS2A_LQI_CH - 1)) ? 

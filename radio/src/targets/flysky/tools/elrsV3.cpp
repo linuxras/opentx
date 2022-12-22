@@ -160,7 +160,6 @@ static void UIbackExec(FieldProps * field);
 static void parseDeviceInfoMessage(uint8_t* data);
 static void parseParameterInfoMessage(uint8_t* data, uint8_t length);
 static void parseElrsInfoMessage(uint8_t* data);
-static void refreshNext(uint8_t command, uint8_t* data, uint8_t length);
 static void runPopupPage(event_t event);
 static void runDevicePage(event_t event);
 static void lcd_title();
@@ -289,7 +288,7 @@ static void selectField(int8_t step) {
 
 static uint8_t getDevice(uint8_t devId) {
   TRACE("getDevice %x", devId);
-  for (uint8_t i = 0; i < devicesLen; i++) {
+  for (uint32_t i = 0; i < devicesLen; i++) {
     if (deviceIds[i] == devId) {
       return deviceIds[i];
     }
