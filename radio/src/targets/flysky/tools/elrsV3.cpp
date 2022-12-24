@@ -66,8 +66,8 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 188; // 165 + 19 (units) => 184+
-static constexpr uint8_t VALUES_BUFFER_SIZE = 252; // 242+
+static constexpr uint8_t NAMES_BUFFER_SIZE  = 184; // 165 + 19 (units) => 184+
+static constexpr uint8_t VALUES_BUFFER_SIZE = 236; // 236+
 static uint8_t *namesBuffer = &reusableBuffer.cToolData[0];
 uint8_t namesBufferOffset = 0;
 static uint8_t *valuesBuffer = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE];
