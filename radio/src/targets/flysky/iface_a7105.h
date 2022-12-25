@@ -80,10 +80,8 @@ extern uint8_t prev_power; // unused power value
 // #define RX_Temp 4
 // #define RX_RPM  5
 
-// extern int16_t telem_AFHDS2A[6];
-// extern uint8_t telem_status;
-
-extern uint8_t  packet[AFHDS2A_TXPACKET_SIZE];
+//extern uint8_t  packet[AFHDS2A_TXPACKET_SIZE];
+extern uint8_t *packet;
 
 //#define NUM_CHN 16
 //// Servo data
