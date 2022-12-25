@@ -325,10 +325,6 @@ EndSendData_:  //-----------------------------------------------------------
     packet_type = AFHDS2A_PACKET_STICKS;
   SETBIT(RadioState, SEND_RES, RES);
   EnableGIO();
-  // if (telem_counter < 100)
-  //   telem_counter++;
-  // else
-  //   telem_status = 0;
   SETBIT(RadioState, SEND_RES, RES);
   return;
 ResData_:  //-----------------------------------------------------------

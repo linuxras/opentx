@@ -102,7 +102,7 @@ extern uint8_t telemetryState;
 #define TELEMETRY_OUTPUT_FIFO_SIZE     20
 #define TELEMETRY_AVERAGE_COUNT        3
 
-#if defined(CROSSFIRE) || defined(MULTIMODULE)
+#if defined(CROSSFIRE) || defined(MULTIMODULE) || defined(AFHDS2A)
 #define TELEMETRY_RX_PACKET_SIZE       128
 // multi module Spektrum telemetry is 18 bytes, FlySky is 37 bytes
 #else
