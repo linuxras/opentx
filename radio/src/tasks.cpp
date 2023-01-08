@@ -165,7 +165,13 @@ TASK_FUNCTION(mixerTask) {
       }
 #endif
 
-      if (heartbeat == HEART_WDT_CHECK) {
+      /**
+       * Workaround for PCBI6X:
+       * When HEART_WDT_CHECK (int + ext module) == 7
+       * then it fails if heartbeat is up to 3 on only internal module,
+       * because PPM init fails for some users.
+       */
+      if (heartbeat == HEART_WDT_CHECK || heartbeat == 3) {
         wdt_reset();
         heartbeat = 0;
       }
