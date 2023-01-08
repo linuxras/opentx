@@ -106,6 +106,18 @@ void usbInit()
 
 void usbStart()
 {
+#if defined(STM32F0)
+  // https://stackoverflow.com/questions/20195175/stm32f107-usb-re-enumerate
+  GPIO_InitTypeDef GPIO_InitStructure;
+  GPIO_InitStructure.GPIO_Pin = USB_GPIO_PIN_DP;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_ResetBits(USB_GPIO, USB_GPIO_PIN_DP);
+  RTOS_WAIT_MS(5); // delay_ms(5);
+#endif
+
   switch (getSelectedUsbMode()) {
 #if !defined(BOOT)
     case USB_JOYSTICK_MODE:

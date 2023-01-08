@@ -26,9 +26,9 @@ uint8_t currentBacklightBright = 0;
 uint8_t requiredBacklightBright = 0;
 uint8_t mainRequestFlags = 0;
 
-#if defined(PCBI6X_ELRSV3)
-extern void ELRSV3_stop();
-#endif
+// #if defined(PCBI6X_ELRSV3)
+// extern void ELRSV3_stop();
+// #endif
 
 #if defined(STM32)
 void onUSBConnectMenu(const char *result)
@@ -72,9 +72,9 @@ void handleUsbConnection()
     else {
       #if !defined(PCBI6X) || defined(PCBI6X_USB_MSD)
       if (getSelectedUsbMode() == USB_MASS_STORAGE_MODE) {
-        #if defined(PCBI6X_ELRSV3)
-        ELRSV3_stop();
-        #endif
+        // #if defined(PCBI6X_ELRSV3)
+        // ELRSV3_stop();
+        // #endif
         opentxClose(false);
         usbPluggedIn();
       }
@@ -343,7 +343,6 @@ void handleGui(event_t event) {
   else
 #elif defined(PCBI6X) && defined(RADIO_TOOLS)
   if (globalData.cToolRunning == 1) {
-    // standalone c script is active
     menuHandlers[menuLevel](event);
   }
   else
