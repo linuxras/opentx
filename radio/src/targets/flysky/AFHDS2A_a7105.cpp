@@ -91,7 +91,7 @@ void AFHDS2A_update_telemetry() {
 
     packet_in[0] = tx_rssi;
     memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8);
-    packet_in[29] = packet[0];
+//    packet_in[29] = packet[0];
 
     processFlySkyPacket(packet_in);
   } else if (packet[0] == 0xAC) {
