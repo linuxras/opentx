@@ -87,12 +87,8 @@ void AFHDS2A_update_telemetry() {
   if (packet[0] == 0xAA) {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
     tx_rssi = limit<int16_t>(0, tx_rssi, 255);
-    packet[8] = tx_rssi;
-
     packet_in[0] = tx_rssi;
     memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8);
-//    packet_in[29] = packet[0];
-
     processFlySkyPacket(packet_in);
   } else if (packet[0] == 0xAC) {
     processFlySkyPacketAC(packet_in);
