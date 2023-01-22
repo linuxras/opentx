@@ -66,8 +66,7 @@ static void AFHDS2A_calc_channels() {
   }
 }
 
-/**
-
+/*
 IntV1: 4.81V
 ExtV2: 0.00V sensor x6b voltaje externo
 Err. 1: 10
@@ -88,7 +87,11 @@ void AFHDS2A_update_telemetry() {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
     tx_rssi = limit<int16_t>(0, tx_rssi, 255);
     packet_in[0] = tx_rssi;
-    memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8);
+  }
+
+  memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8 - 1);
+
+  if (packet[0] == 0xAA) {
     processFlySkyPacket(packet_in);
   } else if (packet[0] == 0xAC) {
     processFlySkyPacketAC(packet_in);
