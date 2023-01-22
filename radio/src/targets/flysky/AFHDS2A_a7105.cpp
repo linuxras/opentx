@@ -91,24 +91,28 @@ void AFHDS2A_update_telemetry() {
       tx_rssi = 0;
     else if (tx_rssi > 255)
       tx_rssi = 255;
-    packet[8] = tx_rssi;
-    processFlySkyPacket(packet + 8);
+
+    packet_in[0] = tx_rssi;
+    memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8);
+    packet_in[29] = packet[0];
+
+    processFlySkyPacket(packet_in);
   } else if (type == 0xAC) {
-    processFlySkyPacketAC(packet + 8);
+    processFlySkyPacketAC(packet_in);
   }
 
 #if defined(AUX_SERIAL)
-  #define AFHDS2A_TELEM_DATA_LEN 29
-
   if (g_eeGeneral.auxSerialMode == UART_MODE_TELEMETRY_MIRROR) {
     // header
     auxSerialPutc('M');
     auxSerialPutc('P');
     auxSerialPutc((type == 0xAA) ? 0x06 : 0x0c); // Multiprotocol module telemetry type for AFHDS2A
-    auxSerialPutc(AFHDS2A_TELEM_DATA_LEN);
+    auxSerialPutc(AFHDS2A_RXPACKET_SIZE - 8);
+
+    // TODO: zdebugować robiąc dump za każdym razem i zobaczyc czy te dane to faktycznie syf
     // data
-    for (uint8_t c = 0 + 8; c < AFHDS2A_TELEM_DATA_LEN + 8; c++) { // skip rx and tx id
-      auxSerialPutc(packet[c]);
+    for (uint8_t c = 0; c < AFHDS2A_RXPACKET_SIZE - 8; c++) { // RSSI value followed by 4*7 bytes of telemetry data, skip rx and tx id
+      auxSerialPutc(packet_in[c]);
     }
   }
 #endif
