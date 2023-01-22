@@ -34,13 +34,6 @@ struct FlySkySensor {
   const uint8_t precision;
 };
 
-#define ZSTR_PRES                      "Pres"
-#define ZSTR_ODO1                      "Odo1"
-#define ZSTR_ODO2                      "Odo2"
-#define ZSTR_DIST                      "Dist"
-#define ZSTR_ARM                       "Arm"
-#define ZSTR_TXV                       "TX_V"
-
 // telemetry sensors ID
 enum {
   AFHDS2A_ID_VOLTAGE = 0x00,         // Internal Voltage
