@@ -105,8 +105,6 @@ void AFHDS2A_update_telemetry() {
     auxSerialPutc('P');
     auxSerialPutc((type == 0xAA) ? 0x06 : 0x0c); // Multiprotocol module telemetry type for AFHDS2A
     auxSerialPutc(AFHDS2A_RXPACKET_SIZE - 8);
-
-    // TODO: zdebugować robiąc dump za każdym razem i zobaczyc czy te dane to faktycznie syf
     // data
     for (uint8_t c = 0; c < AFHDS2A_RXPACKET_SIZE - 8; c++) { // RSSI value followed by 4*7 bytes of telemetry data, skip rx and tx id
       auxSerialPutc(packet_in[c]);
