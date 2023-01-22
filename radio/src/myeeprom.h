@@ -35,7 +35,7 @@
 #define WARN_MEM (!(g_eeGeneral.warnOpts & WARN_MEM_BIT))
 #define BEEP_VAL ((g_eeGeneral.warnOpts & WARN_BVAL_BIT) >> 3)
 
-#define EEPROM_VER 221
+#define EEPROM_VER 222
 #define FIRST_CONV_EEPROM_VER 216
 
 #define GET_PPM_POLARITY(idx) g_model.moduleData[idx].ppm.pulsePol
@@ -85,7 +85,11 @@
 #define CFN_PLAY_REPEAT_NOSTART 0xFF
 #define CFN_GVAR_MODE(p) ((p)->all.mode)
 #define CFN_PARAM(p) ((p)->all.val)
+#if defined(PCBI6X)
+#define CFN_RESET(p) ((p)->active = 0, (p)->clear.val1 = 0)
+#else
 #define CFN_RESET(p) ((p)->active = 0, (p)->clear.val1 = 0, (p)->clear.val2 = 0)
+#endif
 #define CFN_GVAR_CST_MIN -GVAR_MAX
 #define CFN_GVAR_CST_MAX GVAR_MAX
 #define MODEL_GVAR_MIN(idx) (CFN_GVAR_CST_MIN + g_model.gvars[idx].min)

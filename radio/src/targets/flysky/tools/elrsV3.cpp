@@ -66,8 +66,8 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 188; // 165 + 19 (units) => 184+
-static constexpr uint8_t VALUES_BUFFER_SIZE = 252; // 242+
+static constexpr uint8_t NAMES_BUFFER_SIZE  = 184; // 165 + 19 (units) => 184+
+static constexpr uint8_t VALUES_BUFFER_SIZE = 236; // 236+
 static uint8_t *namesBuffer = &reusableBuffer.cToolData[0];
 uint8_t namesBufferOffset = 0;
 static uint8_t *valuesBuffer = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE];
@@ -79,7 +79,6 @@ static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 175+
 static uint8_t *fieldData = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
 //static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 static constexpr uint8_t POPUP_MSG_OFFSET = FIELD_DATA_BUFFER_SIZE - 24 - 1;
-// static uint8_t fieldData[FIELD_DATA_BUFFER_SIZE];
 uint8_t fieldDataLen = 0;
 
 static constexpr uint8_t FIELDS_MAX_COUNT = 16;
@@ -160,7 +159,6 @@ static void UIbackExec(FieldProps * field);
 static void parseDeviceInfoMessage(uint8_t* data);
 static void parseParameterInfoMessage(uint8_t* data, uint8_t length);
 static void parseElrsInfoMessage(uint8_t* data);
-static void refreshNext(uint8_t command, uint8_t* data, uint8_t length);
 static void runPopupPage(event_t event);
 static void runDevicePage(event_t event);
 static void lcd_title();
@@ -289,7 +287,7 @@ static void selectField(int8_t step) {
 
 static uint8_t getDevice(uint8_t devId) {
   TRACE("getDevice %x", devId);
-  for (uint8_t i = 0; i < devicesLen; i++) {
+  for (uint32_t i = 0; i < devicesLen; i++) {
     if (deviceIds[i] == devId) {
       return deviceIds[i];
     }
@@ -908,7 +906,7 @@ void ELRSV3_stop() {
 
 //  if (globalData.cToolRunning) {
     globalData.cToolRunning = 0;
-    memclear(reusableBuffer.cToolData, CTOOL_DATA_SIZE);
+    memclear(reusableBuffer.cToolData, sizeof(reusableBuffer.cToolData));
     popMenu();
 //  }
 }

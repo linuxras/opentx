@@ -39,6 +39,7 @@ if(PCB STREQUAL I6X)
   add_definitions(-DPWR_BUTTON_${PWR_BUTTON})
   add_definitions(-DEEPROM_VARIANT=0)
   add_definitions(-DSOFTWARE_VOLUME)
+  add_definitions(-DAFHDS2A)
 endif()
 
 if(NOT AFHDS2A_LQI_CH)

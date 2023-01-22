@@ -169,7 +169,8 @@ extern "C" void EXTMODULE_TIMER_IRQHandler() {
     EXTMODULE_TIMER->SR &= ~TIM_SR_CC2IF;    // Clears interrupt on ch2
     if ((moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_CROSSFIRE && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_CROSSFIRE) ||
         (moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_PPM && g_model.moduleData[EXTERNAL_MODULE].type != MODULE_TYPE_PPM) ||
-         moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_NONE) {
+         moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_NONE ||
+         moduleState[EXTERNAL_MODULE].protocol == PROTOCOL_CHANNELS_UNINITIALIZED) {
       setupPulses(EXTERNAL_MODULE);
     }
     // Only for PPM, CRSF is handled in sendSynchronousPulses

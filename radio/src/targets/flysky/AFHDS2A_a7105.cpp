@@ -81,23 +81,20 @@ packet[5-8] - rx_id
 0xff - AFHDS2A_ID_END
 */
 void AFHDS2A_update_telemetry() {
-  uint8_t type = packet[0];
-  if (type == 0xAA && packet[9] == 0xFD)
+  if (packet[0] == 0xAA && packet[9] == 0xFD)
     return;  // ignore packets which contain the RX configuration: FD FF 32 00 01 00 FF FF FF 05 DC 05 DE FA FF FF FF FF FF FF FF FF FF FF FF FF FF FF
 
-  if (type == 0xAA) {
+  if (packet[0] == 0xAA) {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
-    if (tx_rssi < 0)
-      tx_rssi = 0;
-    else if (tx_rssi > 255)
-      tx_rssi = 255;
+    tx_rssi = limit<int16_t>(0, tx_rssi, 255);
+    packet[8] = tx_rssi;
 
     packet_in[0] = tx_rssi;
     memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8);
     packet_in[29] = packet[0];
 
     processFlySkyPacket(packet_in);
-  } else if (type == 0xAC) {
+  } else if (packet[0] == 0xAC) {
     processFlySkyPacketAC(packet_in);
   }
 
@@ -156,7 +153,7 @@ void AFHDS2A_build_packet(const uint8_t type) {
   switch (type) {
     case AFHDS2A_PACKET_STICKS:
       packet[0] = 0x58;
-      for (uint8_t ch = 0; ch < num_ch; ++ch) {
+      for (uint32_t ch = 0; ch < num_ch; ++ch) {
         // channelOutputs: -1024 to 1024
 #if defined(AFHDS2A_LQI_CH)
         const uint16_t channelMicros = (ch == (AFHDS2A_LQI_CH - 1)) ? 
@@ -352,10 +349,6 @@ EndSendData_:  //-----------------------------------------------------------
     packet_type = AFHDS2A_PACKET_STICKS;
   SETBIT(RadioState, SEND_RES, RES);
   EnableGIO();
-  // if (telem_counter < 100)
-  //   telem_counter++;
-  // else
-  //   telem_status = 0;
   SETBIT(RadioState, SEND_RES, RES);
   return;
 ResData_:  //-----------------------------------------------------------
