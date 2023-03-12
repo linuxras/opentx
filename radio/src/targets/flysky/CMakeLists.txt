@@ -8,7 +8,7 @@ option(AFHDS2A_LQI_CH "Send RSSI at channel 1-17" 17)
 if(PCB STREQUAL I6X)
   set(PWR_BUTTON "SWITCH" CACHE STRING "Pwr button type (PRESS/SWITCH)")
   if(TRANSLATIONS STREQUAL EN)
-    #set(SPLASH "ON") # ~650B
+    set(SPLASH "OFF") # ~650B
   else()
     set(SPLASH "OFF")
   endif()
