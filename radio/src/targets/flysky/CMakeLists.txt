@@ -54,6 +54,7 @@ if(PCBI6X_BACKLIGHT_MOD STREQUAL YES)
 endif()
 
 if(PCBI6X_ELRSV3 STREQUAL YES)
+  add_definitions(-DPCBI6X_TOOLS)
   add_definitions(-DPCBI6X_ELRSV3)
   set(TARGET_SRC
     ${TARGET_SRC}
@@ -62,12 +63,19 @@ if(PCBI6X_ELRSV3 STREQUAL YES)
 endif()
 
 if(PCBI6X_HELLO STREQUAL YES)
+  add_definitions(-DPCBI6X_TOOLS)
   add_definitions(-DPCBI6X_HELLO)
 set(TARGET_SRC
   ${TARGET_SRC}
   tools/hello.cpp
   )
 endif()
+
+add_definitions(-DPCBI6X_TOOLS)
+set(TARGET_SRC
+  ${TARGET_SRC}
+  tools/inav.cpp
+  )
 
 add_definitions(-DPCBI6X_USB_MSD) # 3620B
 
