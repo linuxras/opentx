@@ -236,7 +236,7 @@ static void inavDraw() {
             // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+12, hdop, MIDSIZE | RIGHT);
             // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+24, fix, MIDSIZE | RIGHT);
             // lcdDrawNumber(INAV_FM_POSX, INAV_FM_POSY, mode);
-            inavDrawMode(mode);
+//            inavDrawMode(mode);
             break;
           case 4: // Course in degree - store for drawing
             inavData->heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
