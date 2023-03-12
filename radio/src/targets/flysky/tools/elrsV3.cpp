@@ -5,11 +5,8 @@
  * Limitations vs elrsV3.lua:
  * - no int16, float, string fields support, but not used by ExpressLRS anyway,
  */
-
 #include "opentx.h"
 #include "tiny_string.cpp"
-
-#define PACKED __attribute__((packed))
 
 enum COMMAND_STEP {
     STEP_IDLE = 0,
@@ -35,7 +32,7 @@ enum COMMAND_STEP {
 #define TYPE_DEVICE         15
 #define TYPE_DEVICES_FOLDER 16
 
-struct FieldProps {
+PACK(struct FieldProps {
   uint8_t nameOffset;
   uint8_t nameLength;
   union {
@@ -56,7 +53,7 @@ struct FieldProps {
     uint8_t status;
   };
   uint8_t id;
-} PACKED;
+});
 
 struct FieldFunctions {
   void (*load)(FieldProps*, uint8_t *, uint8_t);
@@ -65,7 +62,7 @@ struct FieldFunctions {
 };
 
 static constexpr uint8_t NAMES_BUFFER_SIZE  = 190; // 170 + 19 (units) => 189+
-static constexpr uint8_t VALUES_BUFFER_SIZE = 250; // 250+
+static constexpr uint8_t VALUES_BUFFER_SIZE = 246; // 245+
 static uint8_t *namesBuffer = &reusableBuffer.cToolData[0];
 uint8_t namesBufferOffset = 0;
 static uint8_t *valuesBuffer = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE];
@@ -179,7 +176,7 @@ static void crossfireTelemetryPing(){
 
 static void clearFields() {
 //  TRACE("clearFields %d", allocatedFieldsCount);
-  memset(fields, 0, sizeof(fields));
+  memclear(fields, sizeof(fields));
   otherDevicesState = BTN_NONE;
   allocatedFieldsCount = 0;
 }

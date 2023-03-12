@@ -206,7 +206,7 @@
   #define RADIO_TOOLS
 #endif
 
-#define CTOOL_DATA_SIZE 760
+#define CTOOL_DATA_SIZE 756
 
 // RESX range is used for internal calculation; The menu says -100.0 to 100.0; internally it is -1024 to 1024 to allow some optimizations
 #define RESX_SHIFT 10
