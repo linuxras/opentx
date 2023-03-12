@@ -277,10 +277,12 @@ void generalDefault() {
   g_eeGeneral.lightAutoOff = 2;
   g_eeGeneral.inactivityTimer = 10;
 
+#if defined(VOICE) // PCBI6X no voice
   g_eeGeneral.ttsLanguage[0] = 'e';
   g_eeGeneral.ttsLanguage[1] = 'n';
   g_eeGeneral.wavVolume = 2;
   g_eeGeneral.backgroundVolume = 1;
+#endif
 
   for (int i = 0; i < NUM_STICKS; ++i) {
     g_eeGeneral.trainer.mix[i].mode = 2;
@@ -301,19 +303,12 @@ void generalDefault() {
   strcpy(g_eeGeneral.themeName, theme->getName());
   theme->init();
 #endif
+
 #if defined(PCBI6X)
-  for (uint8_t i = 0; i < NUM_CALIBRATED_ANALOGS; ++i) {
-    g_eeGeneral.calib[i].mid = 0x400;
-    g_eeGeneral.calib[i].spanNeg = 0x300;
-    g_eeGeneral.calib[i].spanPos = 0x300;
-  }
-
   g_eeGeneral.telemetryBaudrate = 1; // default: 400k
-
-  g_eeGeneral.chkSum = evalChkSum();
-#else
-  g_eeGeneral.chkSum = 0xFFFF;
 #endif
+
+  g_eeGeneral.chkSum = 0xFFFF;
 }
 
 uint16_t evalChkSum() {
