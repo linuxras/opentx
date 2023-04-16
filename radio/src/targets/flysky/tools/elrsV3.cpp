@@ -801,18 +801,18 @@ static void handleDevicePageEvent(event_t event) {
             // For commands, request this field's
             // data again, with a short delay to allow the module EEPROM to
             // commit. Do this before save() to allow save to override
-            fieldTimeout = getTime() + 20;
             fieldId = field->id;
             fieldChunk = 0;
             fieldDataLen = 0;
-          } else if (field->type < TYPE_FOLDER) {
-            // For editable field types reload whole folder
-            fieldTimeout = getTime() + 20;
+          }
+          fieldTimeout = getTime() + 20;
+          getFunctions(field->type).save(field);
+          if (field->type < TYPE_FOLDER) {
+            // For editable field types reload whole folder, but do it after save
             clearFields();
             reloadAllField();
             fieldId = folderAccess + 1; // Start loading from first folder item
           }
-          getFunctions(field->type).save(field);
         }
       }
     }
