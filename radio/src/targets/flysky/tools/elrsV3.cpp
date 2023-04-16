@@ -283,32 +283,6 @@ static uint8_t getDevice(uint8_t devId) {
   return 0;
 }
 
-//static void strShorten(char * src, const uint8_t maxLen) {
-//  int8_t diff = 0;
-//  char * srcStrPtr = src;
-//  char * srcStrPtr2;
-//  while ((srcStrPtr2 = strstr(srcStrPtr, ";"))) {
-//      uint8_t itemLen = srcStrPtr2 - srcStrPtr;
-//      diff = itemLen - maxLen;
-//      if (diff > 0) {
-//        strcpy(srcStrPtr + maxLen, srcStrPtr2);
-//        srcStrPtr2 -= diff;
-//      }
-//      srcStrPtr = srcStrPtr2 + 1;
-//  }
-//}
-
-/**
- * Remove substring inplace, 76B
- */
-//static void strRemove(char * src, const char * str) {
-//  char strLen = strlen(str);
-//  char * srcStrPtr = src;
-//  while ((srcStrPtr = strstr(srcStrPtr, str))) {
-//    strcpy(srcStrPtr, srcStrPtr + strLen);
-//  }
-//}
-
 static void unitSave(FieldProps * field, uint8_t * data, uint8_t offset) {
   uint8_t unitLen = strlen((char*)&data[offset]);
   //if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
@@ -344,8 +318,6 @@ static void fieldTextSelectionLoad(FieldProps * field, uint8_t * data, uint8_t o
   uint8_t len = strlen((char*)&data[offset]);
   field->value = data[offset + len + 1];
   field->max = data[offset + len + 3];
-//  strRemove((char*)&data[offset], "UX");
-//  strShorten((char*)&data[offset], 12);
   len = strlen((char*)&data[offset]);
   if (field->valuesLength == 0) {
     memcpy(&buffer[bufferOffset], (char*)&data[offset], len);
