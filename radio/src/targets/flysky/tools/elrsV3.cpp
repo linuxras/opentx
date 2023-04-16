@@ -33,10 +33,9 @@ enum COMMAND_STEP {
 #define TYPE_DEVICES_FOLDER 16
 
 PACK(struct FieldProps {
-  uint8_t nameOffset;
+  uint16_t offset;
   uint8_t nameLength;
   union {
-    uint8_t valuesOffset;
     uint8_t min;
     uint8_t timeout;
   };
@@ -45,7 +44,6 @@ PACK(struct FieldProps {
     uint8_t lastStatus;
   };
   uint8_t max;
-  uint8_t unitOffset;
   uint8_t unitLength;
   uint8_t type;
   union {
@@ -61,16 +59,13 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint8_t NAMES_BUFFER_SIZE  = 190; // 170 + 19 (units) => 189+
-static constexpr uint8_t VALUES_BUFFER_SIZE = 246; // 245+
-static uint8_t *namesBuffer = &reusableBuffer.cToolData[0];
-uint8_t namesBufferOffset = 0;
-static uint8_t *valuesBuffer = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE];
-uint8_t valuesBufferOffset = 0;
+static constexpr uint16_t BUFFER_SIZE  = 170 + 246 + 20 + 24; // 170 (names) + 246 (values) + 20 (units) + extra
+static uint8_t *buffer = &reusableBuffer.cToolData[0];
+uint16_t bufferOffset = 0;
 
 // last 25b are also used for popup messages
 static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 175+
-static uint8_t *fieldData = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE];
+static uint8_t *fieldData = &reusableBuffer.cToolData[BUFFER_SIZE];
 
 // Reuse tail of fieldData for popup messages
 static constexpr uint8_t POPUP_MSG_MAX_LEN = 24; // popup hard limit is 32
@@ -79,11 +74,11 @@ uint8_t fieldDataLen = 0;
 
 static constexpr uint8_t FIELDS_MAX_COUNT = 14;
 static constexpr uint8_t FIELDS_SIZE = FIELDS_MAX_COUNT * sizeof(FieldProps);
-static FieldProps *fields = (FieldProps *)&reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
+static FieldProps *fields = (FieldProps *)&reusableBuffer.cToolData[BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE];
 uint8_t allocatedFieldsCount = 0;
 
 static constexpr uint8_t DEVICES_MAX_COUNT = 4;
-static uint8_t *deviceIds = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE];
+static uint8_t *deviceIds = &reusableBuffer.cToolData[BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE];
 //static uint8_t deviceIds[DEVICES_MAX_COUNT];
 uint8_t devicesLen = 0;
 
@@ -99,7 +94,7 @@ uint8_t deviceId = 0xEE;
 uint8_t handsetId = 0xEF;
 
 static constexpr uint8_t DEVICE_NAME_MAX_LEN = 20;
-//static uint8_t *deviceName = &reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT];
+//static uint8_t *deviceName = &reusableBuffer.cToolData[BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT];
 static char deviceName[DEVICE_NAME_MAX_LEN];
 uint8_t lineIndex = 1;
 uint8_t pageOffset = 0;
@@ -112,7 +107,7 @@ uint8_t fieldChunk = 0;
 static char goodBadPkt[11] = "";
 uint8_t elrsFlags = 0;
 static constexpr uint8_t ELRS_FLAGS_INFO_MAX_LEN = 20;
-//static char *elrsFlagsInfo = (char *)&reusableBuffer.cToolData[NAMES_BUFFER_SIZE + VALUES_BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT + DEVICE_NAME_MAX_LEN];
+//static char *elrsFlagsInfo = (char *)&reusableBuffer.cToolData[BUFFER_SIZE + FIELD_DATA_BUFFER_SIZE + FIELDS_SIZE + DEVICES_MAX_COUNT + DEVICE_NAME_MAX_LEN];
 static char elrsFlagsInfo[ELRS_FLAGS_INFO_MAX_LEN] = "";
 uint8_t expectedFieldsCount = 0;
 
@@ -163,6 +158,11 @@ static void luaLcdDrawGauge(coord_t x, coord_t y, coord_t w, coord_t h, int32_t 
   lcdDrawSolidFilledRect(x+1, y+1, len, h-2);
 }
 
+static void bufferPush(void * data, uint8_t len) {
+  memcpy(&buffer[bufferOffset], (char *) data, len);
+  bufferOffset += len;
+}
+
 static void crossfireTelemetryPush4(const uint8_t cmd, const uint8_t third, const uint8_t fourth) {
 //  TRACE("crsf push %x  %x  %x", cmd, third, fourth);
   uint8_t crsfPushData[4] { deviceId, handsetId, third, fourth };
@@ -176,7 +176,7 @@ static void crossfireTelemetryPing(){
 
 static void clearFields() {
 //  TRACE("clearFields %d", allocatedFieldsCount);
-  memclear(fields, sizeof(fields));
+  memclear(fields, FIELDS_SIZE);
   otherDevicesState = BTN_NONE;
   allocatedFieldsCount = 0;
 }
@@ -205,8 +205,7 @@ static void reloadAllField() {
   fieldId = 1;
   fieldChunk = 0;
   fieldDataLen = 0;
-  namesBufferOffset = 0;
-  valuesBufferOffset = 0;
+  bufferOffset = 0;
 }
 
 static FieldProps * getFieldById(const uint8_t id) {
@@ -284,47 +283,20 @@ static uint8_t getDevice(uint8_t devId) {
   return 0;
 }
 
-static void strShorten(char * src, const uint8_t maxLen) {
-  int8_t diff = 0;
-  char * srcStrPtr = src;
-  char * srcStrPtr2;
-  while ((srcStrPtr2 = strstr(srcStrPtr, ";"))) {
-      uint8_t itemLen = srcStrPtr2 - srcStrPtr;
-      diff = itemLen - maxLen;
-      if (diff > 0) {
-        strcpy(srcStrPtr + maxLen, srcStrPtr2);
-        srcStrPtr2 -= diff;
-      }
-      srcStrPtr = srcStrPtr2 + 1;
-  }
-}
-
-/**
- * Remove substring inplace, 76B
- */
-static void strRemove(char * src, const char * str) {
-  char strLen = strlen(str);
-  char * srcStrPtr = src;
-  while ((srcStrPtr = strstr(srcStrPtr, str))) {
-    strcpy(srcStrPtr, srcStrPtr + strLen);
-  }
-}
-
-static void unitSave(FieldProps * field, uint8_t * data, uint8_t unitOffset) {
-  uint8_t unitLen = strlen((char*)&data[unitOffset]);
+static void unitSave(FieldProps * field, uint8_t * data, uint8_t offset) {
+  uint8_t unitLen = strlen((char*)&data[offset]);
   //if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
   field->unitLength = unitLen;
   if (field->type < TYPE_STRING && unitLen > 0) {
-    memcpy(&namesBuffer[namesBufferOffset], (char*)&data[unitOffset], unitLen);
-    field->unitOffset = namesBufferOffset;
-    namesBufferOffset += unitLen;
+    memcpy(&buffer[bufferOffset], (char*)&data[offset], unitLen);
+    bufferOffset += unitLen;
   }
 }
 
 // UINT8
 static void fieldIntegerDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
   lcdDrawNumber(COL2, y, field->value, attr);
-  lcdDrawSizedText(lcdLastRightPos, y, (char *)&namesBuffer[field->unitOffset], field->unitLength, attr);
+  lcdDrawSizedText(lcdLastRightPos, y, (char *)&buffer[field->offset + field->nameLength + field->valuesLength], field->unitLength, attr);
 }
 
 static void fieldUint8Load(FieldProps * field, uint8_t * data, uint8_t offset) {
@@ -346,16 +318,13 @@ static void fieldTextSelectionLoad(FieldProps * field, uint8_t * data, uint8_t o
   uint8_t len = strlen((char*)&data[offset]);
   field->value = data[offset + len + 1];
   field->max = data[offset + len + 3];
-  unitSave(field, data, offset + len + 5);
-  strRemove((char*)&data[offset], "UX");
-  strShorten((char*)&data[offset], 12);
   len = strlen((char*)&data[offset]);
   if (field->valuesLength == 0) {
-    memcpy(&valuesBuffer[valuesBufferOffset], (char*)&data[offset], len);
-    field->valuesOffset = valuesBufferOffset;
+    memcpy(&buffer[bufferOffset], (char*)&data[offset], len);
     field->valuesLength = len;
-    valuesBufferOffset += len;
+    bufferOffset += len;
   }
+  unitSave(field, data, offset + len + 5);
 }
 
 static void fieldTextSelectionSave(FieldProps * field) {
@@ -369,24 +338,25 @@ static uint8_t semicolonPos(const char * str, uint8_t last) {
 }
 
 static void fieldTextSelectionDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
-  uint8_t start = field->valuesOffset;
+  const uint16_t valuesOffset = field->offset + field->nameLength;
+  uint16_t start = valuesOffset;
   uint8_t len;
   uint32_t i = 0;
   while (i++ < field->value) {
-    start += semicolonPos((char *)&valuesBuffer[start], field->valuesLength - (start - field->valuesOffset));
-    if (start - field->valuesOffset >= field->valuesLength) {
+    start += semicolonPos((char *)&buffer[start], field->valuesLength - (start - valuesOffset));
+    if (start - valuesOffset >= field->valuesLength) {
       lcdDrawText(COL2, y, "ERR", attr);
       return;
     }
   }
-  len = semicolonPos((char *)&valuesBuffer[start], field->valuesLength - (start - field->valuesOffset)) - 1;
+  len = semicolonPos((char *)&buffer[start], field->valuesLength - (start - valuesOffset)) - 1;
 
-  lcdDrawSizedText(COL2, y, (char *)&valuesBuffer[start], len, attr);
-  lcdDrawSizedText(lcdLastRightPos, y, (char *)&namesBuffer[field->unitOffset], field->unitLength, 0);
+  lcdDrawSizedText(COL2, y, (char *)&buffer[start], len, attr);
+  lcdDrawSizedText(lcdLastRightPos, y, (char *)&buffer[field->offset + field->nameLength + field->valuesLength], field->unitLength, 0/*attr*/);
 }
 
 static void fieldStringDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
-  lcdDrawSizedText(COL2, y, (char *)&valuesBuffer[field->valuesOffset], field->valuesLength, attr);
+  lcdDrawSizedText(COL2, y, (char *)&buffer[field->offset + field->nameLength], field->valuesLength, attr);
 }
 
 static void fieldFolderOpen(FieldProps * field) {
@@ -451,7 +421,7 @@ static void fieldUnifiedDisplay(FieldProps * field, uint8_t y, uint8_t attr) {
     pat = cmdPat;
   }
   char stringTmp[28];
-  tiny_sprintf((char *)&stringTmp, pat, 2, field->nameLength, (char *)&namesBuffer[field->nameOffset]);
+  tiny_sprintf((char *)&stringTmp, pat, 2, field->nameLength, (char *)&buffer[field->offset]);
   lcdDrawText(textIndent, y, (char *)&stringTmp, attr | BOLD);
 }
 
@@ -497,10 +467,10 @@ static void parseDeviceInfoMessage(uint8_t* data) {
       deviceField.id = id;
       deviceField.type = TYPE_DEVICE;
       deviceField.nameLength = offset - 4;
-      deviceField.nameOffset = namesBufferOffset;
+      deviceField.offset = bufferOffset;
 
-      memcpy(&namesBuffer[namesBufferOffset], &data[3], deviceField.nameLength);
-      namesBufferOffset += deviceField.nameLength;
+      memcpy(&buffer[bufferOffset], &data[3], deviceField.nameLength);
+      bufferOffset += deviceField.nameLength;
       storeField(&deviceField);
       if (devicesLen == expectedFieldsCount - 1) {
         allParamsLoaded = 1;
@@ -630,9 +600,9 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     } else if (!hidden) {
       if (field->nameLength == 0) {
         field->nameLength = offset - 3;
-        field->nameOffset = namesBufferOffset;
-        memcpy(&namesBuffer[namesBufferOffset], &fieldData[2], field->nameLength);
-        namesBufferOffset += field->nameLength;
+        field->offset = bufferOffset;
+        memcpy(&buffer[bufferOffset], &fieldData[2], field->nameLength);
+        bufferOffset += field->nameLength;
       }
       getFunctions(field->type).load(field, fieldData, offset);
       storeField(field);
@@ -640,10 +610,8 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
 
     if (fieldPopup == nullptr) {
       if (fieldId == expectedFieldsCount) { // if we have loaded all params
-        TRACE("namesBufferOffset %d", namesBufferOffset);
-//        DUMP(namesBuffer, NAMES_BUFFER_SIZE);
-        TRACE("valuesBufferOffset %d", valuesBufferOffset);
-//        DUMP(valuesBuffer, VALUES_BUFFER_SIZE);
+        TRACE("bufferOffset %d", bufferOffset);
+        // DUMP(buffer, bufferOffset);
         TRACE("allocatedFieldsCount %d", allocatedFieldsCount);
         allParamsLoaded = 1;
         fieldId = 1;
@@ -805,18 +773,18 @@ static void handleDevicePageEvent(event_t event) {
             // For commands, request this field's
             // data again, with a short delay to allow the module EEPROM to
             // commit. Do this before save() to allow save to override
-            fieldTimeout = getTime() + 20;
             fieldId = field->id;
             fieldChunk = 0;
             fieldDataLen = 0;
-          } else if (field->type < TYPE_FOLDER) {
-            // For editable field types reload whole folder
-            fieldTimeout = getTime() + 20;
+          }
+          fieldTimeout = getTime() + 20;
+          getFunctions(field->type).save(field);
+          if (field->type < TYPE_FOLDER) {
+            // For editable field types reload whole folder, but do it after save
             clearFields();
             reloadAllField();
             fieldId = folderAccess + 1; // Start loading from first folder item
           }
-          getFunctions(field->type).save(field);
         }
       }
     }
@@ -855,7 +823,7 @@ static void runDevicePage(event_t event) {
       } else if (field->nameLength > 0) {
         uint8_t attr = (lineIndex == (pageOffset+y)) ? ((edit && BLINK) + INVERS) : 0;
         if (field->type < TYPE_FOLDER or field->type == TYPE_INFO) {
-          lcdDrawSizedText(textXoffset, y*textSize+textYoffset, (char *)&namesBuffer[field->nameOffset], field->nameLength, 0);
+          lcdDrawSizedText(textXoffset, y*textSize+textYoffset, (char *)&buffer[field->offset], field->nameLength, 0);
         }
         getFunctions(field->type).display(field, y*textSize+textYoffset, attr);
       }
