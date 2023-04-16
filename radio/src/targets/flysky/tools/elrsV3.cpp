@@ -158,8 +158,8 @@ static void luaLcdDrawGauge(coord_t x, coord_t y, coord_t w, coord_t h, int32_t 
   lcdDrawSolidFilledRect(x+1, y+1, len, h-2);
 }
 
-static void bufferPush(void * data, uint8_t len) {
-  memcpy(&buffer[bufferOffset], (char *) data, len);
+static void bufferPush(char * data, uint8_t len) {
+  memcpy(&buffer[bufferOffset], data, len);
   bufferOffset += len;
 }
 
@@ -283,13 +283,12 @@ static uint8_t getDevice(uint8_t devId) {
   return 0;
 }
 
-static void unitSave(FieldProps * field, uint8_t * data, uint8_t offset) {
+static void unitLoad(FieldProps * field, uint8_t * data, uint8_t offset) {
   uint8_t unitLen = strlen((char*)&data[offset]);
   //if (unitLen > 10) unitLen = 0; // Workaround for "Output Mode" missing last 2 bytes, proper solution would be to never read over packet length
   field->unitLength = unitLen;
   if (field->type < TYPE_STRING && unitLen > 0) {
-    memcpy(&buffer[bufferOffset], (char*)&data[offset], unitLen);
-    bufferOffset += unitLen;
+    bufferPush((char*)&data[offset], unitLen);
   }
 }
 
@@ -303,7 +302,7 @@ static void fieldUint8Load(FieldProps * field, uint8_t * data, uint8_t offset) {
   field->value = data[offset + 0];
   field->min = data[offset + 1];
   field->max = data[offset + 2];
-  unitSave(field, data, offset + 4);
+  unitLoad(field, data, offset + 4);
 }
 
 static void fieldUint8Save(FieldProps * field) {
@@ -320,11 +319,10 @@ static void fieldTextSelectionLoad(FieldProps * field, uint8_t * data, uint8_t o
   field->max = data[offset + len + 3];
   len = strlen((char*)&data[offset]);
   if (field->valuesLength == 0) {
-    memcpy(&buffer[bufferOffset], (char*)&data[offset], len);
+    bufferPush((char*)&data[offset], len);
     field->valuesLength = len;
-    bufferOffset += len;
   }
-  unitSave(field, data, offset + len + 5);
+  unitLoad(field, data, offset + len + 5);
 }
 
 static void fieldTextSelectionSave(FieldProps * field) {
@@ -469,8 +467,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
       deviceField.nameLength = offset - 4;
       deviceField.offset = bufferOffset;
 
-      memcpy(&buffer[bufferOffset], &data[3], deviceField.nameLength);
-      bufferOffset += deviceField.nameLength;
+      bufferPush((char *)&data[3], deviceField.nameLength);
       storeField(&deviceField);
       if (devicesLen == expectedFieldsCount - 1) {
         allParamsLoaded = 1;
@@ -601,8 +598,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
       if (field->nameLength == 0) {
         field->nameLength = offset - 3;
         field->offset = bufferOffset;
-        memcpy(&buffer[bufferOffset], &fieldData[2], field->nameLength);
-        bufferOffset += field->nameLength;
+        bufferPush((char*)&fieldData[2], field->nameLength);
       }
       getFunctions(field->type).load(field, fieldData, offset);
       storeField(field);
