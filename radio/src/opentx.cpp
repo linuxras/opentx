@@ -304,8 +304,8 @@ void generalDefault() {
   theme->init();
 #endif
 
-#if defined(PCBI6X)
-  g_eeGeneral.telemetryBaudrate = 1; // default: 400k
+#if defined(PCBI6X_DEFAULT_400K)
+  g_eeGeneral.telemetryBaudrate = 1;
 #endif
 
   g_eeGeneral.chkSum = 0xFFFF;

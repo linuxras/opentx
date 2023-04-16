@@ -159,11 +159,9 @@ void auxSerialInit(unsigned int mode, unsigned int protocol)
 void auxSerialPutc(char c)
 {
 #if !defined(SIMU)
-  int n = 0;
-  while (auxSerialTxFifo.isFull()) {
-    delay_ms(1);
-    if (++n > 5) return;
-  }
+  // do not wait, it can cause reboot and EdgeTX is not doing it
+  if (auxSerialTxFifo.isFull()) return;
+
   auxSerialTxFifo.push(c);
   USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, ENABLE);
 #endif
