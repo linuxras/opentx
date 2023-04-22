@@ -2033,6 +2033,10 @@ uint32_t pwrCheck() {
 
   return e_power_on;
 }
+#elif defined(PCBI6X) // no software controlled power on i6X
+uint32_t pwrCheck() {
+  return e_power_on;
+}
 #else
 uint32_t pwrCheck() {
 #if defined(SOFT_PWR_CTRL)

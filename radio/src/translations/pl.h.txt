@@ -145,8 +145,13 @@
 #define LEN_VDISPLAYTRIMS      "\006"
 #define TR_VDISPLAYTRIMS       "Nie\0  ""Zmień\0""Tak\0"
 
-#define LEN_VBEEPCOUNTDOWN     "\006"
-#define TR_VBEEPCOUNTDOWN      "Cichy Pik  \0DźwiękWibrac"
+#if defined(PCBI6X)
+  #define LEN_VBEEPCOUNTDOWN     "\005"
+  #define TR_VBEEPCOUNTDOWN      "CichyPik\0 "
+#else
+  #define LEN_VBEEPCOUNTDOWN     "\006"
+  #define TR_VBEEPCOUNTDOWN      "Cichy Pik  \0DźwiękWibrac"
+#endif
 
 #define LEN_VVARIOCENTER       "\006"
 #define TR_VVARIOCENTER        "Ton\0  ""Cicho "
@@ -694,7 +699,7 @@
 #define TR_TIMEZONE            TR("Strefa czasowa" ,"Strefa czasowa GPS")
 #define TR_ADJUST_RTC          TR("RegulujRTC", INDENT "RegulujRTC")
 #define TR_GPS                 "GPS"
-#define TR_RXCHANNELORD        TR("KolejnKan.RX", "Bazowa kolejność kanałów")
+#define TR_RXCHANNELORD        TR("Kolejn.kan.", "Bazowa kolejność kanałów")
 #define TR_STICKS              "Drążki"
 #define TR_POTS                "Pots"
 #define TR_SWITCHES            "Przełącz"

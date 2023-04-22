@@ -27,7 +27,6 @@ uint8_t prev_power=0xFD; // unused power value
 
 // reuse telemetryRxBuffer for native AFHDS2A support
 uint8_t *packet = &telemetryRxBuffer[0];
-uint8_t *packet_in = &telemetryRxBuffer[AFHDS2A_TXPACKET_SIZE];
 
 //Protocol variables
 ID_t ID;

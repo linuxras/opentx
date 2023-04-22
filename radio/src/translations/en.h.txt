@@ -143,7 +143,11 @@
 #define TR_VDISPLAYTRIMS               "No\0   ""Change""Yes\0"
 
 #define LEN_VBEEPCOUNTDOWN             "\006"
-#define TR_VBEEPCOUNTDOWN              "SilentBeeps\0Voice\0Haptic"
+#if defined(PCBI6X)
+  #define TR_VBEEPCOUNTDOWN              "SilentBeeps\0"
+#else
+  #define TR_VBEEPCOUNTDOWN              "SilentBeeps\0Voice\0Haptic"
+#endif
 
 #define LEN_VVARIOCENTER               "\006"
 #define TR_VVARIOCENTER                "Tone\0 ""Silent"
@@ -692,7 +696,7 @@
 #define TR_TIMEZONE                    TR("Time Zone", INDENT "Time zone")
 #define TR_ADJUST_RTC                  TR("Adjust RTC", INDENT "Adjust RTC")
 #define TR_GPS                         "GPS"
-#define TR_RXCHANNELORD                TR("Rx channel ord", "Default channel order")
+#define TR_RXCHANNELORD                TR("Def chan order", "Default channel order")
 #define TR_STICKS                      "Sticks"
 #define TR_POTS                        "Pots"
 #define TR_SWITCHES                    "Switches"

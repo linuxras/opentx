@@ -584,7 +584,7 @@ void menuMainView(event_t event)
 
     // And ! in case of unexpected shutdown
     if (isAsteriskDisplayed()) {
-      lcdDrawChar(REBOOT_X, 0 * FH, '!', INVERS);
+      lcdDrawChar(REBOOT_X, 0 * FH, '!', INVERS | BLINK);
     }
 
 #if defined(PCBI6X)

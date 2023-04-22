@@ -86,15 +86,13 @@ void AFHDS2A_update_telemetry() {
   if (packet[0] == 0xAA) {
     int16_t tx_rssi = 256 - (A7105_ReadReg(A7105_1D_RSSI_THOLD) * 8) / 5;  // value from A7105 is between 8 for maximum signal strength to 160 or less
     tx_rssi = limit<int16_t>(0, tx_rssi, 255);
-    packet_in[0] = tx_rssi;
+    packet[8] = tx_rssi;
   }
 
-  memcpy(packet_in + 1, packet + 9, AFHDS2A_RXPACKET_SIZE - 8 - 1);
-
   if (packet[0] == 0xAA) {
-    processFlySkyPacket(packet_in);
+    processFlySkyPacket(packet + 8);
   } else if (packet[0] == 0xAC) {
-    processFlySkyPacketAC(packet_in);
+    processFlySkyPacketAC(packet + 8);
   }
 
 #if defined(AUX_SERIAL)
@@ -105,8 +103,8 @@ void AFHDS2A_update_telemetry() {
     auxSerialPutc((packet[0] == 0xAA) ? 0x06 : 0x0c); // Multiprotocol module telemetry type for AFHDS2A
     auxSerialPutc(AFHDS2A_RXPACKET_SIZE - 8);
     // data
-    for (uint8_t c = 0; c < AFHDS2A_RXPACKET_SIZE - 8; c++) { // RSSI value followed by 4*7 bytes of telemetry data, skip rx and tx id
-      auxSerialPutc(packet_in[c]);
+    for (uint8_t c = 8; c < AFHDS2A_RXPACKET_SIZE; c++) { // RSSI value followed by 4*7 bytes of telemetry data, skip rx and tx id
+      auxSerialPutc(packet[c]);
     }
   }
 #endif

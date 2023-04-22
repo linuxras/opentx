@@ -145,7 +145,11 @@
 #define TR_VDISPLAYTRIMS       "No\0   ""Change""Yes\0"
 
 #define LEN_VBEEPCOUNTDOWN     "\006"
-#define TR_VBEEPCOUNTDOWN      "SilentBeeps\0Voice\0Haptic"
+#if defined(PCBI6X)
+  #define TR_VBEEPCOUNTDOWN              "SilentBeeps\0"
+#else
+  #define TR_VBEEPCOUNTDOWN              "SilentBeeps\0Voice\0Haptic"
+#endif
 
 #define LEN_VVARIOCENTER       "\006"
 #define TR_VVARIOCENTER        "Tone\0 ""Silent"

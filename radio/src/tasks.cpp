@@ -233,11 +233,13 @@ TASK_FUNCTION(menusTask) {
   ledOff();
 #endif
 
+#if !defined(PCBI6X) // no software controlled power on i6X
   drawSleepBitmap();
   opentxClose();
   boardOff();  // Only turn power off if necessary
 
   TASK_RETURN();
+#endif
 }
 
 void tasksStart() {
