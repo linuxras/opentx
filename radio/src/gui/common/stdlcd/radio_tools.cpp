@@ -51,7 +51,6 @@ void menuRadioTools(event_t event)
 #endif
 
   addRadioTool(index++, "INAV Lite", inavRun, event);
-//  addRadioTool(index++, "Telemetry", inavRun, event);
 
   SIMPLE_MENU("TOOLS", menuTabGeneral, MENU_RADIO_TOOLS, HEADER_LINE + index);
 }
