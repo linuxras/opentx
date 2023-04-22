@@ -20,7 +20,6 @@
    - GPS alt,
    - rotate coords to launchHeading,
    - North or launchHeading orientation modes toggle, by BIND?
-   - test,
  + draw home and craft:
    + calculate home and craft position BBox,
    + scale and translate to fit screen BBox,
@@ -33,11 +32,7 @@
    This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)"
 
 afhds2a telem:
-   + no issue with radar drawing,
-   - random resets related to displaying voltage/current/speed?
-     how is orginal handling values?
-  - test draw with very high, below zero value set.
-
+   - test
 crsf telemetry:
    - test
  */
