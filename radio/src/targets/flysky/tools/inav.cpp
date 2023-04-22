@@ -66,7 +66,7 @@ static const int8_t sine[32] = {
 #define INAV_ALT_POSY     57
 
 #define INAV_GALT_POSX    LCD_W
-#define INAV_GALT_POSY    43
+#define INAV_GALT_POSY    44
 
 #define INAV_FM_POSX      (LCD_W / 2)
 #define INAV_FM_POSY      9
@@ -225,7 +225,7 @@ static void inavDraw() {
         
         switch(g_model.telemetrySensors[i].instance) { // inav index - 1, assumption: ibus type = 0
           case 1: // voltage sensor
-            // drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, UNIT_VOLTS, PREC2 | MIDSIZE | RIGHT);
+            drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, UNIT_VOLTS, PREC2 | MIDSIZE | RIGHT);
             break;
           case 3: // Status
             sats = telemetryItem.value / 1000;
@@ -233,16 +233,16 @@ static void inavDraw() {
             hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
             mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
 
-            // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+12, hdop, MIDSIZE | RIGHT);
-            // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+24, fix, MIDSIZE | RIGHT);
-            // lcdDrawNumber(INAV_FM_POSX, INAV_FM_POSY, mode);
+            lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+12, hdop, MIDSIZE | RIGHT);
+            lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+24, fix, MIDSIZE | RIGHT);
+            lcdDrawNumber(INAV_FM_POSX, INAV_FM_POSY+9, mode); // debug flight mode
             inavDrawMode(mode);
             break;
           case 4: // Course in degree - store for drawing
             inavData->heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
             break;
           case 5: // Current in Amperes
-            // drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
+             drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
             break;
           case 6: // Altitude
             alt = (int16_t)(telemetryItem.value) / 10;
