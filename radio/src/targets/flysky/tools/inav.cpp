@@ -218,7 +218,7 @@ static void inavDraw() {
 
       } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
         
-        switch(g_model.telemetrySensors[i].instance) { // inav index - 1, assumption: ibus type = 0
+        switch(g_model.telemetrySensors[i].instance) { // inav index - 1
           case 1: // voltage sensor
             drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, UNIT_VOLTS, PREC2 | MIDSIZE | RIGHT);
             break;
@@ -240,10 +240,11 @@ static void inavDraw() {
              drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
             break;
           case 6: // Altitude
-            alt = (int16_t)(telemetryItem.value) / 10;
+            alt = (int16_t)(telemetryItem.value) / 100;
+            // alt = (int16_t)telemetryItem.dist.alt;
             break;
           case 10: // GPS Altitude - something is not right here
-            galt = (int16_t)(telemetryItem.value) / 10;
+            galt = (int16_t)(telemetryItem.value) / 100;
             break;
           case 8: // Distance
             drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, UNIT_METERS, RIGHT);
