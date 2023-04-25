@@ -347,10 +347,11 @@ void crossfireSetDefault(int index, uint8_t id, uint8_t subId) {
     unit = UNIT_GPS;
   uint8_t prec = min<uint8_t>(2, sensor.precision);
   telemetrySensor.init(sensor.name, unit, prec);
+#if defined(SDCARD) // no sdcard logs on i6X
   if (id == LINK_ID) {
     telemetrySensor.logs = true;
   }
-
+#endif
   storageDirty(EE_MODEL);
 }
 
