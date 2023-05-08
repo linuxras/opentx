@@ -91,8 +91,7 @@ struct InavData {
   uint8_t heading;
 };
 
-// uint8_t lock = 0;
-
+// TODO: home lat/lon and launchHeading shall be kept while radio is running
 static InavData * inavData = (InavData *)&reusableBuffer.cToolData[0];
 
 static Point2D rotate(Point2D *p, uint8_t angle) {
@@ -207,7 +206,7 @@ static void inavDraw() {
           // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
           inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
         } else if (strstr(sensor.label, ZSTR_GSPD)) { // GPS Speed
-          speed = telemetryItem.value;
+          speed = telemetryItem.value / 10; // / sensor.prec * 10
         } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
           // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, telemetryItem.value, MIDSIZE | RIGHT);
           sats = telemetryItem.value;
@@ -262,7 +261,7 @@ static void inavDraw() {
             inavData->currentLon = (inavData->currentLon & 0x0000ffff) | (telemetryItem.value << 16);
             break;
           case 15: // GPS Speed in km/h
-            speed = telemetryItem.value;
+            speed = telemetryItem.value / 100;
             break;
         }
       }
@@ -284,7 +283,7 @@ static void inavDraw() {
   int32_t w = inavData->homeLon - inavData->currentLon;
   int32_t d = isqrt32((w * w) + (h * h));
 
-  int32_t scaleFactor = limit<int32_t>(1, (d / BBOX_SIZE), INT16_MAX);
+  int32_t scaleFactor = limit<int32_t>(1, (d / BBOX_SIZE), INT16_MAX); // TODO: while h || w > BBOX_SIZE do h /= 2; w /=2 ?
 
   // calculate center
   int32_t centerLon = (inavData->homeLon + inavData->currentLon) / 2;
@@ -322,8 +321,7 @@ void inavRun(event_t event) {
     inavData->launchHeading = inavData->heading;
   }
 
-  // if (lock) return;
-
+  // TODO only on change or throttle to every other frame?
   lcdClear();
   inavDraw();
 }
