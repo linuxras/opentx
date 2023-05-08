@@ -73,7 +73,6 @@ static const int8_t sine[32] = {
 #define BBOX_CENTER_Y (36)
 #define BBOX_SIZE     (21)
 
-
 #define HOME_ICON '\xce'
 #define SATS_ICON '\xd1'
 
@@ -229,7 +228,6 @@ static void inavDraw() {
 
             lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+12, hdop, MIDSIZE | RIGHT);
             lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+24, fix, MIDSIZE | RIGHT);
-            lcdDrawNumber(INAV_FM_POSX, INAV_FM_POSY+9, mode); // debug flight mode
             inavDrawMode(mode);
             break;
           case 4: // Course in degree - store for drawing
@@ -240,7 +238,6 @@ static void inavDraw() {
             break;
           case 6: // Altitude
             alt = (int16_t)(telemetryItem.value) / 100;
-            // alt = (int16_t)telemetryItem.dist.alt;
             break;
           case 10: // GPS Altitude - something is not right here
             galt = (int16_t)(telemetryItem.value) / 100;
@@ -321,7 +318,6 @@ void inavRun(event_t event) {
     inavData->launchHeading = inavData->heading;
   }
 
-  // TODO only on change or throttle to every other frame?
   lcdClear();
   inavDraw();
 }
