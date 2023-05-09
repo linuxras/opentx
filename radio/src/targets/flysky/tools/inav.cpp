@@ -205,7 +205,7 @@ static void inavDraw() {
           // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
           inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
         } else if (strstr(sensor.label, ZSTR_GSPD)) { // GPS Speed
-          speed = telemetryItem.value / 10; // / sensor.prec * 10
+          speed = telemetryItem.value;
         } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
           // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, telemetryItem.value, MIDSIZE | RIGHT);
           sats = telemetryItem.value;
@@ -257,15 +257,15 @@ static void inavDraw() {
           case 14: // 15.First part of Longitude (Voltage type), for example -123.45 (-123.4567890 E).
             inavData->currentLon = (inavData->currentLon & 0x0000ffff) | (telemetryItem.value << 16);
             break;
-          case 15: // GPS Speed in km/h
-            speed = telemetryItem.value / 100;
+          case 15: // GPS Speed
+            speed = telemetryItem.value / 10;
             break;
         }
       }
     }
   }
 
-  drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, RIGHT);
+  drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
   drawValueWithUnit(INAV_ALT_POSX, INAV_ALT_POSY, alt, UNIT_METERS, RIGHT);
   lcdDrawChar(INAV_SATS_POSX - 25, INAV_SATS_POSY + 4, SATS_ICON);
   lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, sats, MIDSIZE | RIGHT);
