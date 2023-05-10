@@ -169,11 +169,7 @@ static void inavDraw() {
   // Timer 1
   drawTimer(54, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  // RSSI
-  // lcdDrawNumber(LCD_W - 30, 53, telemetryData.rssi.value, MIDSIZE);
-  drawValueWithUnit(LCD_W - 11, 53, telemetryData.rssi.value, UNIT_DBM, MIDSIZE | RIGHT);
-
-  uint8_t sats = 0, fix, hdop = 0, mode = 0;
+  uint8_t rssi = 0, sats = 0, fix, hdop = 0, mode = 0;
   int32_t alt = 0, galt = 0, speed = 0;
 
   for (int i = 0; i < MAX_TELEMETRY_SENSORS; i++) {
@@ -183,7 +179,9 @@ static void inavDraw() {
       if (telemetryProtocol == PROTOCOL_PULSES_CROSSFIRE) {
         TelemetrySensor & sensor = g_model.telemetrySensors[i];
 
-        if (strstr(sensor.label, ZSTR_ALT)) { // Altitude
+        if (strstr(sensor.label, ZSTR_RX_RSSI1)) { // RSSI
+          rssi = telemetryItem.value;
+        } else if (strstr(sensor.label, ZSTR_ALT)) { // Altitude
           alt = telemetryItem.value;
         } else if (strstr(sensor.label, ZSTR_GPSALT)) { // GPS altitude
           galt = telemetryItem.value;
@@ -215,7 +213,9 @@ static void inavDraw() {
         }
 
       } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
-        
+
+        rssi = telemetryData.rssi.value;
+
         switch(g_model.telemetrySensors[i].instance) { // inav index - 1
           case 1: // voltage sensor
             drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, UNIT_VOLTS, PREC2 | MIDSIZE | RIGHT);
@@ -265,9 +265,10 @@ static void inavDraw() {
     }
   }
 
+  drawValueWithUnit(LCD_W - 11, 53, rssi, UNIT_DB, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
   drawValueWithUnit(INAV_ALT_POSX, INAV_ALT_POSY, alt, UNIT_METERS, RIGHT);
-  lcdDrawChar(INAV_SATS_POSX - 25, INAV_SATS_POSY + 4, SATS_ICON);
+  lcdDrawChar(INAV_SATS_POSX - 28, INAV_SATS_POSY + 4, SATS_ICON);
   lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, sats, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GALT_POSX, INAV_GALT_POSY, galt, UNIT_METERS, RIGHT);
 
