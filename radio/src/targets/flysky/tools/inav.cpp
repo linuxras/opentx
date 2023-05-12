@@ -28,9 +28,6 @@
    + draw rotated craft arrow,
    + test,
 
-   "When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
-   This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)"
-
 afhds2a telem:
    - test
 crsf telemetry:
@@ -42,16 +39,16 @@ static const int8_t sine[32] = {
   0,24,48,70,90,106,117,125,127,125,117,106,90,70,48,24,0,-25,-49,-71,-91,-107,-118,-126,-128,-126,-118,-107,-91,-71,-49,-25
 };
 
-#define INAV_BATTP_POSX    28
-#define INAV_BATTP_POSY     9
-#define INAV_VOLT_POSX    28
-#define INAV_VOLT_POSY    26
-// #define INAV_CELLV_POSX      28
-// #define INAV_CELLV_POSY      20
-#define INAV_CURRENT_POSX 28
+#define INAV_BATTP_POSX   30
+#define INAV_BATTP_POSY    9
+#define INAV_VOLT_POSX    LCD_W
+#define INAV_VOLT_POSY     1
+#define INAV_CELLV_POSX   30
+#define INAV_CELLV_POSY   26
+#define INAV_CURRENT_POSX 30
 #define INAV_CURRENT_POSY 43
 
-#define INAV_GSPD_POSX    17
+#define INAV_GSPD_POSX    19
 #define INAV_GSPD_POSY    57
 
 #define INAV_DIST_POSX    50
@@ -61,7 +58,7 @@ static const int8_t sine[32] = {
 #define INAV_ALT_POSY     57
 
 #define INAV_GALT_POSX    LCD_W
-#define INAV_GALT_POSY    44
+#define INAV_GALT_POSY    43
 
 #define INAV_FM_POSX      (LCD_W / 2)
 #define INAV_FM_POSY      9
@@ -154,116 +151,128 @@ static void inavDrawMode(uint8_t mode) {
 
 static void inavDraw() {
   lcdDrawFilledRect(0, 0, LCD_W, FH, SOLID, 0);
-  lcdDrawSolidVerticalLine(34, FH, LCD_H - FH, FORCE);
+  lcdDrawSolidVerticalLine(36, FH, LCD_H - FH, FORCE);
   lcdDrawSolidVerticalLine(LCD_W - 32, FH, LCD_H - FH, FORCE);
-  lcdDrawSolidHorizontalLine(0, 55, 34, FORCE);
-  lcdDrawSolidHorizontalLine(LCD_W - 32, 52, 32, FORCE);
+  lcdDrawSolidHorizontalLine(0, 55, 36, FORCE);
+  lcdDrawSolidHorizontalLine(LCD_W - 32, 51, 32, FORCE);
 
   // Model Name
   putsModelName(0, 0, g_model.header.name, g_eeGeneral.currModel, INVERS);
 
   // Main Voltage (or alarm if any)
-  LcdFlags att = (IS_TXBATT_WARNING() ? BLINK|INVERS : INVERS) | SMLSIZE;
-  putsVBat(LCD_W - 17, 1, att);
+  putsVBat(LCD_W - 42, 1, (IS_TXBATT_WARNING() ? BLINK|INVERS : INVERS) | SMLSIZE);
 
   // Timer 1
-  drawTimer(54, 1, timersStates[0].val, SMLSIZE | INVERS);
+  drawTimer(58, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  uint8_t rssi = 0, sats = 0, fix, hdop = 0, mode = 0;
+  uint8_t rxBatt = 0, rssi = 0, sats = 0, fix, hdop = 0, mode = 0;
   int32_t alt = 0, galt = 0, speed = 0;
 
   for (int i = 0; i < MAX_TELEMETRY_SENSORS; i++) {
-    if (isTelemetryFieldAvailable(i)) {
-      TelemetryItem & telemetryItem = telemetryItems[i];
+    if (!isTelemetryFieldAvailable(i)) break;
 
-      if (telemetryProtocol == PROTOCOL_PULSES_CROSSFIRE) {
-        TelemetrySensor & sensor = g_model.telemetrySensors[i];
+    TelemetryItem & telemetryItem = telemetryItems[i];
 
-        if (strstr(sensor.label, ZSTR_RX_RSSI1)) { // RSSI
-          rssi = telemetryItem.value;
-        } else if (strstr(sensor.label, ZSTR_ALT)) { // Altitude
-          alt = telemetryItem.value;
-        } else if (strstr(sensor.label, ZSTR_GPSALT)) { // GPS altitude
-          galt = telemetryItem.value;
-        } else if (strstr(sensor.label, ZSTR_BATT_PERCENT)) { // batt percent
-          drawValueWithUnit(INAV_BATTP_POSX, INAV_BATTP_POSY, telemetryItem.value, sensor.unit, DBLSIZE | RIGHT);
-        // } else if (sensor.id >= A4_FIRST_ID && sensor.id <= A4_LAST_ID) { // average cell value
-        //   drawValueWithUnit(INAV_CELLV_POSX, INAV_CELLV_POSY, telemetryItem.value, sensor.unit, MIDSIZE | RIGHT);
-        } else if (strstr(sensor.label, ZSTR_BATT)) { // Voltage
-          drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, sensor.unit, PREC1 | DBLSIZE | RIGHT);
-        } else if (strstr(sensor.label, ZSTR_CURR)) { // Current
-          drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, sensor.unit, PREC1 | MIDSIZE | RIGHT);
-        } else if (strstr(sensor.label, ZSTR_FLIGHT_MODE)) { // flight mode
-          lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, telemetryItem.text, sizeof(telemetryItem.text), CENTERED);
-        // } else if (sensor.id == TEMP2_ID) { // GPS lock status, accuracy, home reset trigger, and number of satellites.
+    if (telemetryProtocol == PROTOCOL_PULSES_CROSSFIRE) {
+      TelemetrySensor & sensor = g_model.telemetrySensors[i];
 
-        } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
-          drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, sensor.unit, RIGHT);
-        } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
-          // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
-          inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
-        } else if (strstr(sensor.label, ZSTR_GSPD)) { // GPS Speed
-          speed = telemetryItem.value;
-        } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
-          // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, telemetryItem.value, MIDSIZE | RIGHT);
-          sats = telemetryItem.value;
-        } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
-          inavData->currentLat = telemetryItem.gps.longitude;
-          inavData->currentLon = telemetryItem.gps.latitude;
-        }
+      if (strstr(sensor.label, ZSTR_RX_RSSI1)) { // RSSI
+        rssi = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_ALT)) { // Altitude
+        alt = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_GPSALT)) { // GPS altitude
+        galt = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_BATT_PERCENT)) { // batt percent
+        drawValueWithUnit(INAV_BATTP_POSX, INAV_BATTP_POSY, telemetryItem.value, sensor.unit, DBLSIZE | RIGHT);
+      } else if (strstr(sensor.label, ZSTR_A4)) { // average cell value
+        drawValueWithUnit(INAV_CELLV_POSX, INAV_CELLV_POSY, telemetryItem.value, sensor.unit, PREC2 | DBLSIZE | RIGHT);
+      } else if (strstr(sensor.label, ZSTR_BATT)) { // Voltage
+        rxBatt = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_CURR)) { // Current
+        drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, sensor.unit, PREC1 | MIDSIZE | RIGHT);
+      } else if (strstr(sensor.label, ZSTR_FLIGHT_MODE)) { // flight mode
+        lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, telemetryItem.text, sizeof(telemetryItem.text), CENTERED);
+      // } else if (sensor.id == TEMP2_ID) { // GPS lock status, accuracy, home reset trigger, and number of satellites.
 
-      } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
+      } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
+        drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, sensor.unit, RIGHT);
+      } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
+        // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
+        inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
+      } else if (strstr(sensor.label, ZSTR_GSPD)) { // GPS Speed
+        speed = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
+        // lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, telemetryItem.value, MIDSIZE | RIGHT);
+        sats = telemetryItem.value;
 
-        rssi = telemetryData.rssi.value;
+        // Fake CRSF HDOP
+        // data.hdop = math.floor(data.satellites * 0.01) % 10
+        // text(72, 59, (data.hdop == 0 and not data.gpsFix) and "---" or (9 - data.hdop) * 0.5 + 0.8, data.set_flags(RIGHT, tmp))
+        hdop = 9 - (sats / 10);
+      } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
+        inavData->currentLat = telemetryItem.gps.longitude;
+        inavData->currentLon = telemetryItem.gps.latitude;
+      }
 
-        switch(g_model.telemetrySensors[i].instance) { // inav index - 1
-          case 1: // voltage sensor
-            drawValueWithUnit(INAV_VOLT_POSX, INAV_VOLT_POSY, telemetryItem.value, UNIT_VOLTS, PREC2 | MIDSIZE | RIGHT);
-            break;
-          case 3: // Status
-            sats = telemetryItem.value / 1000;
-            fix = (telemetryItem.value / 100) - sats * 10;
-            hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
-            mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
+    } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
 
-            lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+12, hdop, MIDSIZE | RIGHT);
-            lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY+24, fix, MIDSIZE | RIGHT);
-            inavDrawMode(mode);
-            break;
-          case 4: // Course in degree - store for drawing
-            inavData->heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
-            break;
-          case 5: // Current in Amperes
-             drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
-            break;
-          case 6: // Altitude
-            alt = (int16_t)(telemetryItem.value) / 100;
-            break;
-          case 10: // GPS Altitude - something is not right here
-            galt = (int16_t)(telemetryItem.value) / 100;
-            break;
-          case 8: // Distance
-            drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, UNIT_METERS, RIGHT);
-            break;
-          case 11: // 12.Second part of Lattitude (Rpm type), for example 5678 (-12.3456789 N).
-            inavData->currentLat = (inavData->currentLat & 0xffff0000) | telemetryItem.value;
-            break;
-          case 12: // 13.Second part of Longitude (Rpm type), for example 6789 (-123.4567891 E).
-            inavData->currentLon = (inavData->currentLon & 0xffff0000) | telemetryItem.value;
-            break;
-          case 13: // 14.First part of Lattitude (Voltage type), for example -12.45 (-12.3456789 N).
-            inavData->currentLat = (inavData->currentLat & 0x0000ffff) | (telemetryItem.value << 16);
-            break;
-          case 14: // 15.First part of Longitude (Voltage type), for example -123.45 (-123.4567890 E).
-            inavData->currentLon = (inavData->currentLon & 0x0000ffff) | (telemetryItem.value << 16);
-            break;
-          case 15: // GPS Speed
-            speed = telemetryItem.value / 10;
-            break;
-        }
+      rssi = telemetryData.rssi.value;
+
+      switch(g_model.telemetrySensors[i].instance) { // inav index - 1
+        case 1: // voltage sensor
+          rxBatt = telemetryItem.value; // scale down to PREC1
+
+          // additionally draw in place of cell voltage
+          drawValueWithUnit(INAV_CELLV_POSX, INAV_CELLV_POSY, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
+          break;
+        case 3: // Status
+          sats = telemetryItem.value / 1000;
+          fix = (telemetryItem.value / 100) - sats * 10;
+          hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
+          mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
+
+          inavDrawMode(mode);
+          break;
+        case 4: // Course in degree - store for drawing
+          inavData->heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
+          break;
+        case 5: // Current in Amperes
+            drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
+          break;
+        case 6: // Altitude
+          alt = (int16_t)(telemetryItem.value) / 100;
+          break;
+        case 10: // GPS Altitude - something is not right here
+          galt = (int16_t)(telemetryItem.value) / 100;
+          break;
+        case 8: // Distance
+          drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, UNIT_METERS, RIGHT);
+          break;
+        case 11: // 12.Second part of Lattitude (Rpm type), for example 5678 (-12.3456789 N).
+          inavData->currentLat = (inavData->currentLat & 0xffff0000) | telemetryItem.value;
+          break;
+        case 12: // 13.Second part of Longitude (Rpm type), for example 6789 (-123.4567891 E).
+          inavData->currentLon = (inavData->currentLon & 0xffff0000) | telemetryItem.value;
+          break;
+        case 13: // 14.First part of Lattitude (Voltage type), for example -12.45 (-12.3456789 N).
+          inavData->currentLat = (inavData->currentLat & 0x0000ffff) | (telemetryItem.value << 16);
+          break;
+        case 14: // 15.First part of Longitude (Voltage type), for example -123.45 (-123.4567890 E).
+          inavData->currentLon = (inavData->currentLon & 0x0000ffff) | (telemetryItem.value << 16);
+          break;
+        case 15: // GPS Speed
+          speed = telemetryItem.value / 10;
+          break;
       }
     }
   }
+
+  // When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
+  // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
+  lcdDrawText(LCD_W, INAV_SATS_POSY + 14, "HDOP", SMLSIZE | RIGHT);
+  lcdDrawNumber(LCD_W, INAV_SATS_POSY + 21, hdop * 5 + 8, PREC1 | MIDSIZE | RIGHT);
+
+  drawValueWithUnit(LCD_W - 6, 1, rxBatt / 10, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
 
   drawValueWithUnit(LCD_W - 11, 53, rssi, UNIT_DB, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
