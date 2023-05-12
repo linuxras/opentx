@@ -136,20 +136,20 @@ static void inavDrawCraft(uint8_t x, uint8_t y) {
 
 // Mode: 0 - Passthrough, 1-Armed(rate), 2-Horizon, 3-Angle, 4-Waypoint, 5-AltHold, 6-PosHold, 7-Rth, 8-Launch, 9-Failsafe
 static void inavDrawMode(uint8_t mode) {
-  const char * modeText[10][8] = {
-    "PASSTHRU",
-    "ARMED\0  ",
-    "HORIZON\0",
-    "ANGLE\0  ",
-    "WAYPOINT",
-    "ALT HOLD",
-    "POS HOLD",
-    "RTH\0    ",
-    "LAUNCH\0 ",
-    "FAILSAFE",
+  static const char modeText[10][8] = {
+    {'P','A','S','S','T','H','R','U'},
+    {'A','R','M','E','D','\0',' ',' '},
+    {'H','O','R','I','Z','O','N','\0'},
+    {'A','N','G','L','E','\0',' ',' '},
+    {'W','A','Y','P','O','I','N','T'},
+    {'A','L','T',' ','H','O','L','D'},
+    {'P','O','S',' ','H','O','L','D'},
+    {'R','T','H','\0',' ',' ',' ',' '},
+    {'L','A','U','N','C','H','\0',' '},
+    {'F','A','I','L','S','A','F','E'},
   };
 
-  lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, modeText[mode][0], 8, SMLSIZE | CENTERED);
+  lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, modeText[mode], 8, SMLSIZE | CENTERED);
 }
 
 static void inavDraw() {
