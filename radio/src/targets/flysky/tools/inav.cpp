@@ -319,6 +319,11 @@ void inavRun(event_t event) {
     inavData->launchHeading = inavData->heading;
   }
 
-  lcdClear();
-  inavDraw();
+  static uint16_t frame = 0;
+  frame++;
+
+  if (frame & 1) { // every other frame to reduce CPU load
+    lcdClear();
+    inavDraw();
+  }
 }
