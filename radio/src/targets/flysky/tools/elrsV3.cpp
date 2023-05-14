@@ -59,7 +59,7 @@ struct FieldFunctions {
   void (*display)(FieldProps*, uint8_t, uint8_t);
 };
 
-static constexpr uint16_t BUFFER_SIZE  = 170 + 246 + 20 + 24; // 170 (names) + 246 (values) + 20 (units) + extra
+static constexpr uint16_t BUFFER_SIZE  = 472;
 static uint8_t *buffer = &reusableBuffer.cToolData[0];
 uint16_t bufferOffset = 0;
 
@@ -153,9 +153,8 @@ static void handleDevicePageEvent(event_t event);
 static void fieldTextSelectionSave(FieldProps * field);
 
 static void luaLcdDrawGauge(coord_t x, coord_t y, coord_t w, coord_t h, int32_t val, int32_t max) {
-  lcdDrawRect(x, y, w+1, h, SOLID);
-  uint8_t len = limit((uint8_t)1, uint8_t(w*val/max), uint8_t(w));
-  lcdDrawSolidFilledRect(x+1, y+1, len, h-2);
+  uint8_t len = limit<uint8_t>(1, w*val/max, w);
+  lcdDrawSolidFilledRect(x+len, y, w - len, h-2);
 }
 
 static void bufferPush(char * data, uint8_t len) {
@@ -701,11 +700,10 @@ static void lcd_title() {
     lcdDrawVerticalLine(LCD_W - 10, 0, barHeight, SOLID, INVERS);
   }
 
+  lcdDrawFilledRect(0, 0, LCD_W, barHeight, SOLID);
   if (allParamsLoaded != 1 && expectedFieldsCount > 0) {
-    lcdDrawFilledRect(COL2, 0, LCD_W, barHeight, SOLID);
-    luaLcdDrawGauge(0, 0, COL2, barHeight, fieldId, expectedFieldsCount); // 136b
+    luaLcdDrawGauge(0, 1, COL2, barHeight, fieldId, expectedFieldsCount);
   } else {
-    lcdDrawFilledRect(0, 0, LCD_W, barHeight, SOLID);
     if (titleShowWarn) {
       lcdDrawSizedText(textXoffset, 1, elrsFlagsInfo, ELRS_FLAGS_INFO_MAX_LEN, INVERS);
     } else {
@@ -816,7 +814,7 @@ static void runDevicePage(event_t event) {
         break;
       } else if (field->nameLength > 0) {
         uint8_t attr = (lineIndex == (pageOffset+y)) ? ((edit && BLINK) + INVERS) : 0;
-        if (field->type < TYPE_FOLDER or field->type == TYPE_INFO) {
+        if (field->type < TYPE_FOLDER || field->type == TYPE_INFO) {
           lcdDrawSizedText(textXoffset, y*textSize+textYoffset, (char *)&buffer[field->offset], field->nameLength, 0);
         }
         getFunctions(field->type).display(field, y*textSize+textYoffset, attr);
