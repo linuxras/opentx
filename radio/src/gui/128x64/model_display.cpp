@@ -54,9 +54,11 @@ enum MenuModelDisplayItems {
 
 inline uint8_t SCREEN_TYPE_COLUMNS(uint8_t screenIndex)
 {
+#if defined(LUA)
   if (TELEMETRY_SCREEN_TYPE(screenIndex) == TELEMETRY_SCREEN_TYPE_SCRIPT)
     return 1;
   else
+#endif
     return 0;
 }
 
