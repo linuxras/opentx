@@ -195,7 +195,7 @@ static void inavDraw() {
       // } else if (sensor.id == TEMP2_ID) { // GPS lock status, accuracy, home reset trigger, and number of satellites.
 
 //      } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
-      } else if (strstr(sensor.label, "0420")) { // Distance
+      } else if (strstr(sensor.label, ZSTR_DIST) || strstr(sensor.label, "0420")) { // Distance
         dist = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
         // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
