@@ -190,7 +190,7 @@ bool displayTelemetryScreen()
     }
     return false;
   }
-#else // PCBI6X
+#elif defined(PCBI6X_INAV)
   if (TELEMETRY_SCREEN_TYPE(s_frsky_view) == TELEMETRY_SCREEN_TYPE_SCRIPT) {
     inavRun(0xff);
     return true;
