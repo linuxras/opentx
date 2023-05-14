@@ -51,7 +51,7 @@ static const int8_t sine[32] = {
 #define INAV_GSPD_POSX    19
 #define INAV_GSPD_POSY    57
 
-#define INAV_DIST_POSX    50
+#define INAV_DIST_POSX    56
 #define INAV_DIST_POSY    57
 
 #define INAV_ALT_POSX     90
@@ -165,8 +165,8 @@ static void inavDraw() {
   // Timer 1
   drawTimer(58, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  uint8_t rxBatt = 0, rssi = 0, sats = 0, fix, hdop = 0, mode = 0;
-  int32_t alt = 0, galt = 0, speed = 0;
+  uint8_t rxBatt = 0, rssi = 0, sats = 0, fix, hdop = 9, mode = 0;
+  int32_t dist = 0, alt = 0, galt = 0, speed = 0;
 
   for (int i = 0; i < MAX_TELEMETRY_SENSORS; i++) {
     if (!isTelemetryFieldAvailable(i)) break;
@@ -194,8 +194,9 @@ static void inavDraw() {
         lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, telemetryItem.text, sizeof(telemetryItem.text), CENTERED);
       // } else if (sensor.id == TEMP2_ID) { // GPS lock status, accuracy, home reset trigger, and number of satellites.
 
-      } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
-        drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, sensor.unit, RIGHT);
+//      } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
+      } else if (strstr(sensor.label, "0420")) { // Distance
+        dist = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
         // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
         inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
@@ -246,7 +247,7 @@ static void inavDraw() {
           galt = (int16_t)(telemetryItem.value) / 100;
           break;
         case 8: // Distance
-          drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, telemetryItem.value, UNIT_METERS, RIGHT);
+          dist = telemetryItem.value;
           break;
         case 11: // 12.Second part of Lattitude (Rpm type), for example 5678 (-12.3456789 N).
           inavData->currentLat = (inavData->currentLat & 0xffff0000) | telemetryItem.value;
@@ -276,7 +277,10 @@ static void inavDraw() {
 
   drawValueWithUnit(LCD_W - 11, 53, rssi, UNIT_DB, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
+
+  drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, dist, UNIT_METERS, RIGHT);
   drawValueWithUnit(INAV_ALT_POSX, INAV_ALT_POSY, alt, UNIT_METERS, RIGHT);
+
   lcdDrawChar(INAV_SATS_POSX - 28, INAV_SATS_POSY + 4, SATS_ICON);
   lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, sats, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GALT_POSX, INAV_GALT_POSY, galt, UNIT_METERS, RIGHT);
