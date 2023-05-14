@@ -843,7 +843,7 @@ void drawValueWithUnit(coord_t x, coord_t y, int val, uint8_t unit, LcdFlags att
   // convertUnit(val, unit);
   lcdDrawNumber(x, y, val, att & (~NO_UNIT));
   if (!(att & NO_UNIT) && unit != UNIT_RAW) {
-    lcdDrawTextAtIndex(lcdLastRightPos/*+1*/, y, STR_VTELEMUNIT, unit, 0);
+    lcdDrawTextAtIndex(lcdLastRightPos/*+1*/, y, STR_VTELEMUNIT, unit, att & INVERS); // modified to support INVERS for unit
   }
 }
 
