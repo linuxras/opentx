@@ -50,7 +50,9 @@ void menuRadioTools(event_t event)
   addRadioTool(index++, "Hello World", hello_run, event);
 #endif
 
+#if defined(PCBI6X_INAV)
   addRadioTool(index++, "INAV Lite", inavRun, event);
+#endif
 
   SIMPLE_MENU("TOOLS", menuTabGeneral, MENU_RADIO_TOOLS, HEADER_LINE + index);
 }

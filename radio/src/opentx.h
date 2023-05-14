@@ -202,7 +202,7 @@
   #define IS_SLAVE_TRAINER()           (g_model.trainerMode == TRAINER_MODE_SLAVE)
 #endif
 
-#if defined(PCBI6X_TOOLS) || defined(LUA) || defined(PXX2) || defined(MULTIMODULE)
+#if defined(LUA) || defined(PXX2) || defined(MULTIMODULE) || defined(PCBI6X)
   #define RADIO_TOOLS
 #endif
 
