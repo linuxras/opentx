@@ -382,7 +382,7 @@
 
 #if defined(PCBI6X)
   #define LEN_VTELEMSCREENTYPE         "\004"
-  #define TR_VTELEMSCREENTYPE          "None""Nums""Bars"
+  #define TR_VTELEMSCREENTYPE          "None""Nums""Bars""INAV"
 #else
   #define LEN_VTELEMSCREENTYPE         "\006"
   #define TR_VTELEMSCREENTYPE          "None\0 ""Nums\0 ""Bars\0 ""Script"

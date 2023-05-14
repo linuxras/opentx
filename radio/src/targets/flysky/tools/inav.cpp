@@ -320,7 +320,10 @@ static void inavDraw() {
 }
 
 void inavRun(event_t event) {
-  globalData.cToolRunning = 1;
+  if (event != 0xff) {
+    globalData.cToolRunning = 1;
+    lcdClear(); // when run as telemetry screen clear is done elsewhere
+  }
 
   if (event == EVT_KEY_LONG(KEY_EXIT)) { // exit on long press CANCEL
     globalData.cToolRunning = 0;
@@ -331,11 +334,8 @@ void inavRun(event_t event) {
     inavData.homeHeading = inavData.heading;
   }
 
-  static uint16_t frame = 0;
-  frame++;
-
-  if (frame & 1) { // every other frame to reduce CPU load
-    lcdClear();
+  // static uint16_t frame = 0;
+  // if (frame++ & 1) { // every other frame to reduce CPU load
     inavDraw();
-  }
+  // }
 }

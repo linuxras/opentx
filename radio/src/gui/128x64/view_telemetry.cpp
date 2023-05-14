@@ -169,6 +169,8 @@ bool displayCustomTelemetryScreen(uint8_t index)
   return true;
 }
 
+void inavRun(event_t event);
+
 bool displayTelemetryScreen()
 {
 #if defined(TELEMETRY_FRSKY)
@@ -187,6 +189,11 @@ bool displayTelemetryScreen()
         return true;
     }
     return false;
+  }
+#else // PCBI6X
+  if (TELEMETRY_SCREEN_TYPE(s_frsky_view) == TELEMETRY_SCREEN_TYPE_SCRIPT) {
+    inavRun(0xff);
+    return true;
   }
 #endif
 
