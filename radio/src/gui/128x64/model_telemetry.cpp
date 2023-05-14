@@ -460,6 +460,9 @@ void menuModelTelemetryFrsky(event_t event)
       if (telemetryItems[index].isFresh()) {
         lcdDrawChar(17*FW, y, '*');
       }
+#if 0 // draw telemetry sensor ID
+      lcdDrawNumber(LCD_W, y, g_model.telemetrySensors[index].instance, attr | RIGHT);
+#endif
       TelemetryItem & telemetryItem = telemetryItems[index];
       if (telemetryItem.isAvailable()) {
         bool isOld = telemetryItem.isOld();
