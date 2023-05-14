@@ -51,7 +51,7 @@ static const int8_t sine[32] = {
 #define INAV_GSPD_POSX    19
 #define INAV_GSPD_POSY    57
 
-#define INAV_DIST_POSX    56
+#define INAV_DIST_POSX    38
 #define INAV_DIST_POSY    57
 
 #define INAV_ALT_POSX     90
@@ -278,7 +278,7 @@ static void inavDraw() {
   drawValueWithUnit(LCD_W - 11, 53, rssi, UNIT_DB, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
 
-  drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, dist, UNIT_METERS, RIGHT);
+  drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, dist, UNIT_METERS, 0);
   drawValueWithUnit(INAV_ALT_POSX, INAV_ALT_POSY, alt, UNIT_METERS, RIGHT);
 
   lcdDrawChar(INAV_SATS_POSX - 28, INAV_SATS_POSY + 4, SATS_ICON);
