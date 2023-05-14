@@ -18,8 +18,8 @@
    + store home GPS coords on long press OK,
    + GPS coords, heading,
    - GPS alt,
-   - rotate coords to launchHeading,
-   - North or launchHeading orientation modes toggle, by BIND?
+   - rotate coords to homeHeading,
+   - North or homeHeading orientation modes toggle, by BIND?
  + draw home and craft:
    + calculate home and craft position BBox,
    + scale and translate to fit screen BBox,
@@ -83,12 +83,11 @@ struct InavData {
   int32_t homeLon;
   int32_t currentLat;
   int32_t currentLon;
-  uint8_t launchHeading;
+  uint8_t homeHeading;
   uint8_t heading;
 };
 
-// TODO: home lat/lon and launchHeading shall be kept while radio is running
-static InavData * inavData = (InavData *)&reusableBuffer.cToolData[0];
+static InavData inavData; // = (InavData *)&reusableBuffer.cToolData[0];
 
 static Point2D rotate(Point2D *p, uint8_t angle) {
   Point2D rotated;
@@ -109,7 +108,7 @@ static void inavDrawCraft(uint8_t x, uint8_t y) {
   constexpr int8_t pLY = 10;
   constexpr int8_t pRX =  3;
   constexpr int8_t pRY = 10;
-  uint8_t angle = inavData->heading + inavData->launchHeading;
+  uint8_t angle = inavData.heading + inavData.homeHeading;
   int8_t sinVal = sine[angle];
   int8_t cosVal = sine[(angle + 8) & 0x1F];
 
@@ -198,8 +197,8 @@ static void inavDraw() {
       } else if (strstr(sensor.label, ZSTR_DIST) || strstr(sensor.label, "0420")) { // Distance
         dist = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
-        // inavData->heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
-        inavData->heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
+        // inavData.heading = ((telemetryItem.value / (10 ^ sensor.prec)) * 100) / 1125;
+        inavData.heading = convertTelemetryValue(telemetryItem.value, sensor.unit, sensor.prec, sensor.unit, 2) / 1125;
       } else if (strstr(sensor.label, ZSTR_GSPD)) { // GPS Speed
         speed = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
@@ -209,10 +208,10 @@ static void inavDraw() {
         // Fake CRSF HDOP
         // data.hdop = math.floor(data.satellites * 0.01) % 10
         // text(72, 59, (data.hdop == 0 and not data.gpsFix) and "---" or (9 - data.hdop) * 0.5 + 0.8, data.set_flags(RIGHT, tmp))
-        hdop = 9 - (sats / 10);
+        hdop = 9 - (sats % 10);
       } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
-        inavData->currentLat = telemetryItem.gps.longitude;
-        inavData->currentLon = telemetryItem.gps.latitude;
+        inavData.currentLat = telemetryItem.gps.longitude;
+        inavData.currentLon = telemetryItem.gps.latitude;
       }
 
     } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
@@ -235,7 +234,7 @@ static void inavDraw() {
           inavDrawMode(mode);
           break;
         case 4: // Course in degree - store for drawing
-          inavData->heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
+          inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
           break;
         case 5: // Current in Amperes
             drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, telemetryItem.value, UNIT_AMPS, PREC2 | MIDSIZE | RIGHT);
@@ -250,16 +249,16 @@ static void inavDraw() {
           dist = telemetryItem.value;
           break;
         case 11: // 12.Second part of Lattitude (Rpm type), for example 5678 (-12.3456789 N).
-          inavData->currentLat = (inavData->currentLat & 0xffff0000) | telemetryItem.value;
+          inavData.currentLat = (inavData.currentLat & 0xffff0000) | telemetryItem.value;
           break;
         case 12: // 13.Second part of Longitude (Rpm type), for example 6789 (-123.4567891 E).
-          inavData->currentLon = (inavData->currentLon & 0xffff0000) | telemetryItem.value;
+          inavData.currentLon = (inavData.currentLon & 0xffff0000) | telemetryItem.value;
           break;
         case 13: // 14.First part of Lattitude (Voltage type), for example -12.45 (-12.3456789 N).
-          inavData->currentLat = (inavData->currentLat & 0x0000ffff) | (telemetryItem.value << 16);
+          inavData.currentLat = (inavData.currentLat & 0x0000ffff) | (telemetryItem.value << 16);
           break;
         case 14: // 15.First part of Longitude (Voltage type), for example -123.45 (-123.4567890 E).
-          inavData->currentLon = (inavData->currentLon & 0x0000ffff) | (telemetryItem.value << 16);
+          inavData.currentLon = (inavData.currentLon & 0x0000ffff) | (telemetryItem.value << 16);
           break;
         case 15: // GPS Speed
           speed = telemetryItem.value / 10;
@@ -287,26 +286,26 @@ static void inavDraw() {
 
   // lcdDrawText(5, 45, "\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2");
 
-  // lcdDrawNumber(70, 20, inavData->currentLat, SMLSIZE | RIGHT);
-  // lcdDrawNumber(70, 30, inavData->currentLon, SMLSIZE | RIGHT);
+  // lcdDrawNumber(70, 20, inavData.currentLat, SMLSIZE | RIGHT);
+  // lcdDrawNumber(70, 30, inavData.currentLon, SMLSIZE | RIGHT);
 
-  int32_t h = inavData->homeLat - inavData->currentLat;
-  int32_t w = inavData->homeLon - inavData->currentLon;
+  int32_t h = inavData.homeLat - inavData.currentLat;
+  int32_t w = inavData.homeLon - inavData.currentLon;
   int32_t d = isqrt32((w * w) + (h * h));
 
   int32_t scaleFactor = limit<int32_t>(1, (d / BBOX_SIZE), INT16_MAX); // TODO: while h || w > BBOX_SIZE do h /= 2; w /=2 ?
 
   // calculate center
-  int32_t centerLon = (inavData->homeLon + inavData->currentLon) / 2;
-  int32_t centerLat = (inavData->homeLat + inavData->currentLat) / 2;
+  int32_t centerLon = (inavData.homeLon + inavData.currentLon) / 2;
+  int32_t centerLat = (inavData.homeLat + inavData.currentLat) / 2;
 
   // translate to center
-  int32_t translatedHomeLon = inavData->homeLon - centerLon;
-  int32_t translatedHomeLat = inavData->homeLat - centerLat;
-  int32_t translatedCurrentLon = inavData->currentLon - centerLon;
-  int32_t translatedCurrentLat = inavData->currentLat - centerLat;
+  int32_t translatedHomeLon = inavData.homeLon - centerLon;
+  int32_t translatedHomeLat = inavData.homeLat - centerLat;
+  int32_t translatedCurrentLon = inavData.currentLon - centerLon;
+  int32_t translatedCurrentLat = inavData.currentLat - centerLat;
 
-  // rotate to launchHeading
+  // rotate to homeHeading
   // ...
 
   // scale
@@ -326,10 +325,10 @@ void inavRun(event_t event) {
   if (event == EVT_KEY_LONG(KEY_EXIT)) { // exit on long press CANCEL
     globalData.cToolRunning = 0;
     popMenu();
-  } else if (inavData->homeLat == 0 || event == EVT_KEY_LONG(KEY_ENTER)) { // store or reset home on long press OK
-    inavData->homeLat = inavData->currentLat;
-    inavData->homeLon = inavData->currentLon;
-    inavData->launchHeading = inavData->heading;
+  } else if (inavData.homeLat == 0 || event == EVT_KEY_LONG(KEY_ENTER)) { // set home on init or long press OK
+    inavData.homeLat = inavData.currentLat;
+    inavData.homeLon = inavData.currentLon;
+    inavData.homeHeading = inavData.heading;
   }
 
   static uint16_t frame = 0;
