@@ -126,17 +126,17 @@ const FlySkySensor flySkySensors[] = {
   {AFHDS2A_ID_ODO2,            ZSTR_ODO2,        UNIT_METERS,            2},  // 2 bytes Odometer2 -- some magic with 330 needed
   {AFHDS2A_ID_SPE,             ZSTR_ASPD,        UNIT_KMH,               2},  // 2 bytes Speed km/h -- some magic with 330 needed
   {AFHDS2A_ID_TX_V,            ZSTR_TXV,         UNIT_VOLTS,             2},  // TX Voltage
-  {AFHDS2A_ID_GPS_LAT,         ZSTR_GPS,         UNIT_RAW,               7},  // 4 bytes signed WGS84 in degrees * 1E7
-  {AFHDS2A_ID_GPS_LON,         ZSTR_GPS,         UNIT_RAW,               7},  // 4 bytes signed WGS84 in degrees * 1E7
+  {AFHDS2A_ID_GPS_LAT,         ZSTR_GPS,         UNIT_GPS,               7},  // 4 bytes signed WGS84 in degrees * 1E7
+  {AFHDS2A_ID_GPS_LON,         ZSTR_GPS,         UNIT_GPS,               7},  // 4 bytes signed WGS84 in degrees * 1E7
   {AFHDS2A_ID_GPS_ALT,         ZSTR_GPSALT,      UNIT_METERS,            2},  // 4 bytes signed GPS alt m*100
   {AFHDS2A_ID_ALT,             ZSTR_ALT,         UNIT_METERS,            2},  // 4 bytes signed Alt m*100
-//  {AFHDS2A_ID_RX_SIG_AFHDS3,    ZSTR_RX_QUALITY,        UNIT_RAW,                    0},  // RX error rate
+//  {AFHDS2A_ID_RX_SIG_AFHDS3,    ZSTR_RX_QUALITY,        UNIT_PERCENT,                    0},  // RX error rate
 //  {AFHDS2A_ID_RX_SNR_AFHDS3,    ZSTR_RX_SNR,            UNIT_DB,                     1},  // RX SNR
   {AFHDS2A_ID_RX_SNR,          ZSTR_RX_SNR,      UNIT_DB,                0},  // RX SNR
   {AFHDS2A_ID_RX_NOISE,        ZSTR_RX_NOISE,    UNIT_DB,                0},  // RX Noise
   {AFHDS2A_ID_RX_RSSI,         ZSTR_RSSI,        UNIT_DB,                0},  // RX RSSI (0xfc)
   {AFHDS2A_ID_RX_ERR_RATE,     ZSTR_RX_QUALITY,  UNIT_RAW,               0},  // RX error rate
-  {AFHDS2A_ID_TX_RSSI,         ZSTR_TX_RSSI,     UNIT_RAW,               0},  // Pseudo sensor for TRSSI
+  {AFHDS2A_ID_TX_RSSI,         ZSTR_TX_RSSI,     UNIT_DBM,               0},  // Pseudo sensor for TRSSI
 
   {0x00,                       NULL,                   UNIT_RAW,               0},  // sentinel
 };
