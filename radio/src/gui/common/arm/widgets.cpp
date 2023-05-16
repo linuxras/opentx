@@ -113,6 +113,9 @@ void drawSensorCustomValue(coord_t x, coord_t y, uint8_t sensor, int32_t value, 
   else if (telemetrySensor.unit == UNIT_TEXT) {
     lcdDrawSizedText(x, flags & DBLSIZE ? y+1 : y, telemetryItem.text, sizeof(telemetryItem.text), flags & ~DBLSIZE);
   }
+  else if (telemetrySensor.id == 0x80 || telemetrySensor.id == 0x81) {
+    drawGPSCoord(x, y, value, (telemetrySensor.id == 0x80) ? "NS" : "EW", flags & ~DBLSIZE);
+  }
   else {
     if (telemetrySensor.prec > 0) {
       flags |= (telemetrySensor.prec==1 ? PREC1 : PREC2);
