@@ -60,6 +60,7 @@ void drawSensorCustomValue(coord_t x, coord_t y, uint8_t sensor, int32_t value, 
   }
   else if (telemetrySensor.unit == UNIT_GPS) {
     if (telemetrySensor.id == 0x80 || telemetrySensor.id == 0x81) { // AFHDS2A is handled differently
+      x -= (g_eeGeneral.gpsFormat == 0 ? 62 : 61);
       flags &= ~0x0F00;
       drawGPSCoord(x, y, value / 10, (telemetrySensor.id == 0x80) ? "NS" : "EW", flags);
     } else {
