@@ -68,7 +68,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          python3 ./tools/build-flysky.py -bI6X_ELRSV3_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN $PWD/
+          python3 ./tools/build-flysky.py -bI6X_BACKLIGHT_MOD -bI6X_HELI -bI6X -tEN $PWD/
       - store_artifacts:
           path: output
 
