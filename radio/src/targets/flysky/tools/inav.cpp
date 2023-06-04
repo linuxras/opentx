@@ -30,7 +30,7 @@ static const int8_t sine[32] = {
 #define INAV_ALT_X     90
 #define INAV_ALT_Y     57
 
-#define INAV_GALT_X    LCD_W
+#define INAV_GALT_X    LCD_W - 5
 #define INAV_GALT_Y    43
 
 #define INAV_FM_X      (LCD_W / 2)
@@ -182,7 +182,7 @@ static void inavDraw() {
         // Fake CRSF HDOP
         // data.hdop = math.floor(data.satellites * 0.01) % 10
         // text(72, 59, (data.hdop == 0 and not data.gpsFix) and "---" or (9 - data.hdop) * 0.5 + 0.8, data.set_flags(RIGHT, tmp))
-        hdop = 9 - (sats % 10);
+        // hdop = 9 - (sats % 10);
       } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
         inavData.currentLat = telemetryItem.gps.longitude;
         inavData.currentLon = telemetryItem.gps.latitude;
@@ -250,7 +250,7 @@ static void inavDraw() {
   // When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
   // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
   lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
-  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, hdop * 5 + 8, PREC1 | MIDSIZE | RIGHT);
+  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT); // fake HDOP for CRSF and AFHDS2A
 
   drawValueWithUnit(LCD_W - 6, 1, rxBatt, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
   drawValueWithUnit(INAV_CURRENT_X, INAV_CURRENT_Y, current, UNIT_AMPS, PREC1 | MIDSIZE | RIGHT);
