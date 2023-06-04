@@ -27,7 +27,7 @@ static const int8_t sine[32] = {
 #define INAV_DIST_X    38
 #define INAV_DIST_Y    57
 
-#define INAV_ALT_X     90
+#define INAV_ALT_X     91
 #define INAV_ALT_Y     57
 
 #define INAV_GALT_X    LCD_W - 5
