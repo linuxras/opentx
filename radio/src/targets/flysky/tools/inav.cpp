@@ -214,11 +214,14 @@ static void inavDraw() {
         case 3: // 4. Current in Amperes
           current = telemetryItem.value / 10;
           break;
-        case 4: // 5. Heading (Course in degree)
-          inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
-          break;
+        // case 4: // 5. Heading (Course in degree)
+        //   inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
+        //   break;
         // case 6: // 7. Climb
         //   break;
+        case 7: // 8. Yaw
+          inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
+          break;
         case 8: // 9. Dist
           dist = telemetryItem.value;
           break;
