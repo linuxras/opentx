@@ -1,6 +1,6 @@
 /**
  * INAV Lite
- * Telemetry radar screen for CRSF and AFHDS2A (expects ibus_telemetry_type=0-3)
+ * Telemetry radar screen for CRSF and AFHDS2A (expects ibus_telemetry_type=7/8/135/136)
  *
  */
 #include "opentx.h"
@@ -12,36 +12,36 @@ static const int8_t sine[32] = {
   0,24,48,70,90,106,117,125,127,125,117,106,90,70,48,24,0,-25,-49,-71,-91,-107,-118,-126,-128,-126,-118,-107,-91,-71,-49,-25
 };
 
-#define INAV_BATTP_POSX   30
-#define INAV_BATTP_POSY    9
-#define INAV_VOLT_POSX    LCD_W
-#define INAV_VOLT_POSY     1
-#define INAV_CELLV_POSX   30
-#define INAV_CELLV_POSY   26
-#define INAV_CURRENT_POSX 30
-#define INAV_CURRENT_POSY 43
+#define INAV_BATTP_X   30
+#define INAV_BATTP_Y    9
+#define INAV_VOLT_X    LCD_W
+#define INAV_VOLT_Y     1
+#define INAV_CELLV_X   30
+#define INAV_CELLV_Y   26
+#define INAV_CURRENT_X 30
+#define INAV_CURRENT_Y 43
 
-#define INAV_GSPD_POSX    19
-#define INAV_GSPD_POSY    57
+#define INAV_GSPD_X    19
+#define INAV_GSPD_Y    57
 
-#define INAV_DIST_POSX    38
-#define INAV_DIST_POSY    57
+#define INAV_DIST_X    38
+#define INAV_DIST_Y    57
 
-#define INAV_ALT_POSX     90
-#define INAV_ALT_POSY     57
+#define INAV_ALT_X     90
+#define INAV_ALT_Y     57
 
-#define INAV_GALT_POSX    LCD_W
-#define INAV_GALT_POSY    43
+#define INAV_GALT_X    LCD_W
+#define INAV_GALT_Y    43
 
-#define INAV_FM_POSX      (LCD_W / 2)
-#define INAV_FM_POSY      9
+#define INAV_FM_X      (LCD_W / 2)
+#define INAV_FM_Y       9
 
-#define INAV_SATS_POSX      LCD_W 
-#define INAV_SATS_POSY      8
+#define INAV_SATS_X    LCD_W
+#define INAV_SATS_Y     8
 
-#define BBOX_CENTER_X (LCD_W / 2)
-#define BBOX_CENTER_Y (36)
-#define BBOX_SIZE     (21)
+#define BBOX_CENTER_X  (LCD_W / 2)
+#define BBOX_CENTER_Y  (36)
+#define BBOX_SIZE      (21)
 
 #define HOME_ICON '\xce'
 #define SATS_ICON '\xd1'
@@ -104,7 +104,7 @@ static void inavDrawCraft(uint8_t x, uint8_t y) {
 }
 
 // Mode: 0 - Passthrough, 1-Armed(rate), 2-Horizon, 3-Angle, 4-Waypoint, 5-AltHold, 6-PosHold, 7-Rth, 8-Launch, 9-Failsafe
-static void inavDrawFM(uint8_t mode) {
+static void inavDrawAFHDS2AFM(uint8_t mode) {
   static const char modeText[10][8] = {
     {'P','A','S','S','T','H','R','U'},
     {'A','R','M','E','D','\0',' ',' '},
@@ -118,7 +118,7 @@ static void inavDrawFM(uint8_t mode) {
     {'F','A','I','L','S','A','F','E'},
   };
 
-  lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, modeText[mode], 8, SMLSIZE | CENTERED);
+  lcdDrawSizedText(INAV_FM_X, INAV_FM_Y, modeText[mode], 8, SMLSIZE | CENTERED);
 }
 
 static void inavDraw() {
@@ -137,8 +137,10 @@ static void inavDraw() {
   // Timer 1
   drawTimer(58, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  uint8_t rxBatt = 0, rssi = 0, sats = 0, fix, hdop = 9, mode = 0;
+  uint8_t rxBatt = 0, sats = 0, fix, hdop = 9, mode = 0;
   int32_t dist = 0, alt = 0, galt = 0, speed = 0, current = 0;
+
+  int8_t rssi = 0;
 
   for (int i = 0; i < MAX_TELEMETRY_SENSORS; i++) {
     if (!isTelemetryFieldAvailable(i)) break;
@@ -156,18 +158,17 @@ static void inavDraw() {
       } else if (strstr(sensor.label, ZSTR_GPSALT)) { // GPS altitude
         galt = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_BATT_PERCENT)) { // batt percent
-        drawValueWithUnit(INAV_BATTP_POSX, INAV_BATTP_POSY, telemetryItem.value, sensor.unit, DBLSIZE | RIGHT);
+        drawValueWithUnit(INAV_BATTP_X, INAV_BATTP_Y, telemetryItem.value, sensor.unit, DBLSIZE | RIGHT);
       } else if (strstr(sensor.label, ZSTR_A4)) { // average cell value
-        drawValueWithUnit(INAV_CELLV_POSX, INAV_CELLV_POSY, telemetryItem.value, sensor.unit, PREC2 | DBLSIZE | RIGHT);
+        drawValueWithUnit(INAV_CELLV_X, INAV_CELLV_Y, telemetryItem.value, sensor.unit, PREC2 | DBLSIZE | RIGHT);
       } else if (strstr(sensor.label, ZSTR_BATT)) { // Voltage
         rxBatt = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_CURR)) { // Current
         current = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_FLIGHT_MODE)) { // flight mode
-        lcdDrawSizedText(INAV_FM_POSX, INAV_FM_POSY, telemetryItem.text, sizeof(telemetryItem.text), CENTERED);
+        lcdDrawSizedText(INAV_FM_X, INAV_FM_Y, telemetryItem.text, sizeof(telemetryItem.text), CENTERED);
       // } else if (sensor.id == TEMP2_ID) { // GPS lock status, accuracy, home reset trigger, and number of satellites.
 
-//      } else if (strstr(sensor.label, ZSTR_DIST)) { // Distance
       } else if (strstr(sensor.label, ZSTR_DIST) || strstr(sensor.label, "0420")) { // Distance
         dist = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_HDG)) { // Heading
@@ -189,51 +190,58 @@ static void inavDraw() {
 #endif // INAVLITE_CRSF
     } else if (telemetryProtocol == PROTOCOL_FLYSKY_IBUS) {
 #if defined(INAVLITE_AFHDS2A)
-      rssi = telemetryData.rssi.value;
+
+      if (g_model.telemetrySensors[i].id == 0xfc) { // RX RSSI
+        rssi = telemetryItem.value;
+      }
 
       switch(g_model.telemetrySensors[i].instance) { // inav index - 1
         case 1: // voltage sensor
-          rxBatt = telemetryItem.value; // scale down to PREC1
+          rxBatt = telemetryItem.value / 10; // scale down to PREC1
 
           // additionally draw in place of cell voltage
-          drawValueWithUnit(INAV_CELLV_POSX, INAV_CELLV_POSY, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
+          drawValueWithUnit(INAV_CELLV_X, INAV_CELLV_Y, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
           break;
-        case 3: // Status
-          sats = telemetryItem.value / 1000;
-          fix = (telemetryItem.value / 100) - sats * 10;
-          hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
-          mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
-          inavDrawFM(mode);
+        case 2: // 3. GPS Status, truncated to just Fix in flysky_ibus.cpp
+          lcdDrawNumber(70, 20, telemetryItem.value, SMLSIZE | RIGHT);
+          sats = telemetryItem.value & 0xff;
+          fix = telemetryItem.value >> 8;
+          // sats = telemetryItem.value / 1000;
+          // fix = (telemetryItem.value / 100) - sats * 10;
+          //hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
+          // mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
+          // inavDrawFM(mode);
           break;
-        case 4: // Course in degree - store for drawing
-          inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
-          break;
-        case 5: // Current in Amperes
+        case 3: // 4. Current in Amperes
           current = telemetryItem.value / 10;
           break;
-        case 6: // Altitude
-          alt = (int16_t)(telemetryItem.value) / 100;
+        case 4: // 5. Heading (Course in degree)
+          inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
           break;
-        case 10: // GPS Altitude - something is not right here
-          galt = (int16_t)(telemetryItem.value) / 100;
-          break;
-        case 8: // Distance
+        // case 6: // 7. Climb
+        //   break;
+        case 8: // 9. Dist
           dist = telemetryItem.value;
           break;
-        case 11: // 12.Second part of Lattitude (Rpm type), for example 5678 (-12.3456789 N).
-          inavData.currentLat = (inavData.currentLat & 0xffff0000) | telemetryItem.value;
+        // case 9: // 10. Armed
+        //   break;     
+        case 10: // 11. Speed
+          speed = telemetryItem.value;
+          break;        
+        case 11: // 12. GPS Lattitude
+          inavData.currentLat = telemetryItem.value;
           break;
-        case 12: // 13.Second part of Longitude (Rpm type), for example 6789 (-123.4567891 E).
-          inavData.currentLon = (inavData.currentLon & 0xffff0000) | telemetryItem.value;
+        case 12: // 13. GPS Longitude
+          inavData.currentLon = telemetryItem.value;
           break;
-        case 13: // 14.First part of Lattitude (Voltage type), for example -12.45 (-12.3456789 N).
-          inavData.currentLat = (inavData.currentLat & 0x0000ffff) | (telemetryItem.value << 16);
+        case 13: // 14. GALT
+          galt = (int16_t)(telemetryItem.value) / 10;
           break;
-        case 14: // 15.First part of Longitude (Voltage type), for example -123.45 (-123.4567890 E).
-          inavData.currentLon = (inavData.currentLon & 0x0000ffff) | (telemetryItem.value << 16);
+        case 14: // 15. ALT
+          alt = (int16_t)(telemetryItem.value) / 10;
           break;
-        case 15: // GPS Speed
-          speed = telemetryItem.value / 10;
+        case 15: // 16. MODE - no need to decode from Status
+          inavDrawAFHDS2AFM(telemetryItem.value);
           break;
       }
 #endif // INAVLITE_AFHDS2A
@@ -242,21 +250,21 @@ static void inavDraw() {
 
   // When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
   // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
-  lcdDrawText(LCD_W, INAV_SATS_POSY + 14, "HDOP", SMLSIZE | RIGHT);
-  lcdDrawNumber(LCD_W, INAV_SATS_POSY + 21, hdop * 5 + 8, PREC1 | MIDSIZE | RIGHT);
+  lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
+  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, hdop * 5 + 8, PREC1 | MIDSIZE | RIGHT);
 
-  drawValueWithUnit(LCD_W - 6, 1, rxBatt / 10, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
-  drawValueWithUnit(INAV_CURRENT_POSX, INAV_CURRENT_POSY, current, UNIT_AMPS, PREC1 | MIDSIZE | RIGHT);
+  drawValueWithUnit(LCD_W - 6, 1, rxBatt, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
+  drawValueWithUnit(INAV_CURRENT_X, INAV_CURRENT_Y, current, UNIT_AMPS, PREC1 | MIDSIZE | RIGHT);
 
   drawValueWithUnit(LCD_W - 11, 53, rssi, UNIT_DB, MIDSIZE | RIGHT);
-  drawValueWithUnit(INAV_GSPD_POSX, INAV_GSPD_POSY, speed, UNIT_KMH, PREC1 | RIGHT);
+  drawValueWithUnit(INAV_GSPD_X, INAV_GSPD_Y, speed, UNIT_KMH, PREC1 | RIGHT);
 
-  drawValueWithUnit(INAV_DIST_POSX, INAV_DIST_POSY, dist, UNIT_METERS, 0);
-  drawValueWithUnit(INAV_ALT_POSX, INAV_ALT_POSY, alt, UNIT_METERS, RIGHT);
+  drawValueWithUnit(INAV_DIST_X, INAV_DIST_Y, dist, UNIT_METERS, 0);
+  drawValueWithUnit(INAV_ALT_X, INAV_ALT_Y, alt, UNIT_METERS, RIGHT);
 
-  lcdDrawChar(INAV_SATS_POSX - 28, INAV_SATS_POSY + 4, SATS_ICON);
-  lcdDrawNumber(INAV_SATS_POSX, INAV_SATS_POSY, sats, MIDSIZE | RIGHT);
-  drawValueWithUnit(INAV_GALT_POSX, INAV_GALT_POSY, galt, UNIT_METERS, RIGHT);
+  lcdDrawChar(INAV_SATS_X - 28, INAV_SATS_Y + 4, SATS_ICON);
+  lcdDrawNumber(INAV_SATS_X, INAV_SATS_Y, sats, MIDSIZE | RIGHT);
+  drawValueWithUnit(INAV_GALT_X, INAV_GALT_Y, galt, UNIT_METERS, RIGHT);
 
   // lcdDrawText(5, 45, "\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2");
 
@@ -302,7 +310,7 @@ void inavRun(event_t event) {
   if (event == EVT_KEY_LONG(KEY_EXIT)) { // exit on long press CANCEL
     globalData.cToolRunning = 0;
     popMenu();
-  } else if (inavData.homeLat == 0 || event == EVT_KEY_LONG(KEY_ENTER)) { // set home on init or long press OK
+  } else if (event == EVT_KEY_LONG(KEY_ENTER)) { // set home on init or long press OK
     inavData.homeLat = inavData.currentLat;
     inavData.homeLon = inavData.currentLon;
     // inavData.homeHeading = inavData.heading;
