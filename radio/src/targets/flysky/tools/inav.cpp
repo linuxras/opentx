@@ -203,7 +203,6 @@ static void inavDraw() {
           drawValueWithUnit(INAV_CELLV_X, INAV_CELLV_Y, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
           break;
         case 2: // 3. GPS Status, truncated to just Fix in flysky_ibus.cpp
-          lcdDrawNumber(70, 20, telemetryItem.value, SMLSIZE | RIGHT);
           sats = telemetryItem.value & 0xff;
           fix = telemetryItem.value >> 8;
           // sats = telemetryItem.value / 1000;
