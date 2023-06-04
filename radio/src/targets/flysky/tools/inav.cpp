@@ -310,7 +310,6 @@ static void inavDraw() {
 
   // draw VSpd line
   vspd = limit<int16_t>(-5, vspd / 4, 5);
-  lcdDrawNumber(70, 20, vspd, SMLSIZE | RIGHT);
   lcdDrawLine(LCD_W - 30, ((LCD_H / 2) + FH / 2) - 10 + vspd, LCD_W - 28, ((LCD_H / 2) + FH / 2) - 10 - vspd, SOLID, FORCE); 
   lcdDrawLine(LCD_W - 30, ((LCD_H / 2) + FH / 2) -  9 + vspd, LCD_W - 28, ((LCD_H / 2) + FH / 2) -  9 - vspd, SOLID, FORCE); 
 }
