@@ -180,7 +180,7 @@ void processFlySkySensor(const uint8_t *packet, uint8_t type) {
     value = (int16_t)value;  // Signed value
   }
   else if (id == AFHDS2A_ID_GPS_STATUS) {
-    value = value >> 8;
+    if (!(value & 0xff)) value = value >> 8;
   }
   else if (id == AFHDS2A_ID_GPS_FULL) {
     //(AC FRAME)[ID][inst][size][fix][sats][LAT]x4[LON]x4[ALT]x4
