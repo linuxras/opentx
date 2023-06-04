@@ -124,9 +124,11 @@ static void inavDrawAFHDS2AFM(uint8_t mode) {
 static void inavDraw() {
   lcdDrawFilledRect(0, 0, LCD_W, FH, SOLID, 0);
   lcdDrawSolidVerticalLine(36, FH, LCD_H - FH, FORCE);
-  lcdDrawSolidVerticalLine(LCD_W - 32, FH, LCD_H - FH, FORCE);
+  lcdDrawSolidVerticalLine(LCD_W - 31, FH, LCD_H - FH, FORCE);
+  lcdDrawSolidVerticalLine(LCD_W - 27, FH, LCD_H - FH, FORCE);
   lcdDrawSolidHorizontalLine(0, 55, 36, FORCE);
-  lcdDrawSolidHorizontalLine(LCD_W - 32, 51, 32, FORCE);
+  lcdDrawSolidHorizontalLine(LCD_W - 26, 51, 32, FORCE);
+  lcdDrawLine(LCD_W - 30, (LCD_H / 2) + FH / 2, LCD_W - 28, (LCD_H / 2) + FH / 2, DOTTED, FORCE);
 
   // Model Name
   putsModelName(0, 0, g_model.header.name, g_eeGeneral.currModel, INVERS);
@@ -141,6 +143,7 @@ static void inavDraw() {
   int32_t dist = 0, alt = 0, galt = 0, speed = 0, current = 0;
 
   int8_t rssi = 0;
+  int16_t vspd = 0;
 
   for (int i = 0; i < MAX_TELEMETRY_SENSORS; i++) {
     if (!isTelemetryFieldAvailable(i)) break;
@@ -157,6 +160,8 @@ static void inavDraw() {
         alt = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_GPSALT)) { // GPS altitude
         galt = telemetryItem.value;
+      } else if (strstr(sensor.label, ZSTR_VSPD)) { // VSpd
+        vspd = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_BATT_PERCENT)) { // batt percent
         drawValueWithUnit(INAV_BATTP_X, INAV_BATTP_Y, telemetryItem.value, sensor.unit, DBLSIZE | RIGHT);
       } else if (strstr(sensor.label, ZSTR_A4)) { // average cell value
@@ -217,8 +222,9 @@ static void inavDraw() {
         // case 4: // 5. Heading (Course in degree)
         //   inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
         //   break;
-        // case 6: // 7. Climb
-        //   break;
+        case 6: // 7. Climb
+          vspd = telemetryItem.value;
+          break;
         case 7: // 8. Yaw
           inavData.heading = telemetryItem.value / 1125; // div by 5.625 => 64 degrees
           break;
@@ -264,7 +270,7 @@ static void inavDraw() {
   drawValueWithUnit(INAV_DIST_X, INAV_DIST_Y, dist, UNIT_METERS, 0);
   drawValueWithUnit(INAV_ALT_X, INAV_ALT_Y, alt, UNIT_METERS, RIGHT);
 
-  lcdDrawChar(INAV_SATS_X - 28, INAV_SATS_Y + 4, SATS_ICON);
+  lcdDrawChar(INAV_SATS_X - 25, INAV_SATS_Y + 4, SATS_ICON);
   lcdDrawNumber(INAV_SATS_X, INAV_SATS_Y, sats, MIDSIZE | RIGHT);
   drawValueWithUnit(INAV_GALT_X, INAV_GALT_Y, galt, UNIT_METERS, RIGHT);
 
@@ -301,6 +307,12 @@ static void inavDraw() {
   // translate to LCD center space and draw
   inavDrawHome(BBOX_CENTER_X + scaledHomeLon, BBOX_CENTER_Y + scaledHomeLat);
   inavDrawCraft(BBOX_CENTER_X + scaledCurrentLon, BBOX_CENTER_Y + scaledCurrentLat);
+
+  // draw VSpd line
+  vspd = limit<int16_t>(-5, vspd / 4, 5);
+  lcdDrawNumber(70, 20, vspd, SMLSIZE | RIGHT);
+  lcdDrawLine(LCD_W - 30, ((LCD_H / 2) + FH / 2) - 10 + vspd, LCD_W - 28, ((LCD_H / 2) + FH / 2) - 10 - vspd, SOLID, FORCE); 
+  lcdDrawLine(LCD_W - 30, ((LCD_H / 2) + FH / 2) -  9 + vspd, LCD_W - 28, ((LCD_H / 2) + FH / 2) -  9 - vspd, SOLID, FORCE); 
 }
 
 void inavRun(event_t event) {
