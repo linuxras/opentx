@@ -62,6 +62,7 @@ struct InavData {
 
 static InavData inavData; // = (InavData *)&reusableBuffer.cToolData[0];
 
+/*
 static Point2D rotate(Point2D *p, uint8_t angle) {
   Point2D rotated;
   int8_t sinVal = sine[angle];
@@ -70,6 +71,7 @@ static Point2D rotate(Point2D *p, uint8_t angle) {
   rotated.y = (p->y * cosVal + p->x * sinVal) >> 7;
   return rotated;
 }
+*/
 
 static void inavDrawHome(uint8_t x, uint8_t y) {
   lcdDrawChar(x - 2, y - 3, HOME_ICON);
@@ -139,7 +141,7 @@ static void inavDraw() {
   // Timer 1
   drawTimer(58, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  uint8_t rxBatt = 0, sats = 0, fix, hdop = 9, mode = 0;
+  uint8_t rxBatt = 0, sats = 0, fix = 1; //, hdop = 9, mode = 0;
   int32_t dist = 0, alt = 0, galt = 0, speed = 0, current = 0;
 
   int8_t rssi = 0;
@@ -183,7 +185,7 @@ static void inavDraw() {
         speed = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
         sats = telemetryItem.value;
-
+        fix = (sats >= 6) ? 2 : 1;
         // Fake CRSF HDOP
         // data.hdop = math.floor(data.satellites * 0.01) % 10
         // text(72, 59, (data.hdop == 0 and not data.gpsFix) and "---" or (9 - data.hdop) * 0.5 + 0.8, data.set_flags(RIGHT, tmp))
@@ -256,10 +258,12 @@ static void inavDraw() {
     }
   }
 
+  // Fake HDOP for CRSF and AFHDS2A
   // When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
   // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
-  lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
-  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT); // fake HDOP for CRSF and AFHDS2A
+  // data.satellites = math.min(data.satellites, 99) + (math.floor(math.min(data.satellites + 10, 25) * 0.36 + 0.5) * 100) + (data.satellites >= 6 and 1000 or 0)
+  // data.satellites = math.min(data.satellites, 99) + math.min(data.satellites + 10, 25) * 36 + 50
+  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT);
 
   drawValueWithUnit(LCD_W - 6, 1, rxBatt, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
   drawValueWithUnit(INAV_CURRENT_X, INAV_CURRENT_Y, current, UNIT_AMPS, PREC1 | MIDSIZE | RIGHT);
@@ -304,9 +308,20 @@ static void inavDraw() {
   int8_t scaledCurrentLon = translatedCurrentLon / scaleFactor;
   int8_t scaledCurrentLat = translatedCurrentLat / scaleFactor;
 
+if (fix > 1) {
+  if (inavData.homeLat == 0) {
+    inavData.homeLat = inavData.currentLat;
+    inavData.homeLon = inavData.currentLon;
+    buzzerEvent(AU_SPECIAL_SOUND_WARN1);
+  }
+
   // translate to LCD center space and draw
   inavDrawHome(BBOX_CENTER_X + scaledHomeLon, BBOX_CENTER_Y + scaledHomeLat);
   inavDrawCraft(BBOX_CENTER_X + scaledCurrentLon, BBOX_CENTER_Y + scaledCurrentLat);
+} 
+// else {
+//   lcdDrawText(LCD_W, LCD_H - FH / 2, "NO FIX", SMLSIZE | CENTERED);
+// }
 
   // draw VSpd line
   vspd = limit<int16_t>(-5, vspd / 4, 5);
