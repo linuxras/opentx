@@ -263,6 +263,7 @@ static void inavDraw() {
   // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
   // data.satellites = math.min(data.satellites, 99) + (math.floor(math.min(data.satellites + 10, 25) * 0.36 + 0.5) * 100) + (data.satellites >= 6 and 1000 or 0)
   // data.satellites = math.min(data.satellites, 99) + math.min(data.satellites + 10, 25) * 36 + 50
+  lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
   lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT);
 
   drawValueWithUnit(LCD_W - 6, 1, rxBatt, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
@@ -338,7 +339,7 @@ void inavRun(event_t event) {
   if (event == EVT_KEY_LONG(KEY_EXIT)) { // exit on long press CANCEL
     globalData.cToolRunning = 0;
     popMenu();
-  } else if (event == EVT_KEY_LONG(KEY_ENTER)) { // set home on init or long press OK
+  } else if (event == EVT_KEY_LONG(KEY_ENTER)) { // set home on long press OK
     inavData.homeLat = inavData.currentLat;
     inavData.homeLon = inavData.currentLon;
     // inavData.homeHeading = inavData.heading;
