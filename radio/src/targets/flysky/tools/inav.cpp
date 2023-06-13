@@ -186,10 +186,6 @@ static void inavDraw() {
       } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
         sats = telemetryItem.value;
         fix = (sats >= 6) ? 2 : 1;
-        // Fake CRSF HDOP
-        // data.hdop = math.floor(data.satellites * 0.01) % 10
-        // text(72, 59, (data.hdop == 0 and not data.gpsFix) and "---" or (9 - data.hdop) * 0.5 + 0.8, data.set_flags(RIGHT, tmp))
-        // hdop = 9 - (sats % 10);
       } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
         inavData.currentLat = telemetryItem.gps.longitude;
         inavData.currentLon = telemetryItem.gps.latitude;
@@ -257,9 +253,10 @@ static void inavDraw() {
   // When GPS accuracy (HDOP) is displayed as a decimal, the range is 0.8 - 5.3 and it's rounded to the nearest 0.5 HDOP.
   // This is due to HDOP being sent as a single integer from 0 to 9, not as the actual HDOP decimal value (not applicable to Crossfire)
   // data.satellites = math.min(data.satellites, 99) + (math.floor(math.min(data.satellites + 10, 25) * 0.36 + 0.5) * 100) + (data.satellites >= 6 and 1000 or 0)
-  // data.satellites = math.min(data.satellites, 99) + math.min(data.satellites + 10, 25) * 36 + 50
-  lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
-  lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT);
+  // data.hdop = math.floor(data.satellites * 0.01) % 10
+  // (9 - data.hdop) * 0.5 + 0.8
+  // lcdDrawText(LCD_W, INAV_SATS_Y + 14, "HDOP", SMLSIZE | RIGHT);
+  // lcdDrawNumber(LCD_W, INAV_SATS_Y + 21, (9 - (sats % 10)) * 5 + 8, PREC1 | MIDSIZE | RIGHT);
 
   drawValueWithUnit(LCD_W - 6, 1, rxBatt, UNIT_VOLTS, PREC1 | SMLSIZE | INVERS | RIGHT);
   drawValueWithUnit(INAV_CURRENT_X, INAV_CURRENT_Y, current, UNIT_AMPS, PREC1 | MIDSIZE | RIGHT);
@@ -304,20 +301,18 @@ static void inavDraw() {
   int8_t scaledCurrentLon = translatedCurrentLon / scaleFactor;
   int8_t scaledCurrentLat = translatedCurrentLat / scaleFactor;
 
-if (fix > 1) {
-  if (inavData.homeLat == 0) {
-    inavData.homeLat = inavData.currentLat;
-    inavData.homeLon = inavData.currentLon;
-    buzzerEvent(AU_SPECIAL_SOUND_WARN1);
-  }
+  if (fix > 1) {
+    if (inavData.homeLat == 0) {
+      inavData.homeLat = inavData.currentLat;
+      inavData.homeLon = inavData.currentLon;
+      buzzerEvent(AU_SPECIAL_SOUND_WARN1);
+    }
 
-  // translate to LCD center space and draw
-  inavDrawHome(BBOX_CENTER_X + scaledHomeLon, BBOX_CENTER_Y + scaledHomeLat);
-  inavDrawCraft(BBOX_CENTER_X + scaledCurrentLon, BBOX_CENTER_Y + scaledCurrentLat);
-} 
-// else {
-//   lcdDrawText(LCD_W, LCD_H - FH / 2, "NO FIX", SMLSIZE | CENTERED);
-// }
+    // translate to LCD center space and draw
+    inavDrawHome(BBOX_CENTER_X + scaledHomeLon, BBOX_CENTER_Y + scaledHomeLat);
+    inavDrawCraft(BBOX_CENTER_X + scaledCurrentLon, BBOX_CENTER_Y + scaledCurrentLat);
+  } 
+  
 
   // draw VSpd line
   vspd = limit<int16_t>(-5, vspd / 4, 5);
