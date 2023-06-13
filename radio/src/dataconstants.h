@@ -320,6 +320,7 @@ enum TelemetryUnit {
   // Internal units (not stored in sensor unit)
   UNIT_GPS_LONGITUDE,
   UNIT_GPS_LATITUDE,
+  UNIT_GPS_STATUS,
   UNIT_DATETIME_YEAR,
   UNIT_DATETIME_DAY_MONTH,
   UNIT_DATETIME_HOUR_MIN,

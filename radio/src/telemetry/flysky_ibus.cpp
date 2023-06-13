@@ -106,7 +106,7 @@ const FlySkySensor flySkySensors[] = {
   {AFHDS2A_ID_CMP_HEAD,        ZSTR_HDG,         UNIT_DEGREE,            0},  // Heading  0..360 deg, 0=north 2bytes
   {AFHDS2A_ID_CLIMB_RATE,      ZSTR_VSPD,        UNIT_METERS_PER_SECOND, 2},  // 2 bytes m/s *100
   {AFHDS2A_ID_COG,             ZSTR_HDG,         UNIT_DEGREE,            2},  // 2 bytes  Course over ground(NOT heading, but direction of movement) in degrees * 100, 0.0..359.99 degrees. unknown max uint
-  {AFHDS2A_ID_GPS_STATUS,      ZSTR_SATELLITES,  UNIT_RAW,               0},  // 2 bytes
+  {AFHDS2A_ID_GPS_STATUS,      ZSTR_SATELLITES,  UNIT_GPS_STATUS,        0},  // 2 bytes
   {AFHDS2A_ID_ACC_X,           ZSTR_ACCX,        UNIT_METERS_PER_SECOND, 2},  // 2 bytes m/s *100 signed
   {AFHDS2A_ID_ACC_Y,           ZSTR_ACCY,        UNIT_METERS_PER_SECOND, 2},  // 2 bytes m/s *100 signed
   {AFHDS2A_ID_ACC_Z,           ZSTR_ACCZ,        UNIT_METERS_PER_SECOND, 2},  // 2 bytes m/s *100 signed
@@ -178,9 +178,6 @@ void processFlySkySensor(const uint8_t *packet, uint8_t type) {
   }
   else if ((id >= AFHDS2A_ID_ACC_X && id <= AFHDS2A_ID_VERTICAL_SPEED) || id == AFHDS2A_ID_CLIMB_RATE || id == AFHDS2A_ID_ALT_FLYSKY) {
     value = (int16_t)value;  // Signed value
-  }
-  else if (id == AFHDS2A_ID_GPS_STATUS) {
-    if (!(value & 0xff)) value = value >> 8;
   }
   else if (id == AFHDS2A_ID_GPS_FULL) {
     //(AC FRAME)[ID][inst][size][fix][sats][LAT]x4[LON]x4[ALT]x4
@@ -320,6 +317,9 @@ void flySkySetDefault(int index, uint16_t id, uint8_t subId, uint8_t instance) {
     if (unit == UNIT_RPMS) {
       telemetrySensor.custom.ratio = 1;
       telemetrySensor.custom.offset = 1;
+    }
+    else if (unit == UNIT_GPS_STATUS) {
+      unit = UNIT_RAW;
     }
   } else {
     telemetrySensor.init(id);

@@ -210,13 +210,8 @@ static void inavDraw() {
           drawValueWithUnit(INAV_CELLV_X, INAV_CELLV_Y, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
           break;
         case 2: // 3. GPS Status, truncated to just Fix in flysky_ibus.cpp
-          sats = telemetryItem.value & 0xff;
-          fix = telemetryItem.value >> 8;
-          // sats = telemetryItem.value / 1000;
-          // fix = (telemetryItem.value / 100) - sats * 10;
-          //hdop = (telemetryItem.value / 10) - (sats * 100) - (fix * 10);
-          // mode = telemetryItem.value - (sats * 1000) - (fix * 100) - (hdop * 10);
-          // inavDrawFM(mode);
+          sats = telemetryItem.gpsStatus.sats;
+          fix = telemetryItem.gpsStatus.fix;
           break;
         case 3: // 4. Current in Amperes
           current = telemetryItem.value / 10;

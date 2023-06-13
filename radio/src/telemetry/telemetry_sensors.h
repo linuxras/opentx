@@ -75,6 +75,10 @@ class TelemetryItem
         // pilot latitude is stored in max
         // distFromEarthAxis is stored in value
       } gps;
+      struct {
+        uint8_t fix;
+        uint8_t sats;
+      } gpsStatus; // AFHDS2A_ID_GPS_STATUS
       char text[TELEMETRY_SENSOR_TEXT_LENGTH];
     };
 

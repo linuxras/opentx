@@ -74,7 +74,12 @@ void drawSensorCustomValue(coord_t x, coord_t y, uint8_t sensor, int32_t value, 
     if (telemetrySensor.prec > 0) {
       flags |= (telemetrySensor.prec==1 ? PREC1 : PREC2);
     }
-    drawValueWithUnit(x, y, value, telemetrySensor.unit == UNIT_CELLS ? UNIT_VOLTS : telemetrySensor.unit, flags);
+    if (telemetrySensor.unit == UNIT_RAW && telemetryItem.gpsStatus.fix) { // AFHDS2A_ID_GPS_STATUS
+      lcdDrawNumber(x + ((flags & RIGHT) ? (- 20) : 0), y, telemetryItem.gpsStatus.fix, flags);
+      lcdDrawNumber((flags & RIGHT) ? x : lcdNextPos + 6, y, telemetryItem.gpsStatus.sats, flags/*  & LEADING0 */);
+    } else {
+      drawValueWithUnit(x, y, value, telemetrySensor.unit == UNIT_CELLS ? UNIT_VOLTS : telemetrySensor.unit, flags);
+    }
   }
 }
 
