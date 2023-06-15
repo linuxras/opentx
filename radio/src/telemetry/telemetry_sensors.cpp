@@ -160,11 +160,6 @@ void TelemetryItem::setValue(const TelemetrySensor& sensor, int32_t val, uint32_
     gps.longitude = newVal;
     setFresh();
     return;
-  } else if (unit == UNIT_GPS_STATUS) {
-    gpsStatus.fix = newVal >> 8;
-    gpsStatus.sats = newVal & 0xff;
-    setFresh();
-    return;
   } else if (unit == UNIT_DATETIME_YEAR) {
     datetime.year = newVal;
     return;

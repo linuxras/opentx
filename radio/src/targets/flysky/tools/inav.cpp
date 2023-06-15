@@ -185,7 +185,6 @@ static void inavDraw() {
         speed = telemetryItem.value;
       } else if (strstr(sensor.label, ZSTR_SATELLITES)) { // GPS Sats
         sats = telemetryItem.value;
-        fix = (sats >= 6) ? 2 : 1;
       } else if (strstr(sensor.label, ZSTR_GPS)) { // GPS coords
         inavData.currentLat = telemetryItem.gps.longitude;
         inavData.currentLon = telemetryItem.gps.latitude;
@@ -206,8 +205,7 @@ static void inavDraw() {
           drawValueWithUnit(INAV_CELLV_X, INAV_CELLV_Y, rxBatt, UNIT_VOLTS, PREC1 | DBLSIZE | RIGHT);
           break;
         case 2: // 3. GPS Status, truncated to just Fix in flysky_ibus.cpp
-          sats = telemetryItem.gpsStatus.sats;
-          fix = telemetryItem.gpsStatus.fix;
+          sats = telemetryItem.value;
           break;
         case 3: // 4. Current in Amperes
           current = telemetryItem.value / 10;
@@ -301,7 +299,7 @@ static void inavDraw() {
   int8_t scaledCurrentLon = translatedCurrentLon / scaleFactor;
   int8_t scaledCurrentLat = translatedCurrentLat / scaleFactor;
 
-  if (fix > 1) {
+  if (sats >= 6) {
     if (inavData.homeLat == 0) {
       inavData.homeLat = inavData.currentLat;
       inavData.homeLon = inavData.currentLon;
