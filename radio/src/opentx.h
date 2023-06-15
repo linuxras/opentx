@@ -206,10 +206,10 @@
   #define RADIO_TOOLS
 #endif
 
-#if defined(PCBI6X_ELRSV3)
+#if defined(PCBI6X_ELRS)
 #define CTOOL_DATA_SIZE 816
 #else
-#define CTOOL_DATA_SIZE 512 // minimize RAM usage for non ELRSV3 enabled builds, like DEBUG
+#define CTOOL_DATA_SIZE 512 // minimize RAM usage for non PCBI6X_ELRS enabled builds, like DEBUG
 #endif
 
 // RESX range is used for internal calculation; The menu says -100.0 to 100.0; internally it is -1024 to 1024 to allow some optimizations

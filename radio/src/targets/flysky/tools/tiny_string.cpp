@@ -9,7 +9,6 @@ void tiny_sprintf(char *arr, char const *fmt, char argsLen, ...) {
   va_list args;
   va_start(args, argsLen);
   char ch;
-  unsigned int length = 0;
   int int_temp;
   char char_temp;
   char *string_temp;
@@ -19,26 +18,22 @@ void tiny_sprintf(char *arr, char const *fmt, char argsLen, ...) {
       switch ((ch = *fmt++)) {
         case 'c':
           char_temp = va_arg(args, int);
-          arr[length] = char_temp;
-          length++;
+          *arr++ = char_temp;
           break;
         case 's':
           int_temp = va_arg(args, int); // reuse as string length
           string_temp = va_arg(args, char *);
-          memcpy(&arr[length], string_temp, int_temp);
-          length += int_temp;
+          arr = strAppend(arr, string_temp, int_temp);
           break;
         case 'u':
           int_temp = va_arg(args, int);
-          char *tmp_ptr = strAppendUnsigned(&arr[length], int_temp);
-          length += (tmp_ptr - &arr[length]);
+          arr = strAppendUnsigned(arr, int_temp);
           break;
       }
     } else {
-      arr[length] = ch;
-      length++;
+      *arr++ = ch;
     }
   }
   va_end(args);
-  arr[length] = '\0';
+  *arr = '\0';
 }

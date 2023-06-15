@@ -34,7 +34,7 @@ void addRadioTool(uint8_t index, const char * label, void (* tool)(event_t event
   }
 }
 
-void ELRSV3_run(event_t event);
+void elrsRun(event_t event);
 void hello_run(event_t event);
 void inavRun(event_t event);
 
@@ -42,8 +42,8 @@ void menuRadioTools(event_t event)
 {
   uint8_t index = 0;
 
-#if defined(PCBI6X_ELRSV3)
-  addRadioTool(index++, "ExpressLRS", ELRSV3_run, event);
+#if defined(PCBI6X_ELRS)
+  addRadioTool(index++, "ExpressLRS", elrsRun, event);
 #endif
 
 #if defined(PCBI6X_HELLO)

@@ -869,10 +869,12 @@ void drawGPSCoord(coord_t x, coord_t y, int32_t value, const char * direction, L
       lcdLastRightPos += 3;
     }
   }
+#if !defined(PCBI6X) // GPS format setting disabled
   else {
     absvalue /= 10000;
     lcdDrawNumber(lcdLastRightPos+FW, y, absvalue, att|LEFT|PREC2); // mm.mmm
   }
+#endif
   lcdDrawSizedText(lcdLastRightPos+1, y, direction + (value>=0 ? 0 : 1), 1);
 }
 
@@ -952,7 +954,7 @@ void drawTelemScreenDate(coord_t x, coord_t y, source_t sensor, LcdFlags att)
 void drawGPSPosition(coord_t x, coord_t y, int32_t longitude, int32_t latitude, LcdFlags flags)
 {
   if (flags & DBLSIZE) {
-    x -= (g_eeGeneral.gpsFormat == 0 ? 62 : 61);
+    x -= 62; // (g_eeGeneral.gpsFormat == 0 ? 62 : 61);
     flags &= ~0x0F00; // TODO constant
     drawGPSCoord(x, y, latitude, "NS", flags);
     drawGPSCoord(x, y+FH, longitude, "EW", flags);

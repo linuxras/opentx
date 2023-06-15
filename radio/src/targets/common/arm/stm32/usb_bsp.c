@@ -56,7 +56,8 @@ void USB_BSP_Init(USB_CORE_HANDLE *pdev) {
   RCC_USBCLKConfig(RCC_USBCLK_PLLCLK); 
 #endif /*USB_CLOCK_SOURCE_CRS */ 
 
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
+// included in RCC_APB1_LIST
+//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
 
   /* Configure VBUS Pin */
   GPIO_InitTypeDef GPIO_InitStructure;

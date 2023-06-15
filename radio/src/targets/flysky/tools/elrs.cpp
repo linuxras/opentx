@@ -71,7 +71,7 @@ static uint8_t *buffer = &reusableBuffer.cToolData[0];
 uint16_t bufferOffset = 0;
 
 // last 25b are also used for popup messages
-static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 175+
+static constexpr uint8_t FIELD_DATA_BUFFER_SIZE = 176; // 8 + 56 + 56 + 56 
 static uint8_t *fieldData = &reusableBuffer.cToolData[BUFFER_SIZE];
 
 // Reuse tail of fieldData for popup messages
@@ -503,7 +503,7 @@ static void parseDeviceInfoMessage(uint8_t* data) {
   }
 }
 
-//static const FieldFunctions noopFunctions = { .load=noopLoad, .save=noopSave, .display=noopDisplay };
+static const FieldFunctions noopFunctions = { .load=noopLoad, .save=noopSave, .display=noopDisplay };
 
 static const FieldFunctions functions[] = {
   { .load=fieldUint8Load, .save=fieldUint8Save, .display=fieldIntegerDisplay }, // 1 UINT8(0)
@@ -526,10 +526,10 @@ static const FieldFunctions functions[] = {
 };
 
 static FieldFunctions getFunctions(uint32_t i) {
-  i = (i > 0) ? i - 8 : i;
-//  if (i > 0 && i < 9) {
-//    return noopFunctions;
-//  }
+  if (i > TYPE_UINT8) {
+    if (i < TYPE_TEXT_SELECTION) return noopFunctions; // guard against not implemented types
+    i -= 8;
+  }
   return functions[i];
 }
 
@@ -558,10 +558,6 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
   expectedChunks = chunksRemain - 1;
 
 //  TRACE("chunk len %d", length); // to know what is the max single chunk size
-  if (fieldDataLen + length - 5 > FIELD_DATA_BUFFER_SIZE) {
-    TRACE("elrs data OF");
-    return;
-  }
   memcpy(&fieldData[fieldDataLen], &data[5], length - 5);
   fieldDataLen += length - 5;
 
@@ -579,7 +575,7 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     field->id = fieldId;
     uint8_t parent = fieldData[0];
     uint8_t type = fieldData[1] & 0x7F;
-    uint8_t hidden = (fieldData[1] & 0x80) ? 1 : 0;
+    uint8_t hidden = fieldData[1] & 0x80;
     uint8_t offset;
 
     if (type > TYPE_COMMAND) {
@@ -595,7 +591,6 @@ static void parseParameterInfoMessage(uint8_t* data, uint8_t length) {
     }
 
     field->type = type;
-    // field->hidden = hidden;
     offset = strlen((char*)&fieldData[2]) + 1 + 2;
 
     if (parent != folderAccess) {
@@ -641,7 +636,7 @@ static void parseElrsInfoMessage(uint8_t* data) {
   }
 
   uint8_t badPkt = data[3];
-  uint16_t goodPkt = (data[4]*256) + data[5];
+  uint16_t goodPkt = (data[4] << 8) + data[5];
   uint8_t newFlags = data[6];
   // If flags are changing, reset the warning timeout to display/hide message immediately
   if (newFlags != elrsFlags) {
@@ -874,7 +869,7 @@ static void runPopupPage(event_t event) {
   }
 }
 
-void ELRSV3_stop() {
+void elrsStop() {
   registerCrossfireTelemetryCallback(nullptr);
   // reloadAllField();
   UIbackExec();
@@ -889,14 +884,14 @@ void ELRSV3_stop() {
 //  }
 }
 
-void ELRSV3_run(event_t event) {
+void elrsRun(event_t event) {
   if (globalData.cToolRunning == 0) {
     globalData.cToolRunning = 1;
     registerCrossfireTelemetryCallback(refreshNextCallback);
   }
 
   if (event == EVT_KEY_LONG(KEY_EXIT)) {
-    ELRSV3_stop();
+    elrsStop();
   } else { 
     if (fieldPopup != nullptr) {
       runPopupPage(event);

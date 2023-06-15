@@ -59,9 +59,11 @@ void drawSensorCustomValue(coord_t x, coord_t y, uint8_t sensor, int32_t value, 
     drawDate(x, y, telemetryItem, flags);
   }
   else if (telemetrySensor.unit == UNIT_GPS) {
-    if (telemetrySensor.id == 0x80 || telemetrySensor.id == 0x81) { // AFHDS2A is handled differently
-      x -= (g_eeGeneral.gpsFormat == 0 ? 62 : 61);
-      flags &= ~0x0F00;
+    if (telemetrySensor.id == 0x80 || telemetrySensor.id == 0x81) { // AFHDS2A GPS lat/lon formatting
+      if (flags & DBLSIZE) {
+        x -= 62; //(g_eeGeneral.gpsFormat == 0 ? 62 : 61);
+        flags &= ~0x0F00;
+      }
       drawGPSCoord(x, y, value / 10, (telemetrySensor.id == 0x80) ? "NS" : "EW", flags);
     } else {
       drawGPSSensorValue(x, y, telemetryItem, flags);
