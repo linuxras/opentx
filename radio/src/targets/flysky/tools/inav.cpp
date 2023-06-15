@@ -141,7 +141,7 @@ static void inavDraw() {
   // Timer 1
   drawTimer(58, 1, timersStates[0].val, SMLSIZE | INVERS);
 
-  uint8_t rxBatt = 0, sats = 0, fix = 1; //, hdop = 9, mode = 0;
+  uint8_t rxBatt = 0, sats = 0;
   int32_t dist = 0, alt = 0, galt = 0, speed = 0, current = 0;
 
   int8_t rssi = 0;
