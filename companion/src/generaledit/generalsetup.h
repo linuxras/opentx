@@ -60,11 +60,12 @@ class GeneralSetupPanel : public GeneralPanel
     void on_hapticLengthCB_currentIndexChanged(int index);
     void on_backlightswCB_currentIndexChanged(int index);
     void on_usbModeCB_currentIndexChanged(int index);
+    void on_jackModeCB_currentIndexChanged(int index);
     void on_backlightColor_SL_valueChanged();
     void on_mavbaud_CB_currentIndexChanged(int index);
     void on_voiceLang_CB_currentIndexChanged(int index);
     void stickReverseEdited();
-    void on_switchesDelay_valueChanged();
+    void on_switchesDelay_valueChanged(int);
     void on_blAlarm_ChkB_stateChanged();
     void unlockSwitchEdited();
     void on_beepVolume_SL_valueChanged();
@@ -86,7 +87,10 @@ class GeneralSetupPanel : public GeneralPanel
     void on_vBatMinDSB_editingFinished();
     void on_vBatMaxDSB_editingFinished();
     void on_contrastSB_editingFinished();
+    void on_registrationId_editingFinished();
 
+    void on_pwrOnDelay_valueChanged(int);
+    void on_pwrOffDelay_valueChanged(int);
 
   private:
     Ui::GeneralSetup *ui;

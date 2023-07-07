@@ -75,10 +75,7 @@ void EEPROMInterface::showEepromErrors(QWidget *parent, const QString &title, co
 
   if (errors.test(UNSUPPORTED_NEWER_VERSION)) { errorsList << tr("- Eeprom is from a newer version of OpenTX"); }
   if (errors.test(NOT_OPENTX)) { errorsList << tr("- Eeprom is not from OpenTX"); }
-  if (errors.test(NOT_TH9X)) { errorsList << tr("- Eeprom is not from Th9X"); }
-  if (errors.test(NOT_GRUVIN9X)) { errorsList << tr("- Eeprom is not from Gruvin9X"); }
   if (errors.test(NOT_ERSKY9X)) { errorsList << tr("- Eeprom is not from ErSky9X"); }
-  if (errors.test(NOT_ER9X)) { errorsList << tr("- Eeprom is not from Er9X"); }
   if (errors.test(WRONG_SIZE)) { errorsList << tr("- Eeprom size is invalid"); }
   if (errors.test(WRONG_FILE_SYSTEM)) { errorsList << tr("- Eeprom file system is invalid"); }
   if (errors.test(UNKNOWN_BOARD)) { errorsList << tr("- Eeprom is from a unknown board"); }
@@ -103,20 +100,18 @@ void EEPROMInterface::showEepromErrors(QWidget *parent, const QString &title, co
 #endif
 
 // TODO: No GUI here, e.g. return string list instead
-void EEPROMInterface::showEepromWarnings(QWidget *parent, const QString &title, unsigned long errorsFound)
+QString EEPROMInterface::getEepromWarnings(unsigned long errorsFound)
 {
   std::bitset<NUM_ERRORS> errors((unsigned long long)errorsFound);
   QStringList warningsList;
-  if (errors.test(WARNING_WRONG_FIRMWARE)) { warningsList << tr("- Your radio probably uses a wrong firmware,\n eeprom size is 4096 but only the first 2048 are used"); }
-  if (errors.test(OLD_VERSION)) { warningsList << tr("- Your eeprom is from an old version of OpenTX, upgrading!\n To keep your original file as a backup, please choose File -> Save As specifying a different name."); }
+  if (errors.test(WARNING_WRONG_FIRMWARE)) {
+    warningsList << tr("- Your radio probably uses a wrong firmware,\n eeprom size is 4096 but only the first 2048 are used");
+  }
+  if (errors.test(OLD_VERSION)) {
+    warningsList << tr("- Your eeprom is from an old version of OpenTX, upgrading!\n To keep your original file as a backup, please choose File -> Save As specifying a different name.");
+  }
 
-  QMessageBox msgBox(parent);
-  msgBox.setWindowTitle(title);
-  msgBox.setIcon(QMessageBox::Warning);
-  msgBox.setText(tr("Warnings!"));
-  msgBox.setInformativeText(warningsList.join("\n"));
-  msgBox.setStandardButtons(QMessageBox::Ok);
-  msgBox.exec();
+  return warningsList.join("\n");
 }
 
 
@@ -126,8 +121,8 @@ void EEPROMInterface::showEepromWarnings(QWidget *parent, const QString &title, 
 
 // static
 QVector<Firmware *> Firmware::registeredFirmwares;
-Firmware * Firmware::defaultVariant = NULL;
-Firmware * Firmware::currentVariant = NULL;
+Firmware * Firmware::defaultVariant = nullptr;
+Firmware * Firmware::currentVariant = nullptr;
 
 // static
 Firmware * Firmware::getFirmwareForId(const QString & id)

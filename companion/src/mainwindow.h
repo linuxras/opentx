@@ -34,7 +34,6 @@ class QAction;
 class QMenu;
 class QMdiArea;
 class QMdiSubWindow;
-class QSignalMapper;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -112,7 +111,6 @@ class MainWindow : public QMainWindow
     void readBackup();
     void burnConfig();
     void burnList();
-    void burnFuses();
     void contributors();
     void sdsync();
     void changelog();
@@ -129,6 +127,7 @@ class MainWindow : public QMainWindow
     void exportSettings();
     void importSettings();
     void autoClose();
+    void chooseProfile();
 
     void openUpdatesWaitDialog();
     void closeUpdatesWaitDialog();
@@ -164,10 +163,9 @@ class MainWindow : public QMainWindow
     bool checkProfileRadioExists(int profId);
 
     QMdiArea *mdiArea;
-    QSignalMapper *windowMapper;
 
     QString installer_fileName;
-    downloadDialog * downloadDialog_forWait;
+    DownloadDialog * downloadDialog_forWait;
     unsigned int checkForUpdatesState;
     QString firmwareVersionString;
 
@@ -211,7 +209,6 @@ class MainWindow : public QMainWindow
     QAction *readEepromAct;
     QAction *burnConfigAct;
     QAction *burnListAct;
-    QAction *burnFusesAct;
     QAction *writeFlashAct;
     QAction *readFlashAct;
     QAction *writeBUToRadioAct;

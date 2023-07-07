@@ -455,7 +455,14 @@ if(NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
 
     # these are in addition to CMAKE_CXX_FLAGS
-    set(CMAKE_EXE_LINKER_FLAGS "-lm -T${RADIO_SRC_DIRECTORY}/${LINKER_SCRIPT} -Wl,-Map=firmware.map,--cref,--no-warn-mismatch,--no-warn-rwx-segments,--gc-sections")
+    # Check linker version before applying the no-warn-rwx-segments
+    # check_linker_flag(CXX "LINKER:--no-warn-rwx-segments" LINKER_SUPPORTS_RWX_SEGMENTS) <-CMake 3.18
+    execute_process(COMMAND ${CMAKE_CXX_LINK_EXECUTABLE} -version OUTPUT_VARIABLE LINKER_VERSION)
+    if(LINKER_VERSION VERSION_LESS "2.39")
+        set(CMAKE_EXE_LINKER_FLAGS "-lm -T${RADIO_SRC_DIRECTORY}/${LINKER_SCRIPT} -Wl,-Map=firmware.map,--cref,--no-warn-mismatch,--gc-sections")
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "-lm -T${RADIO_SRC_DIRECTORY}/${LINKER_SCRIPT} -Wl,-Map=firmware.map,--cref,--no-warn-mismatch,--no-warn-rwx-segments,--gc-sections")
+    endif()
 
     if(SEMIHOSTING)
       add_definitions(-DSEMIHOSTING)

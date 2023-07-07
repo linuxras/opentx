@@ -53,7 +53,10 @@ enum Capability {
   VoicesAsNumbers,
   VoicesMaxLength,
   MultiLangVoice,
-  ModelImage,
+  HasModelImage,
+  ModelImageNameLen,
+  ModelImageFilters,
+  ModelImageKeepExtn,
   CustomFunctions,
   SafetyChannelCustomFunction,
   LogicalSwitches,
@@ -100,6 +103,8 @@ enum Capability {
   GvarsName,
   NoTelemetryProtocol,
   TelemetryCustomScreens,
+  TelemetryCustomScreensBars,
+  TelemetryCustomScreensLines,
   TelemetryCustomScreensFieldsPerLine,
   TelemetryMaxMultiplier,
   HasVario,
@@ -107,6 +112,7 @@ enum Capability {
   HasFailsafe,
   HasSoundMixer,
   NumModules,
+  NumFirstUsableModule,
   HasModuleR9MFlex,
   HasModuleR9MMini,
   PPMCenter,
@@ -131,7 +137,6 @@ enum Capability {
   VirtualInputs,
   InputsLength,
   TrainerInputs,
-  RtcTime,
   SportTelemetry,
   LuaScripts,
   LuaInputsPerScript,
@@ -146,7 +151,17 @@ enum Capability {
   HasMixerExpo,
   HasBatMeterRange,
   DangerousFunctions,
-  HasModelCategories
+  HasModelCategories,
+  HasSwitchableJack,
+  HasSportConnector,
+  PwrButtonPress,
+  Sensors,
+  HasAuxSerialMode,
+  HasAux2SerialMode,
+  HasBluetooth,
+  HasAntennaChoice,
+  HasADCJitterFilter,
+  HasTelemetryBaudrate
 };
 
 class EEPROMInterface
@@ -175,7 +190,7 @@ class EEPROMInterface
     virtual int getSize(const GeneralSettings &) = 0;
 
     //static void showEepromErrors(QWidget *parent, const QString &title, const QString &mainMessage, unsigned long errorsFound);
-    static void showEepromWarnings(QWidget *parent, const QString &title, unsigned long errorsFound);
+    static QString getEepromWarnings(unsigned long errorsFound);
 
   protected:
 
@@ -229,10 +244,7 @@ enum EepromLoadErrors {
   WRONG_SIZE,
   WRONG_FILE_SYSTEM,
   NOT_OPENTX,
-  NOT_TH9X,
-  NOT_GRUVIN9X,
   NOT_ERSKY9X,
-  NOT_ER9X,
   UNKNOWN_BOARD,
   WRONG_BOARD,
   BACKUP_NOT_SUPPORTED,
@@ -338,11 +350,13 @@ class Firmware
 
     virtual int getCapability(Capability) = 0;
 
+    virtual QString getCapabilityStr(Capability) = 0;
+
     virtual QString getAnalogInputName(unsigned int index) = 0;
 
     virtual QTime getMaxTimerStart() = 0;
 
-    virtual int isAvailable(PulsesProtocol proto, int port=0) = 0;
+    virtual bool isAvailable(PulsesProtocol proto, int port=0) = 0;
 
     const int getFlashSize();
 

@@ -18,12 +18,18 @@
  * GNU General Public License for more details.
  */
 
-#ifndef _BOARDS_H_
-#define _BOARDS_H_
+#pragma once
 
 #include <QtCore>
 #include <QObject>
 #include <QString>
+
+class AbstractStaticItemModel;
+
+// identiying names of static abstract item models
+constexpr char AIM_BOARDS_POT_TYPE[]        {"boards.pottype"};
+constexpr char AIM_BOARDS_SLIDER_TYPE[]     {"boards.slidertype"};
+constexpr char AIM_BOARDS_SWITCH_TYPE[]     {"boards.switchtype"};
 
 // TODO create a Board class with all these functions
 
@@ -32,21 +38,33 @@ namespace Board {
   enum Type
   {
     BOARD_UNKNOWN = -1,
-    BOARD_STOCK = 0,
-    BOARD_M128,
-    BOARD_MEGA2560,
-    BOARD_GRUVIN9X,
     BOARD_SKY9X,
     BOARD_9XRPRO,
     BOARD_AR9X,
     BOARD_TARANIS_X7,
+    BOARD_TARANIS_X7_ACCESS,
     BOARD_TARANIS_X9D,
     BOARD_TARANIS_X9DP,
+    BOARD_TARANIS_X9DP_2019,
     BOARD_TARANIS_X9E,
-    BOARD_X12S,
+    BOARD_HORUS_X12S,
     BOARD_X10,
+    BOARD_X10_EXPRESS,
     BOARD_TARANIS_XLITE,
-    BOARD_ENUM_COUNT
+    BOARD_TARANIS_XLITES,
+    BOARD_TARANIS_X9LITE,
+    BOARD_TARANIS_X9LITES,
+    BOARD_JUMPER_T12,
+    BOARD_JUMPER_T16,
+    BOARD_RADIOMASTER_TX16S,
+    BOARD_JUMPER_T18,
+    BOARD_RADIOMASTER_TX12,
+    BOARD_RADIOMASTER_T8,
+    BOARD_JUMPER_TLITE,
+    BOARD_JUMPER_TPRO,
+    BOARD_RADIOMASTER_ZORRO,
+    BOARD_TYPE_COUNT,
+    BOARD_TYPE_MAX = BOARD_TYPE_COUNT - 1
   };
 
   enum PotType
@@ -54,13 +72,15 @@ namespace Board {
     POT_NONE,
     POT_WITH_DETENT,
     POT_MULTIPOS_SWITCH,
-    POT_WITHOUT_DETENT
+    POT_WITHOUT_DETENT,
+    POT_TYPE_COUNT
   };
 
   enum SliderType
   {
     SLIDER_NONE,
-    SLIDER_WITH_DETENT
+    SLIDER_WITH_DETENT,
+    SLIDER_TYPE_COUNT
   };
 
   enum SwitchType
@@ -68,7 +88,8 @@ namespace Board {
     SWITCH_NOT_AVAILABLE,
     SWITCH_TOGGLE,
     SWITCH_2POS,
-    SWITCH_3POS
+    SWITCH_3POS,
+    SWITCH_TYPE_COUNT
   };
 
   enum StickAxes {
@@ -112,14 +133,19 @@ namespace Board {
     FactoryInstalledPots,
     Sliders,
     MouseAnalogs,
+    GyroAnalogs,
     MaxAnalogs,
     MultiposPots,
     MultiposPotsPositions,
     Switches,
+    FunctionSwitches,
     SwitchPositions,
+    NumFunctionSwitchesPositions,
     FactoryInstalledSwitches,
     NumTrims,
-    NumTrimSwitches
+    NumTrimSwitches,
+    HasRTC,
+    HasColorLcd
   };
 
   struct SwitchInfo
@@ -136,6 +162,13 @@ namespace Board {
       }
       unsigned int index;
       unsigned int position;
+  };
+
+  enum SwitchTypeMasks {
+    SwitchTypeFlag2Pos    = 0x01,
+    SwitchTypeFlag3Pos    = 0x02,
+    SwitchTypeContext2Pos = SwitchTypeFlag2Pos,
+    SwitchTypeContext3Pos = SwitchTypeFlag2Pos | SwitchTypeFlag3Pos
   };
 
 }
@@ -163,14 +196,20 @@ class Boards
     const bool isBoardCompatible(Board::Type board2) const { return isBoardCompatible(m_boardType, board2); }
 
     static uint32_t getFourCC(Board::Type board);
-    static const int getEEpromSize(Board::Type board);
-    static const int getFlashSize(Board::Type board);
-    static const Board::SwitchInfo getSwitchInfo(Board::Type board, int index);
-    static const int getCapability(Board::Type board, Board::Capability capability);
-    static const QString getAxisName(int index);
-    static const QString getAnalogInputName(Board::Type board, int index);
-    static const bool isBoardCompatible(Board::Type board1, Board::Type board2);
-    static const QString getBoardName(Board::Type board);
+    static int getEEpromSize(Board::Type board);
+    static int getFlashSize(Board::Type board);
+    static Board::SwitchInfo getSwitchInfo(Board::Type board, int index);
+    static int getCapability(Board::Type board, Board::Capability capability);
+    static QString getAxisName(int index);
+    static QString getAnalogInputName(Board::Type board, int index);
+    static bool isBoardCompatible(Board::Type board1, Board::Type board2);
+    static QString getBoardName(Board::Type board);
+    static QString potTypeToString(int value);
+    static QString sliderTypeToString(int value);
+    static QString switchTypeToString(int value);
+    static AbstractStaticItemModel * potTypeItemModel();
+    static AbstractStaticItemModel * sliderTypeItemModel();
+    static AbstractStaticItemModel * switchTypeItemModel();
 
   protected:
 
@@ -180,27 +219,184 @@ class Boards
 // temporary aliases for transition period, use Boards class instead.
 #define getBoardCapability(b__, c__)   Boards::getCapability(b__, c__)
 
-#define IS_9X(board)                   (board==Board::BOARD_STOCK || board==Board::BOARD_M128)
-#define IS_STOCK(board)                (board==Board::BOARD_STOCK)
-#define IS_M128(board)                 (board==Board::BOARD_M128)
-#define IS_2560(board)                 (board==Board::BOARD_GRUVIN9X || board==Board::BOARD_MEGA2560)
-#define IS_SKY9X(board)                (board==Board::BOARD_SKY9X || board==Board::BOARD_9XRPRO || board==Board::BOARD_AR9X)
-#define IS_9XRPRO(board)               (board==Board::BOARD_9XRPRO)
-#define IS_TARANIS_XLITE(board)        (board==Board::BOARD_TARANIS_XLITE)
-#define IS_TARANIS_X7(board)           (board==Board::BOARD_TARANIS_X7)
-#define IS_TARANIS_X9(board)           (board==Board::BOARD_TARANIS_X9D || board==Board::BOARD_TARANIS_X9DP || board==Board::BOARD_TARANIS_X9E)
-#define IS_TARANIS_X9D(board)          (board==Board::BOARD_TARANIS_X9D || board==Board::BOARD_TARANIS_X9DP)
-#define IS_TARANIS_PLUS(board)         (board==Board::BOARD_TARANIS_X9DP || board==Board::BOARD_TARANIS_X9E)
-#define IS_TARANIS_X9E(board)          (board==Board::BOARD_TARANIS_X9E)
-#define IS_TARANIS(board)              (IS_TARANIS_X9(board) || IS_TARANIS_X7(board) || IS_TARANIS_XLITE(board))
-#define IS_TARANIS_SMALL(board)        (board==Board::BOARD_TARANIS_X7 || board==Board::BOARD_TARANIS_XLITE)
-#define IS_TARANIS_NOT_X9E(board)      (IS_TARANIS(board) && !IS_TARANIS_X9E(board))
-#define IS_HORUS_X12S(board)           (board==Board::BOARD_X12S)
-#define IS_HORUS_X10(board)            (board==Board::BOARD_X10)
-#define IS_HORUS(board)                (IS_HORUS_X12S(board) || IS_HORUS_X10(board))
-#define IS_HORUS_OR_TARANIS(board)     (IS_HORUS(board) || IS_TARANIS(board))
-#define IS_STM32(board)                (IS_TARANIS(board) || IS_HORUS(board))
-#define IS_ARM(board)                  (IS_STM32(board) || IS_SKY9X(board))
-#define HAS_LARGE_LCD(board)           (IS_HORUS(board) || IS_TARANIS_X9(board))
+inline bool IS_SKY9X(Board::Type board)
+{
+  return board == Board::BOARD_SKY9X || board == Board::BOARD_9XRPRO || board == Board::BOARD_AR9X;
+}
 
-#endif // _BOARDS_H_
+inline bool IS_9XRPRO(Board::Type board)
+{
+  return board == Board::BOARD_9XRPRO;
+}
+
+inline bool IS_JUMPER_T12(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T12;
+}
+
+inline bool IS_JUMPER_TLITE(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_TLITE;
+}
+
+inline bool IS_JUMPER_TPRO(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_TPRO;
+}
+
+inline bool IS_JUMPER_T16(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T16;
+}
+
+inline bool IS_JUMPER_T18(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T18;
+}
+
+inline bool IS_RADIOMASTER_TX16S(Board::Type board)
+{
+  return board == Board::BOARD_RADIOMASTER_TX16S;
+}
+
+inline bool IS_RADIOMASTER_TX12(Board::Type board)
+{
+  return board == Board::BOARD_RADIOMASTER_TX12;
+}
+
+inline bool IS_RADIOMASTER_ZORRO(Board::Type board)
+{
+  return board == Board::BOARD_RADIOMASTER_ZORRO;
+}
+
+
+inline bool IS_RADIOMASTER_T8(Board::Type board)
+{
+  return board == Board::BOARD_RADIOMASTER_T8;
+}
+
+inline bool IS_FAMILY_T16(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T16 || board == Board::BOARD_RADIOMASTER_TX16S || board == Board::BOARD_JUMPER_T18;
+}
+
+inline bool IS_FAMILY_T12(Board::Type board)
+{
+  return board == Board::BOARD_JUMPER_T12 || board == Board::BOARD_RADIOMASTER_TX12 || board == Board::BOARD_RADIOMASTER_ZORRO || board == Board::BOARD_RADIOMASTER_T8 || board == Board::BOARD_JUMPER_TLITE || board == Board::BOARD_JUMPER_TPRO;
+}
+
+inline bool IS_TARANIS_XLITE(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_XLITE || board == Board::BOARD_TARANIS_XLITES;
+}
+
+inline bool IS_TARANIS_XLITES(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_XLITES;
+}
+
+inline bool IS_TARANIS_X7(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X7 || board == Board::BOARD_TARANIS_X7_ACCESS;
+}
+
+inline bool IS_TARANIS_X7_ACCESS(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X7_ACCESS;
+}
+
+inline bool IS_TARANIS_X9LITE(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X9LITE || board == Board::BOARD_TARANIS_X9LITES;
+}
+
+inline bool IS_TARANIS_X9LITES(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X9LITES;
+}
+
+inline bool IS_TARANIS_X9(Board::Type board)
+{
+  return board==Board::BOARD_TARANIS_X9D || board==Board::BOARD_TARANIS_X9DP || board==Board::BOARD_TARANIS_X9DP_2019 || board==Board::BOARD_TARANIS_X9E;
+}
+
+inline bool IS_TARANIS_X9D(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X9D || board == Board::BOARD_TARANIS_X9DP || board == Board::BOARD_TARANIS_X9DP_2019;
+}
+
+inline bool IS_TARANIS_PLUS(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X9DP || board == Board::BOARD_TARANIS_X9E;
+}
+
+inline bool IS_TARANIS_X9E(Board::Type board)
+{
+  return board == Board::BOARD_TARANIS_X9E;
+}
+
+inline bool IS_TARANIS_SMALL(Board::Type board)
+{
+  return IS_TARANIS_X7(board) || IS_TARANIS_XLITE(board) || IS_TARANIS_X9LITE(board) || IS_FAMILY_T12(board) || IS_JUMPER_TPRO(board);
+}
+
+inline bool IS_TARANIS(Board::Type board)
+{
+  return IS_TARANIS_X9(board) || IS_TARANIS_SMALL(board);
+}
+
+inline bool IS_HORUS_X10(Board::Type board)
+{
+  return board == Board::BOARD_X10 || board == Board::BOARD_X10_EXPRESS;
+}
+
+inline bool IS_HORUS_X12S(Board::Type board)
+{
+  return board == Board::BOARD_HORUS_X12S;
+}
+
+inline bool IS_FAMILY_HORUS(Board::Type board)
+{
+  return IS_HORUS_X12S(board) || IS_HORUS_X10(board);
+}
+
+inline bool IS_FAMILY_HORUS_OR_T16(Board::Type board)
+{
+  return IS_FAMILY_HORUS(board) || IS_FAMILY_T16(board);
+}
+
+inline bool IS_HORUS_OR_TARANIS(Board::Type board)
+{
+  return IS_FAMILY_HORUS_OR_T16(board) || IS_TARANIS(board);
+}
+
+inline bool IS_STM32(Board::Type board)
+{
+  return IS_TARANIS(board) || IS_FAMILY_HORUS_OR_T16(board);
+}
+
+inline bool IS_ARM(Board::Type board)
+{
+  return IS_STM32(board) || IS_SKY9X(board);
+}
+
+inline bool HAS_LARGE_LCD(Board::Type board)
+{
+  return IS_FAMILY_HORUS_OR_T16(board) || IS_TARANIS_X9(board);
+}
+
+inline bool HAS_EXTERNAL_ANTENNA(Board::Type board)
+{
+  return (board == Board::BOARD_X10 || board == Board::BOARD_HORUS_X12S || (IS_TARANIS_XLITE(board) && !IS_TARANIS_XLITES(board)));
+}
+
+inline bool IS_TARANIS_X9DP_2019(Board::Type board)
+{
+  return (board == Board::BOARD_TARANIS_X9DP_2019);
+}
+
+inline bool IS_ACCESS_RADIO(Board::Type board, const QString & id)
+{
+  return (IS_TARANIS_XLITES(board) || IS_TARANIS_X9LITE(board) || board == Board::BOARD_TARANIS_X9DP_2019 || board == Board::BOARD_X10_EXPRESS || IS_TARANIS_X7_ACCESS(board) ||
+          (IS_FAMILY_HORUS_OR_T16(board) && id.contains("internalaccess")));
+}

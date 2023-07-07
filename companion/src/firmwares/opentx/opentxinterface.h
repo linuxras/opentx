@@ -118,11 +118,13 @@ class OpenTxFirmware: public Firmware
 
     virtual int getCapability(Capability);
 
+    virtual QString getCapabilityStr(Capability);
+
     virtual QString getAnalogInputName(unsigned int index);
 
     virtual QTime getMaxTimerStart();
 
-    virtual int isAvailable(PulsesProtocol proto, int port=0);
+    virtual bool isAvailable(PulsesProtocol proto, int port=0);
 
   protected:
 

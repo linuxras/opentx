@@ -25,12 +25,17 @@
 #include "mixerslistwidget.h"
 #include "modelprinter.h"
 
+class CompoundItemModelFactory;
+class FilteredItemModel;
+
+constexpr char MIMETYPE_EXPO[] = "application/x-companion-expo";
+
 class InputsPanel : public ModelPanel
 {
     Q_OBJECT
 
   public:
-    InputsPanel(QWidget *parent, ModelData & model, GeneralSettings & generalSettings, Firmware * firmware);
+    InputsPanel(QWidget *parent, ModelData & model, GeneralSettings & generalSettings, Firmware * firmware, CompoundItemModelFactory * sharedItemModels);
     virtual ~InputsPanel();
 
     virtual void update();
@@ -44,7 +49,7 @@ class InputsPanel : public ModelPanel
     void expolistWidget_customContextMenuRequested(QPoint pos);
     void expolistWidget_doubleClicked(QModelIndex index);
     void expolistWidget_KeyPress(QKeyEvent *event);
-    void exposDelete(bool ask=true);
+    void exposDelete(bool prompt = true);
     void exposCut();
     void exposCopy();
     void exposPaste();
@@ -52,12 +57,23 @@ class InputsPanel : public ModelPanel
     void expoOpen(QListWidgetItem *item = NULL);
     void expoAdd();
     void maybeCopyInputName(int srcChan, int destChan);
+    void cmInputClear();
+    void cmInputDelete();
+    void cmInputInsert();
+    void cmInputMoveDown();
+    void cmInputMoveUp();
+    void onItemModelAboutToBeUpdated();
+    void onItemModelUpdateComplete();
 
   private:
     bool expoInserted;
     MixersListWidget *ExposlistWidget;
     int inputsCount;
     ModelPrinter modelPrinter;
+    int selectedIdx;
+    int inputIdx;
+    CompoundItemModelFactory *sharedItemModels;
+    int modelsUpdateCnt;
 
     int getExpoIndex(unsigned int dch);
     bool gm_insertExpo(int idx);
@@ -70,7 +86,16 @@ class InputsPanel : public ModelPanel
     void pasteExpoMimeData(const QMimeData * mimeData, int destIdx);
     void AddInputLine(int dest);
     QString getInputText(int dest, bool newChan);
-
+    bool cmInputInsertAllowed() const;
+    bool cmInputMoveDownAllowed() const;
+    bool cmInputMoveUpAllowed() const;
+    void cmInputSwapData(int idx1, int idx2);
+    bool isInputIndex(const int index);
+    bool isExpoIndex(const int index);
+    int getIndexFromSelected();
+    int getInputIndexFromSelected();
+    void updateItemModels();
+    void connectItemModelEvents(const int id);
 };
 
 #endif // _INPUTS_H_

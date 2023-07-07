@@ -24,8 +24,6 @@ set(COMPANION_OSX_APP_BUNDLE_NAME "OpenTX Companion ${VERSION_MAJOR}.${VERSION_M
 # On OS X we copy dfu-util to the application bundle. This the path from which we copy
 # the binary (default homebrew path)
 set(DFU_UTIL_PATH "/usr/local/bin/dfu-util")
-set(AVRDUDE_PATH "/usr/local/bin/avrdude")
-set(AVRDUDE_CONF "/usr/local/etc/avrdude.conf")
 
 option(ALLOW_NIGHTLY_BUILDS "Allow nightly builds download / update") # Disabled by default
 if(ALLOW_NIGHTLY_BUILDS)
@@ -123,7 +121,7 @@ configure_file(${COMPANION_SRC_DIRECTORY}/simulator.desktop.in ${CMAKE_CURRENT_B
 ### Generate .qm files and assemble resource (qrc) file.
 
 # available Companion translations (src/translations/*.ts)
-set(LANGUAGES cs de en es fi fr it pl sv zh_CN)
+set(LANGUAGES cs de en es fi fr it pl ru sv zh_CN ja)
 foreach(language ${LANGUAGES})
   list(APPEND companion_TS translations/companion_${language}.ts)
 endforeach(language)
@@ -239,7 +237,6 @@ set(companion_SRCS
   flasheepromdialog.cpp
   printdialog.cpp
   modelprinter.cpp
-  fusesdialog.cpp
   logsdialog.cpp
   downloaddialog.cpp
   splashlibrarydialog.cpp
@@ -250,6 +247,7 @@ set(companion_SRCS
   wizarddialog.cpp
   styleeditdialog.cpp
   dialogs/filesyncdialog.cpp         # TODO move to own lib with other dialogs
+  profilechooser.cpp
   )
 
 set(companion_MOC_HDRS
@@ -258,7 +256,6 @@ set(companion_MOC_HDRS
   burnconfigdialog.h
   comparedialog.h
   printdialog.h
-  fusesdialog.h
   logsdialog.h
   creditsdialog.h
   releasenotesdialog.h
@@ -284,12 +281,12 @@ set(companion_MOC_HDRS
   styleeditdialog.h
   helpers_html.h
   dialogs/filesyncdialog.h
+  profilechooser.h
   )
 
 set(companion_UIS
   mdichild.ui
   comparedialog.ui
-  fusesdialog.ui
   logsdialog.ui
   apppreferencesdialog.ui
   fwpreferencesdialog.ui
@@ -305,6 +302,7 @@ set(companion_UIS
   flasheepromdialog.ui
   radionotfound.ui
   styleeditdialog.ui
+  profilechooser.ui
   )
 
 if(WIN32)
@@ -326,23 +324,62 @@ set(simu_SRCS simulator.cpp )
 add_executable(${SIMULATOR_NAME} MACOSX_BUNDLE ${WIN_EXECUTABLE_TYPE} ${simu_SRCS} ${icon_RC})
 target_link_libraries(${SIMULATOR_NAME} PRIVATE ${CPN_COMMON_LIB})
 
+if(NOT MSVC)
+  add_subdirectory(tests)
+endif()
+
 ############# Install ####################
 
 # Generate list of simulator plugins, used by all platforms
-file(GLOB simulator_plugins "${CMAKE_BINARY_DIR}/*opentx-*simulator${CMAKE_SHARED_LIBRARY_SUFFIX}")
+if(WIN32)
+  file(GLOB simulator_plugins "${CMAKE_BINARY_DIR}/Release/*opentx-*simulator${CMAKE_SHARED_LIBRARY_SUFFIX}")
+else()
+  file(GLOB simulator_plugins "${CMAKE_BINARY_DIR}/*opentx-*simulator${CMAKE_SHARED_LIBRARY_SUFFIX}")
+endif()
+
 # the current flavour is not automatically added if build in the current cmake iteration, so always
 # add its library name to be sure
-string(TOLOWER ${PCB} FLAVOUR)
+if(PCB STREQUAL X7 AND PCBREV STREQUAL ACCESS)
+  set(FLAVOUR x7access)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL T12)
+  set(FLAVOUR t12)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL TLITE)
+  set(FLAVOUR tlite)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL TPRO)
+  set(FLAVOUR tpro)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL TX12)
+  set(FLAVOUR tx12)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL ZORRO)
+  set(FLAVOUR zorro)
+elseif(PCB STREQUAL X7 AND PCBREV STREQUAL T8)
+  set(FLAVOUR t8)
+elseif(PCB STREQUAL TANGO)
+  set(FLAVOUR tango)
+elseif(PCB STREQUAL MAMBO)
+  set(FLAVOUR mambo)
+elseif(PCB STREQUAL X9D+ AND PCBREV STREQUAL 2019)
+  set(FLAVOUR x9d+2019)
+elseif(PCB STREQUAL X10 AND PCBREV STREQUAL EXPRESS)
+  set(FLAVOUR x10express)
+elseif(PCB STREQUAL X10 AND PCBREV STREQUAL T16)
+  set(FLAVOUR t16)
+elseif(PCB STREQUAL X10 AND PCBREV STREQUAL TX16S)
+  set(FLAVOUR tx16s)
+elseif(PCB STREQUAL X10 AND PCBREV STREQUAL T18)
+  set(FLAVOUR t18)
+else()
+  string(TOLOWER ${PCB} FLAVOUR)
+endif()
 if(POLICY CMP0026)
   cmake_policy(SET CMP0026 OLD)  # https://cmake.org/cmake/help/v3.0/policy/CMP0026.html
 endif()
+
 if(SIMU_TARGET)
   get_property(current_plugin TARGET opentx-${FLAVOUR}-simulator PROPERTY LOCATION)
   list(APPEND simulator_plugins "${current_plugin}")
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
   message(STATUS "install " ${CMAKE_BINARY_DIR} " to " ${CMAKE_INSTALL_PREFIX}/bin)
   install(TARGETS ${COMPANION_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
   install(TARGETS ${SIMULATOR_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -368,7 +405,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   set(OperatingSystem "Linux")
 
 elseif(WIN32)
-
   if(NOT WIN_DO_FULL_INSTALL)
     # Just copy supporting DLLs to build folder
     set(INSTALL_DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
@@ -382,7 +418,7 @@ elseif(WIN32)
     install(TARGETS ${SIMULATOR_NAME} DESTINATION ${INSTALL_DESTINATION})
     install(FILES ${simulator_plugins} DESTINATION "${INSTALL_DESTINATION}")
     # supporting utilities
-    set(INSTALL_TEMP_FILES avrdude.exe avrdude.conf dfu-util.exe libusb0.dll libusb-1.0.dll license.txt)
+    set(INSTALL_TEMP_FILES dfu-util.exe libusb0.dll libusb-1.0.dll license.txt)
     foreach(tmpfile ${INSTALL_TEMP_FILES})
       install(FILES "${COMPANION_SRC_DIRECTORY}/../targets/windows/${tmpfile}" DESTINATION ${INSTALL_DESTINATION})
     endforeach()
@@ -397,8 +433,10 @@ elseif(WIN32)
   if(MSVC)
     set(wdqtopts ${wdqtopts} --no-compiler-runtime)  # --compiler-runtime includes vcredist_x86, but we just copy the required DLLs manually
   endif()
-  set(wdqtopts ${wdqtopts} -dir "${INSTALL_DESTINATION}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${COMPANION_NAME}.exe" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${SIMULATOR_NAME}.exe")
+  set(wdqtopts ${wdqtopts} -dir "\"${INSTALL_DESTINATION}\"" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release/${COMPANION_NAME}.exe" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Release/${SIMULATOR_NAME}.exe")
+
   # Add installer command to execute windeployqt
+  message(STATUS "windeployqt command: ${QT_BIN_DIR}/windeployqt.exe ${wdqtopts}")
   install(CODE "execute_process(COMMAND \"${QT_BIN_DIR}/windeployqt.exe\" ${wdqtopts})")
 
   # SDL dll
@@ -444,7 +482,6 @@ endif() # WIN32 install
 
 # Create Windows installer with NSIS
 if(WIN32)
-
   find_program(NSIS_EXE makensis.exe PATHS
     "C:/Program Files/NSIS"
     "C:/Program Files (x86)/NSIS"
@@ -459,7 +496,7 @@ if(WIN32)
 
     add_custom_target(installer
       # The 'install' target prepares all the distro files, make sure it has been executed first.
-      COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
+      COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install --config Release
       COMMAND "${NSIS_EXE}" "${NSI_FILE}"
       DEPENDS "${NSI_FILE}"
       COMMENT "Building Windows NSIS installer..."
@@ -490,6 +527,8 @@ IF(APPLE)
   # Use a non standard Info.plist that adds Retina support flags
   set_target_properties(${COMPANION_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/companion/targets/mac/MacOSXBundleInfo.plist.in)
   set_target_properties(${SIMULATOR_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${PROJECT_SOURCE_DIR}/companion/targets/mac/MacOSXBundleInfo.plist.in)
+  
+  set(MACOSX_BUNDLE_GUI_IDENTIFIER "org.opentx.companion")
 
   INSTALL(TARGETS ${COMPANION_NAME}
       BUNDLE DESTINATION . COMPONENT Runtime
@@ -528,14 +567,11 @@ IF(APPLE)
   set(${COMPANION_SOURCES} ${COMPANION_SOURCES} ${PROJECT_SOURCE_DIR}/images/${MACOSX_BUNDLE_ICON_FILE})
   install(FILES ${MAC_ICON_FILE} DESTINATION ${companion_res_dir} COMPONENT Runtime)
 
-  # Copy dfu-util and avrdude, resolve symlink first
+  # Copy dfu-util, resolve symlink first
   get_filename_component(DFU_UTIL_ABSOLUTE_PATH ${DFU_UTIL_PATH} REALPATH)
-  get_filename_component(AVRDUDE_ABSOLUTE_PATH ${AVRDUDE_PATH} REALPATH)
-  get_filename_component(AVRDUDECONF_ABSOLUTE_PATH ${AVRDUDE_CONF} REALPATH)
-  install(PROGRAMS ${DFU_UTIL_ABSOLUTE_PATH} ${AVRDUDE_ABSOLUTE_PATH} DESTINATION ${companion_res_dir} COMPONENT Runtime)
-  install(FILES ${AVRDUDECONF_ABSOLUTE_PATH} DESTINATION ${companion_res_dir} COMPONENT Runtime)
+  install(PROGRAMS ${DFU_UTIL_ABSOLUTE_PATH} DESTINATION ${companion_res_dir} COMPONENT Runtime)
 
-  set(bundle_tools_path "\${CMAKE_INSTALL_PREFIX}/${companion_res_dir}/dfu-util;\${CMAKE_INSTALL_PREFIX}/${companion_res_dir}/avrdude")
+  set(bundle_tools_path "\${CMAKE_INSTALL_PREFIX}/${companion_res_dir}/dfu-util;")
 
 
   # Include depencies (adding frameworks, fixing the embbeded libraries)
@@ -571,7 +607,7 @@ elseif(APPLE)
   set(CPACK_GENERATOR "DragNDrop")
 # set(CPACK_GENERATOR "TGZ")  # for quick testing
   set(CPACK_BINARY_DRAGNDROP ON)
-  set(CPACK_DMG_BACKGROUND_IMAGE ${COMPANION_SRC_DIRECTORY}/images/splash22_3_dmg.png)
+  set(CPACK_DMG_BACKGROUND_IMAGE ${COMPANION_SRC_DIRECTORY}/images/splash_dmg.png)
   set(CPACK_DMG_VOLUME_NAME "OpenTX Companion")
   set(CPACK_DMG_DS_STORE ${PROJECT_SOURCE_DIR}/companion/targets/mac/DS_Store)
   set(CPACK_PACKAGE_FILE_NAME "opentx-${CPACK_PACKAGE_NAME_LOWERCASE}-${VERSION}")

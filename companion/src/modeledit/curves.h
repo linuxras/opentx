@@ -26,12 +26,9 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 
-enum CopyAction {
-  CURVE_COPY,
-  CURVE_PASTE,
-  CURVE_RESET,
-  CURVE_RESETALL
-};
+class CompoundItemModelFactory;
+
+constexpr char MIMETYPE_CURVE[] = "application/x-companion-curve";
 
 namespace Ui {
   class Curves;
@@ -59,19 +56,18 @@ class CustomScene : public QGraphicsScene
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
 };
 
-class Curves : public ModelPanel
+class CurvesPanel : public ModelPanel
 {
     Q_OBJECT
 
   public:
-    Curves(QWidget *parent, ModelData & model, GeneralSettings & generalSettings, Firmware * firmware);
-    virtual ~Curves();
+    CurvesPanel(QWidget *parent, ModelData & model, GeneralSettings & generalSettings, Firmware * firmware, CompoundItemModelFactory * sharedItemModels);
+    virtual ~CurvesPanel();
 
     virtual void update();
 
   private slots:
     void editCurve();
-    void ShowContextMenu(const QPoint& pos);
     void plotCurve(bool checked);
     void on_curveName_editingFinished();
     void on_curvePoints_currentIndexChanged(int index);
@@ -86,6 +82,16 @@ class Curves : public ModelPanel
     void onSceneNewPoint(int x, int y);
     void onPointSizeEdited();
     void onNodeDelete();
+    void onCustomContextMenuRequested(QPoint pos);
+    void cmClear(bool prompt = true);
+    void cmClearAll();
+    void cmCopy();
+    void cmCut();
+    void cmDelete();
+    void cmInsert();
+    void cmPaste();
+    void cmMoveDown();
+    void cmMoveUp();
 
   protected:
     virtual void resizeEvent(QResizeEvent *event);
@@ -105,6 +111,18 @@ class Curves : public ModelPanel
     bool allowCurveType(int points, CurveData::CurveType type);
     void setPointY(int i, int x, int y);
     CustomScene * scene;
+    int maxCurves;
+    int hasNames;
+    int hasEnhanced;
+    int maxPoints;
+    int selectedIndex;
+    bool hasClipboardData(QByteArray * data = nullptr) const;
+    bool insertAllowed() const;
+    bool moveDownAllowed() const;
+    bool moveUpAllowed() const;
+    void swapData(int idx1, int idx2);
+    CompoundItemModelFactory * sharedItemModels;
+    void updateItemModels();
 };
 
 #endif // _CURVES_H_

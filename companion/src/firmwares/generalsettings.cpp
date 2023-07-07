@@ -23,6 +23,7 @@
 #include "appdata.h"
 #include "eeprominterface.h"
 #include "radiodataconversionstate.h"
+#include "compounditemmodels.h"
 
 const uint8_t chout_ar[] = { // First number is 0..23 -> template setup,  Second is relevant channel out
   1,2,3,4 , 1,2,4,3 , 1,3,2,4 , 1,3,4,2 , 1,4,2,3 , 1,4,3,2,
@@ -36,7 +37,7 @@ bool GeneralSettings::switchPositionAllowedTaranis(int index) const
   if (index == 0)
     return true;
 
-  div_t qr = div(abs(index)-1, 3);
+  div_t qr = div(abs(index) - 1, 3);
 
   if (index < 0 && switchConfig[qr.quot] != Board::SWITCH_3POS)
     return false;
@@ -53,23 +54,25 @@ bool GeneralSettings::switchSourceAllowedTaranis(int index) const
 
 bool GeneralSettings::isPotAvailable(int index) const
 {
-  if (index<0 || index>getBoardCapability(getCurrentBoard(), Board::Pots)) return false;
+  if (index < 0 || index > Boards::getCapability(getCurrentBoard(), Board::Pots))
+    return false;
   return potConfig[index] != Board::POT_NONE;
 }
 
 bool GeneralSettings::isSliderAvailable(int index) const
 {
-  if (index<0 || index>getBoardCapability(getCurrentBoard(), Board::Sliders)) return false;
+  if (index < 0 || index > Boards::getCapability(getCurrentBoard(), Board::Sliders))
+    return false;
   return sliderConfig[index] != Board::SLIDER_NONE;
 }
 
 GeneralSettings::GeneralSettings()
 {
-  memset(this, 0, sizeof(GeneralSettings));
+  memset(reinterpret_cast<void *>(this), 0, sizeof(GeneralSettings));
 
   contrast  = 25;
 
-  for (int i=0; i < CPN_MAX_ANALOGS; ++i) {
+  for (int i = 0; i < CPN_MAX_ANALOGS; ++i) {
     calibMid[i]     = 0x200;
     calibSpanNeg[i] = 0x180;
     calibSpanPos[i] = 0x180;
@@ -86,11 +89,17 @@ GeneralSettings::GeneralSettings()
     vBatMin = -5;   //8,5V
     vBatMax = -5;   //11,5V
   }
-  else if (IS_TARANIS_XLITE(board) || IS_HORUS_X10(board)) {
+  else if (IS_TARANIS_XLITE(board) || IS_HORUS_X10(board) || IS_FAMILY_T16(board)) {
     // Lipo 2S
     vBatWarn = 66;
     vBatMin = -23;  // 6.7V
-    vBatMax = -37;  // 8.3V 
+    vBatMax = -37;  // 8.3V
+  }
+  else if (IS_JUMPER_TLITE(board)) {
+    // 1S Li-Ion
+    vBatWarn = 32;
+    vBatMin = -60; //3V
+    vBatMax = -78; //4.2V
   }
   else if (IS_TARANIS(board)) {
     // NI-MH 7.2V, X9D, X9D+ and X7
@@ -104,19 +113,25 @@ GeneralSettings::GeneralSettings()
   backlightMode = 3; // keys and sticks
   // backlightBright = 0; // 0 = 100%
 
-  if (IS_HORUS(board)) {
+  if (IS_FAMILY_HORUS_OR_T16(board)) {
     backlightOffBright = 20;
   }
 
-  if (IS_ARM(board)) {
-    speakerVolume = 12;
-  }
+  speakerVolume = 12;
 
-  if (IS_HORUS(board)) {
-    strcpy(bluetoothName, "Horus");
+  if (IS_JUMPER_T16(board))
+    strcpy(bluetoothName, "t16");
+  else if (IS_FAMILY_HORUS_OR_T16(board)) {
+    strcpy(bluetoothName, "horus");
   }
   else if (IS_TARANIS_X9E(board) || IS_TARANIS_SMALL(board)) {
-    strcpy(bluetoothName, "Taranis");
+    strcpy(bluetoothName, "taranis");
+  }
+
+  for (uint8_t i = 0; i < 4; i++) {
+    trainer.mix[i].mode = TrainerMix::TRN_MIX_MODE_SUBST;
+    trainer.mix[i].src = i;
+    trainer.mix[i].weight = 100;
   }
 
   templateSetup = g.profile[g.sessionId()].channelOrder();
@@ -231,8 +246,12 @@ void GeneralSettings::setDefaultControlTypes(Board::Type board)
     switchConfig[i] = Boards::getSwitchInfo(board, i).config;
   }
 
+  // TLite does not have pots or sliders
+  if (IS_JUMPER_TLITE(board))
+    return;
+
   // TODO: move to Boards, like with switches
-  if (IS_HORUS(board)) {
+  if (IS_FAMILY_HORUS_OR_T16(board)) {
     potConfig[0] = Board::POT_WITH_DETENT;
     potConfig[1] = Board::POT_MULTIPOS_SWITCH;
     potConfig[2] = Board::POT_WITH_DETENT;
@@ -243,6 +262,14 @@ void GeneralSettings::setDefaultControlTypes(Board::Type board)
   }
   else if (IS_TARANIS_X7(board)) {
     potConfig[0] = Board::POT_WITHOUT_DETENT;
+    potConfig[1] = Board::POT_WITH_DETENT;
+  }
+  else if(IS_RADIOMASTER_ZORRO(board)) {
+    potConfig[0] = Board::POT_WITHOUT_DETENT;
+    potConfig[1] = Board::POT_WITHOUT_DETENT;
+  }
+  else if (IS_FAMILY_T12(board)) {
+    potConfig[0] = Board::POT_WITH_DETENT;
     potConfig[1] = Board::POT_WITH_DETENT;
   }
   else if (IS_TARANIS(board)) {
@@ -261,7 +288,7 @@ void GeneralSettings::setDefaultControlTypes(Board::Type board)
     sliderConfig[2] = Board::SLIDER_WITH_DETENT;
     sliderConfig[3] = Board::SLIDER_WITH_DETENT;
   }
-  else if (IS_TARANIS_X9(board) || IS_HORUS_X10(board)) {
+  else if (IS_TARANIS_X9(board) || IS_HORUS_X10(board) || IS_FAMILY_T16(board)) {
     sliderConfig[0] = Board::SLIDER_WITH_DETENT;
     sliderConfig[1] = Board::SLIDER_WITH_DETENT;
   }
@@ -305,15 +332,29 @@ void GeneralSettings::convert(RadioDataConversionState & cstate)
 
   // SE and SG are skipped on X7 board
   if (IS_TARANIS_X7(cstate.toType)) {
-    if (IS_TARANIS_X9(cstate.fromType) || IS_HORUS(cstate.fromType)) {
+    if (IS_TARANIS_X9(cstate.fromType) || IS_FAMILY_HORUS_OR_T16(cstate.fromType)) {
       strncpy(switchName[4], switchName[5], sizeof(switchName[4]));
       strncpy(switchName[5], switchName[7], sizeof(switchName[5]));
     }
   }
   else if (IS_TARANIS_X7(cstate.fromType)) {
-    if (IS_TARANIS_X9(cstate.toType) || IS_HORUS(cstate.toType)) {
+    if (IS_TARANIS_X9(cstate.toType) || IS_FAMILY_HORUS_OR_T16(cstate.toType)) {
       strncpy(switchName[5], switchName[4], sizeof(switchName[5]));
       strncpy(switchName[7], switchName[5], sizeof(switchName[7]));
+    }
+  }
+
+  if (IS_FAMILY_T12(cstate.toType)) {
+    if (IS_TARANIS_X9(cstate.fromType) || IS_FAMILY_HORUS_OR_T16(cstate.fromType)) {
+      strncpy(switchName[4], switchName[5], sizeof(switchName[0]));
+      strncpy(switchName[5], switchName[7], sizeof(switchName[0]));
+    }
+  }
+
+  else if (IS_FAMILY_T12(cstate.fromType)) {
+    if (IS_TARANIS_X9(cstate.toType) || IS_FAMILY_HORUS_OR_T16(cstate.toType)) {
+      strncpy(switchName[5], switchName[4], sizeof(switchName[0]));
+      strncpy(switchName[7], switchName[5], sizeof(switchName[0]));
     }
   }
 
@@ -327,7 +368,7 @@ void GeneralSettings::convert(RadioDataConversionState & cstate)
     strncpy(sliderName[3], sliderName[1], sizeof(sliderName[3]));
   }
 
-  if (IS_HORUS(cstate.toType)) {
+  if (IS_FAMILY_HORUS_OR_T16(cstate.toType)) {
     // 6P switch is only on Horus (by default)
     if (cstate.fromBoard.getCapability(Board::FactoryInstalledPots) == 2) {
       strncpy(potName[2], potName[1], sizeof(potName[2]));
@@ -350,4 +391,252 @@ void GeneralSettings::convert(RadioDataConversionState & cstate)
     customFn[i].convert(cstate.withComponentIndex(i));
   }
 
+}
+
+QString GeneralSettings::antennaModeToString() const
+{
+  return antennaModeToString(antennaMode);
+}
+
+QString GeneralSettings::bluetoothModeToString() const
+{
+  return bluetoothModeToString(bluetoothMode);
+}
+
+QString GeneralSettings::auxSerialModeToString() const
+{
+  return auxSerialModeToString(auxSerialMode);
+}
+
+QString GeneralSettings::telemetryBaudrateToString() const
+{
+  return telemetryBaudrateToString(telemetryBaudrate);
+}
+
+//  static
+QString GeneralSettings::antennaModeToString(int value)
+{
+  Board::Type board = getCurrentBoard();
+
+  switch(value) {
+    case ANTENNA_MODE_INTERNAL:
+      return tr("Internal");
+    case ANTENNA_MODE_ASK:
+      return tr("Ask");
+    case ANTENNA_MODE_PER_MODEL:
+      return tr("Per model");
+    case ANTENNA_MODE_EXTERNAL:
+    // case ANTENNA_MODE_INTERNAL_EXTERNAL:
+      return IS_HORUS_X12S(board) ? tr("Internal + External") : tr("External");
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+//  static
+QString GeneralSettings::bluetoothModeToString(int value)
+{
+  Board::Type board = getCurrentBoard();
+
+  switch(value) {
+    case BLUETOOTH_MODE_OFF:
+      return tr("OFF");
+    case BLUETOOTH_MODE_ENABLED:
+    // case BLUETOOTH_MODE_TELEMETRY:
+      return IS_TARANIS_X9E(board) ? tr("Enabled") : tr("Telemetry");
+    case BLUETOOTH_MODE_TRAINER:
+      return tr("Trainer");
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+//  static
+QString GeneralSettings::auxSerialModeToString(int value)
+{
+  switch(value) {
+    case AUX_SERIAL_OFF:
+      return tr("OFF");
+    case AUX_SERIAL_TELE_MIRROR:
+      return tr("Telemetry Mirror");
+    case AUX_SERIAL_TELE_IN:
+      return tr("Telemetry In");
+    case AUX_SERIAL_SBUS_TRAINER:
+      return tr("SBUS Trainer");
+    case AUX_SERIAL_LUA:
+      return tr("LUA");
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+//  static
+QString GeneralSettings::telemetryBaudrateToString(int value)
+{
+  switch(value) {
+    case 0:
+      return "400000";
+    case 1:
+      return "115200";
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+//  static
+FieldRange GeneralSettings::getPPM_MultiplierRange()
+{
+  FieldRange result;
+
+  result.min = 0;
+  result.max = 5;
+  result.decimals = 1;
+  result.step = 0.1;
+  result.offset = 10;
+
+  return result;
+}
+
+//  static
+FieldRange GeneralSettings::getTxCurrentCalibration()
+{
+  FieldRange result;
+
+  result.max = 49;
+  result.min = -result.max;
+  result.unit = tr("mA");
+
+  return result;
+}
+
+//  static
+AbstractStaticItemModel * GeneralSettings::antennaModeItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_GS_ANTENNAMODE);
+
+  for (int i = ANTENNA_MODE_FIRST; i <= ANTENNA_MODE_LAST; i++) {
+    mdl->appendToItemList(antennaModeToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+//  static
+AbstractStaticItemModel * GeneralSettings::bluetoothModeItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_GS_BLUETOOTHMODE);
+
+  for (int i = 0; i < BLUETOOTH_MODE_COUNT; i++) {
+    mdl->appendToItemList(bluetoothModeToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+//  static
+AbstractStaticItemModel * GeneralSettings::auxSerialModeItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_GS_AUXSERIALMODE);
+
+  for (int i = 0; i < AUX_SERIAL_COUNT; i++) {
+    mdl->appendToItemList(auxSerialModeToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+//  static
+AbstractStaticItemModel * GeneralSettings::telemetryBaudrateItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_GS_TELEMETRYBAUDRATE);
+
+  for (int i = 0; i <= 1; i++) {
+    mdl->appendToItemList(telemetryBaudrateToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+/*
+    TrainerMix
+*/
+
+QString TrainerMix::modeToString() const
+{
+  return modeToString(mode);
+}
+
+QString TrainerMix::srcToString() const
+{
+  return srcToString(src);
+}
+
+//  static
+FieldRange TrainerMix::getWeightRange()
+{
+  FieldRange result;
+
+  result.decimals = 0;
+  result.max = 125;
+  result.min = -result.max;
+  result.step = 1;
+
+  return result;
+}
+
+//  static
+QString TrainerMix::modeToString(int value)
+{
+  switch(value) {
+    case TRN_MIX_MODE_OFF:
+      return tr("OFF");
+    case TRN_MIX_MODE_ADD:
+      return tr("+= (Sum)");
+    case TRN_MIX_MODE_SUBST:
+      return tr(":= (Replace)");
+    default:
+      return CPN_STR_UNKNOWN_ITEM;
+  }
+}
+
+//  static
+QString TrainerMix::srcToString(int value)
+{
+  return tr("CH%1").arg(value + 1);
+}
+
+//  static
+AbstractStaticItemModel * TrainerMix::modeItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_TRAINERMIX_MODE);
+
+  for (int i = 0; i < TRN_MIX_MODE_COUNT; i++) {
+    mdl->appendToItemList(modeToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
+}
+
+//  static
+AbstractStaticItemModel * TrainerMix::srcItemModel()
+{
+  AbstractStaticItemModel * mdl = new AbstractStaticItemModel();
+  mdl->setName(AIM_TRAINERMIX_SRC);
+
+  for (int i = 0; i < Boards::getCapability(getCurrentBoard(), Board::Sticks); i++) {
+    mdl->appendToItemList(srcToString(i), i);
+  }
+
+  mdl->loadItemList();
+  return mdl;
 }

@@ -251,7 +251,7 @@ int Ersky9xInterface::getSize(const GeneralSettings & settings)
   return 0;
 }
 
-int Ersky9xInterface::isAvailable(PulsesProtocol prot, int port)
+bool Ersky9xInterface::isAvailable(PulsesProtocol prot, int port)
 {
   switch (prot) {
     case PULSES_PPM:
@@ -386,4 +386,9 @@ int Ersky9xInterface::getCapability(Capability capability)
     default:
       return 0;
   }
+}
+
+QString Ersky9xInterface::getCapabilityStr(Capability capability)
+{
+  return QString();
 }
