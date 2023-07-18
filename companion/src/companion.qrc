@@ -259,6 +259,16 @@
     <file>images/simulator/TX16S/left_tele.png</file>
     <file>images/simulator/TX16S/right_ent.png</file>
     <file>images/simulator/TX16S/right_mdl.png</file>
+    <file>images/simulator/I6X/left.png</file>
+    <file>images/simulator/I6X/left_bind.png</file>
+    <file>images/simulator/I6X/left_down.png</file>
+    <file>images/simulator/I6X/left_up.png</file>
+    <file>images/simulator/I6X/right.png</file>
+    <file>images/simulator/I6X/right_cancel.png</file>
+    <file>images/simulator/I6X/right_ok.png</file>
+    <file>images/simulator/I6X/right_off.png</file>
+    <file>images/simulator/I6X/top.png</file>
+    <file>images/simulator/I6X/bottom.png</file>
     <file>images/wizard/ailerons.png</file>
     <file>images/wizard/airbrakes.png</file>
     <file>images/wizard/elevons.png</file>

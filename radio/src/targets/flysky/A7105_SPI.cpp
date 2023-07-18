@@ -353,7 +353,9 @@ void A7105_Init(void)
 //	uint8_t vco_calibration0, vco_calibration1;
 /*****************************************************************************/
 	A7105_Reset();
+#if !defined(SIMU)
     delay_ms(1);
+#endif
 /*****************************************************************************/
 	A7105_WriteID(0x5475c52A); //0x2Ac57554
 	A7105_Regs = (uint8_t*) AFHDS2A_A7105_regs;

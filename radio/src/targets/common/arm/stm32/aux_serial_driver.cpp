@@ -32,7 +32,8 @@ Fifo<uint8_t, 512> auxSerialTxFifo;
 DMAFifo<32> auxSerialRxFifo __DMA (AUX_SERIAL_DMA_Stream_RX);
 #endif
 
-void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t lenght = USART_WordLength_8b, uint16_t parity = USART_Parity_No, uint16_t stop = USART_StopBits_1)
+void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t length = ((uint32_t)0x00000000), uint16_t parity = ((uint32_t)0x00000000), uint16_t stop = ((uint32_t)0x00000000))
+//void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t length = USART_WordLength_8b, uint16_t parity = USART_Parity_No, uint16_t stop = USART_StopBits_1)
 {
   USART_InitTypeDef USART_InitStructure;
   GPIO_InitTypeDef GPIO_InitStructure;
@@ -48,7 +49,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t lenght = USART_Wor
   GPIO_Init(AUX_SERIAL_GPIO, &GPIO_InitStructure);
 
   USART_InitStructure.USART_BaudRate = baudrate;
-  USART_InitStructure.USART_WordLength = lenght;
+  USART_InitStructure.USART_WordLength = length;
   USART_InitStructure.USART_StopBits = stop;
   USART_InitStructure.USART_Parity = parity;
   USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
@@ -56,7 +57,7 @@ void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t lenght = USART_Wor
   USART_Init(AUX_SERIAL_USART, &USART_InitStructure);
 
   if (dma) {
-#if defined(AUX_SERIAL_DMA_Channel_RX)
+#if defined(AUX_SERIAL_DMA_Channel_RX) && !defined(SIMU)
     auxSerialRxFifo.stream = AUX_SERIAL_DMA_Channel_RX; // workaround, CNDTR reading do not work otherwise
     DMA_InitTypeDef DMA_InitStructure;
     auxSerialRxFifo.clear();
@@ -104,10 +105,12 @@ void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t lenght = USART_Wor
   }
   else {
     USART_Cmd(AUX_SERIAL_USART, ENABLE);
+#if !defined(SIMU)
 #if !defined(PCBI6X)
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_RXNE, ENABLE);
 #endif
     USART_ITConfig(AUX_SERIAL_USART, USART_IT_TXE, DISABLE);
+#endif
     NVIC_SetPriority(AUX_SERIAL_USART_IRQn, 7);
     NVIC_EnableIRQ(AUX_SERIAL_USART_IRQn);
   }
@@ -195,6 +198,7 @@ uint8_t auxSerialTracesEnabled()
 #endif
 }
 
+#if !defined(SIMU)
 extern "C" void AUX_SERIAL_USART_IRQHandler(void)
 {
   DEBUG_INTERRUPT(INT_SER2);
@@ -255,4 +259,5 @@ extern "C" void AUX_SERIAL_USART_IRQHandler(void)
   }
 #endif // PCBI6X
 }
+#endif //SIMU
 #endif // AUX_SERIAL

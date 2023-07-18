@@ -23,11 +23,16 @@
 
 #ifndef __GNUC__
 #include <windows.h>
+#include <intrin.h>
 #define sleep(x) Sleep(x)
 #define strcasecmp  _stricmp
 #define strncasecmp _tcsnicmp
 #define chdir  _chdir
 #define getcwd _getcwd
+inline int __builtin_clz(unsigned x)
+{
+    return (int)__lzcnt(x);
+}
 #else
 #include <unistd.h>
 #define sleep(x) usleep(1000*x)
@@ -69,8 +74,6 @@ void sig(int sgn)
 
 #include <inttypes.h>
 #include <stdio.h>
-#include <pthread.h>
-#include <semaphore.h>
 #include <stddef.h>
 #include <errno.h>
 
@@ -84,9 +87,15 @@ extern GPIO_TypeDef gpioa, gpiob, gpioc, gpiod, gpioe, gpiof, gpiog, gpioh, gpio
 extern TIM_TypeDef tim1, tim2, tim3, tim4, tim5, tim6, tim7, tim8, tim9, tim10;
 extern USART_TypeDef Usart0, Usart1, Usart2, Usart3, Usart4;
 extern RCC_TypeDef rcc;
+#if defined(STM32F0)
+extern DMA_Channel_TypeDef dma1_stream0, dma1_stream1, dma1_stream2, dma1_stream3, dma1_stream4, dma1_stream5, dma1_stream6, dma1_stream7, dma2_stream1, dma2_stream2, dma2_stream5, dma2_stream6, dma2_stream7;
+#else
 extern DMA_Stream_TypeDef dma1_stream0, dma1_stream1, dma1_stream2, dma1_stream3, dma1_stream4, dma1_stream5, dma1_stream6, dma1_stream7, dma2_stream1, dma2_stream2, dma2_stream5, dma2_stream6, dma2_stream7;
+#endif
 extern DMA_TypeDef dma2;
 extern SysTick_Type systick;
+extern ADC_Common_TypeDef adc;
+extern RTC_TypeDef rtc;
 #undef SysTick
 #define SysTick (&systick)
 #undef GPIOA
@@ -165,6 +174,10 @@ extern SysTick_Type systick;
 #define DMA2_Stream7 (&dma2_stream7)
 #undef DMA2
 #define DMA2 (&dma2)
+#undef ADC
+#define ADC (&adc)
+#undef RTC
+#define RTC (&rtc)
 #elif defined(PCBSKY9X)
 extern Pmc pmc;
 #undef PMC
@@ -172,6 +185,12 @@ extern Pmc pmc;
 extern Ssc ssc;
 #undef SSC
 #define SSC (&ssc)
+extern Pmc pmc;
+#undef PMC
+#define PMC (&pmc)
+extern Tc tc1;
+#undef TC1
+#define TC1 (&tc1)
 extern Pio Pioa, Piob, Pioc;
 extern Twi Twio;
 extern Dacc dacc;
@@ -202,16 +221,13 @@ extern Pwm pwm;
 #define PWM (&pwm)
 #endif
 
-#if defined(EEPROM_SIZE)
-extern uint8_t eeprom[EEPROM_SIZE];
-#else
 extern uint8_t * eeprom;
-#endif
-
 extern void startPdcUsartReceive() ;
 extern uint32_t txPdcUsart( uint8_t *buffer, uint32_t size );
 extern uint32_t txPdcPending();
 extern void rxPdcUsart( void (*pChProcess)(uint8_t x) );
+extern uint8_t auxSerialMode;
+extern uint32_t telemetryErrors;
 
 #define ISR(x, ...)  void x()
 
@@ -232,7 +248,7 @@ extern char * main_thread_error;
 
 #define OPENTX_START_DEFAULT_ARGS  simu_start_mode
 
-static inline void getADC() { }
+inline void getADC() { }
 
 uint64_t simuTimerMicros(void);
 
@@ -270,9 +286,15 @@ inline void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct) { 
 #define TIM_ClearFlag(...)
 #define TIM_Cmd(...)
 #define TIM_ITConfig(...)
+#if defined(STM32F0)
+#define GPIO_SetBits(GPIOx, pin) GPIOx->BSRR |= pin
+#define GPIO_ResetBits(GPIOx, pin) GPIOx->BSRR &= ~pin
+#define GPIO_ReadInputDataBit(GPIOx, pin) (GPIOx->BSRR & pin)
+#else
 #define GPIO_SetBits(GPIOx, pin) GPIOx->BSRRL |= pin
 #define GPIO_ResetBits(GPIOx, pin) GPIOx->BSRRL &= ~pin
 #define GPIO_ReadInputDataBit(GPIOx, pin) (GPIOx->BSRRL & pin)
+#endif
 #define RCC_AHB1PeriphClockCmd(...)
 #define RCC_APB2PeriphClockCmd(...)
 inline void SPI_Init(SPI_TypeDef* SPIx, SPI_InitTypeDef* SPI_InitStruct) { }
@@ -281,15 +303,28 @@ inline void SPI_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState) { }
 inline FlagStatus SPI_I2S_GetFlagStatus(SPI_TypeDef* SPIx, uint16_t SPI_I2S_FLAG) { return RESET; }
 inline uint16_t SPI_I2S_ReceiveData(SPI_TypeDef* SPIx) { return 0; }
 inline void SPI_I2S_SendData(SPI_TypeDef* SPIx, uint16_t Data) { }
+#if defined(STM32F0)
+inline void DMA_DeInit(DMA_Channel_TypeDef* DMAy_Streamx) { }
+inline void DMA_Init(DMA_Channel_TypeDef* DMAy_Streamx, DMA_InitTypeDef* DMA_InitStruct) { }
+inline void DMA_ITConfig(DMA_Channel_TypeDef* DMAy_Streamx, uint32_t DMA_IT, FunctionalState NewState) { }
+inline void DMA_Cmd(DMA_Channel_TypeDef* DMAy_Streamx, FunctionalState NewState) { }
+#else
 inline void DMA_DeInit(DMA_Stream_TypeDef* DMAy_Streamx) { }
 inline void DMA_Init(DMA_Stream_TypeDef* DMAy_Streamx, DMA_InitTypeDef* DMA_InitStruct) { }
 inline void DMA_ITConfig(DMA_Stream_TypeDef* DMAy_Streamx, uint32_t DMA_IT, FunctionalState NewState) { }
-inline void DMA_StructInit(DMA_InitTypeDef* DMA_InitStruct) { }
 inline void DMA_Cmd(DMA_Stream_TypeDef* DMAy_Streamx, FunctionalState NewState) { }
+#endif
+inline void DMA_StructInit(DMA_InitTypeDef* DMA_InitStruct) { }
 void DMACopy(void * src, void * dest, unsigned size);
+#if defined(STM32F0)
+inline FlagStatus DMA_GetFlagStatus(DMA_Channel_TypeDef* DMAy_Streamx, uint32_t DMA_FLAG) { return RESET; }
+inline ITStatus DMA_GetITStatus(DMA_Channel_TypeDef* DMAy_Streamx, uint32_t DMA_IT) { return RESET; }
+inline void DMA_ClearITPendingBit(DMA_Channel_TypeDef* DMAy_Streamx, uint32_t DMA_IT) { }
+#else
 inline FlagStatus DMA_GetFlagStatus(DMA_Stream_TypeDef* DMAy_Streamx, uint32_t DMA_FLAG) { return RESET; }
 inline ITStatus DMA_GetITStatus(DMA_Stream_TypeDef* DMAy_Streamx, uint32_t DMA_IT) { return RESET; }
 inline void DMA_ClearITPendingBit(DMA_Stream_TypeDef* DMAy_Streamx, uint32_t DMA_IT) { }
+#endif
 inline void SPI_I2S_DMACmd(SPI_TypeDef* SPIx, uint16_t SPI_I2S_DMAReq, FunctionalState NewState) { }
 inline void UART3_Configure(uint32_t baudrate, uint32_t masterClock) { }
 inline void NVIC_Init(NVIC_InitTypeDef *) { }

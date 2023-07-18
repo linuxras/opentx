@@ -18,7 +18,7 @@
  * GNU General Public License for more details.
  */
 
-  #define SIMPGMSPC_USE_QT    0
+#define SIMPGMSPC_USE_QT    0
 
 #include "opentx.h"
 #include <errno.h>
@@ -34,37 +34,55 @@
   #include <SDL.h>
 #endif
 
-uint8_t MCUCSR, MCUSR, MCUCR;
-volatile uint8_t pina=0xff, pinb=0xff, pinc=0xff, pind, pine=0xff, pinf=0xff, ping=0xff, pinh=0xff, pinj=0, pinl=0;
-uint8_t portb, portc, porth=0, dummyport;
-uint16_t dummyport16;
 int g_snapshot_idx = 0;
 
 uint8_t simu_start_mode = 0;
-char * main_thread_error = NULL;
+char * main_thread_error = nullptr;
 
 bool simu_shutdown = false;
 bool simu_running = false;
 
+#if !defined(HARDWARE_TRIMS)
+uint8_t  g_trimState = 0;
+#endif
+
 #if defined(STM32)
-uint32_t Peri1_frequency, Peri2_frequency;
 GPIO_TypeDef gpioa, gpiob, gpioc, gpiod, gpioe, gpiof, gpiog, gpioh, gpioi, gpioj;
 TIM_TypeDef tim1, tim2, tim3, tim4, tim5, tim6, tim7, tim8, tim9, tim10;
 RCC_TypeDef rcc;
+#if defined(STM32F0)
+DMA_Channel_TypeDef dma1_stream1, dma1_stream2, dma1_stream3, dma1_stream4, dma1_stream5, dma1_stream6, dma1_stream7, dma2_stream1, dma2_stream2, dma2_stream5, dma2_stream6, dma2_stream7;
+#else
 DMA_Stream_TypeDef dma1_stream1, dma1_stream2, dma1_stream3, dma1_stream4, dma1_stream5, dma1_stream6, dma1_stream7, dma2_stream1, dma2_stream2, dma2_stream5, dma2_stream6, dma2_stream7;
+#endif
 DMA_TypeDef dma2;
 USART_TypeDef Usart0, Usart1, Usart2, Usart3, Usart4;
 SysTick_Type systick;
+ADC_Common_TypeDef adc;
+RTC_TypeDef rtc;
 #else
 Pio Pioa, Piob, Pioc;
 Pmc pmc;
 Ssc ssc;
 Pwm pwm;
+Tc tc1;
 Twi Twio;
 Usart Usart0;
 Dacc dacc;
 Adc Adc0;
 #endif
+
+#if defined(SDCARD)
+FATFS g_FATFS_Obj;
+#endif
+
+void adcInit()
+{
+}
+
+void usbInit(){}
+
+void delaysInit(){}
 
 void lcdInit()
 {
@@ -77,14 +95,12 @@ void toplcdOff()
 uint64_t simuTimerMicros(void)
 {
 #if SIMPGMSPC_USE_QT
-
   static QElapsedTimer ticker;
   if (!ticker.isValid())
     ticker.start();
   return ticker.nsecsElapsed() / 1000;
 
 #elif defined(_MSC_VER)
-
   static double freqScale = 0.0;
   static LARGE_INTEGER firstTick;
   LARGE_INTEGER newTick;
@@ -103,12 +119,9 @@ uint64_t simuTimerMicros(void)
   QueryPerformanceCounter(&newTick);
   // compute the elapsed time
   return (newTick.QuadPart - firstTick.QuadPart) * freqScale;
-
 #else  // GNUC
-
   auto now = std::chrono::steady_clock::now();
   return (uint64_t) std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
-
 #endif
 }
 
@@ -141,185 +154,44 @@ void simuInit()
   PIOC->PIO_PDSR &= ~PIO_PC17;
 #endif
 
-  for (int i = 0; i <= 17; i++) {
-    simuSetSwitch(i, 0);
-    simuSetKey(i, false);  // a little dirty, but setting keys that don't exist is perfectly OK here
-  }
-  for (int i = 0; i < 2*NUM_TRIMS; i++)
-    simuSetTrim(i, false);
-
-#if defined(ROTARY_ENCODERS) || defined(ROTARY_ENCODER_NAVIGATION)
-  for (uint8_t i=0; i < DIM(rotencValue); i++)
-    rotencValue[i] = 0;
+#if defined(ROTARY_ENCODER_NAVIGATION)
+  rotencValue = 0;
 #endif
+  //Check the enum number
+  //TRACE("KEY_MENU %d", KEY_MENU);
+  //TRACE("KEY_ENTER %d", KEY_ENTER);
+  //TRACE("KEY_EXIT %d", KEY_EXIT);
+  //TRACE("KEY_DOWN %d", KEY_DOWN);
+  //TRACE("KEY_MINUS %d", KEY_MINUS);
+  //TRACE("KEY_UP %d", KEY_UP);
+  //TRACE("KEY_PLUS %d", KEY_PLUS);
+  //TRACE("KEY_RIGHT %d", KEY_RIGHT);
+  //TRACE("KEY_LEFT %d", KEY_LEFT);
+  //TRACE("KEY_BIND %d", KEY_BIND);
 }
 
-#define NEG_CASE(sw_or_key, pin, mask) \
-    case sw_or_key: \
-      if ((int)state > 0) pin &= ~(mask); else pin |= (mask); \
-      break;
-#define POS_CASE(sw_or_key, pin, mask) \
-    case sw_or_key: \
-      if ((int)state > 0) pin |= (mask); else pin &= ~(mask); \
-      break;
-
-  #if defined(PCBHORUS) || (defined(PCBTARANIS) && !defined(PCBX9E))
-    #define SWITCH_CASE    NEG_CASE
-    #define SWITCH_INV     POS_CASE
-  #else
-    #define SWITCH_CASE    POS_CASE
-  #endif
-  #define KEY_CASE         NEG_CASE
-  #define SWITCH_3_CASE(swtch, pin1, pin2, mask1, mask2) \
-    case swtch: \
-      if ((int)state < 0) pin1 &= ~(mask1); else pin1 |= (mask1); \
-      if ((int)state > 0) pin2 &= ~(mask2); else pin2 |= (mask2); \
-      break;
-  #define SWITCH_3_INV(swtch, pin1, pin2, mask1, mask2)  SWITCH_3_CASE(swtch, pin2, pin1, mask2, mask1)
-
-#define TRIM_CASE          KEY_CASE
-
+bool keysStates[NUM_KEYS] = { false };
 void simuSetKey(uint8_t key, bool state)
 {
-  // if (state) TRACE_SIMPGMSPACE("simuSetKey(%d, %d)", key, state);
-
-  switch (key) {
-#if defined(PCBX12S)
-    KEY_CASE(KEY_PGUP, KEYS_GPIO_REG_PGUP, KEYS_GPIO_PIN_PGUP)
-    KEY_CASE(KEY_PGDN, KEYS_GPIO_REG_PGDN, KEYS_GPIO_PIN_PGDN)
-    KEY_CASE(KEY_ENTER, KEYS_GPIO_REG_ENTER, KEYS_GPIO_PIN_ENTER)
-    KEY_CASE(KEY_TELEM, KEYS_GPIO_REG_RIGHT, KEYS_GPIO_PIN_RIGHT)
-    KEY_CASE(KEY_RADIO, KEYS_GPIO_REG_LEFT, KEYS_GPIO_PIN_LEFT)
-    KEY_CASE(KEY_MODEL, KEYS_GPIO_REG_UP, KEYS_GPIO_PIN_UP)
-    KEY_CASE(KEY_EXIT, KEYS_GPIO_REG_DOWN, KEYS_GPIO_PIN_DOWN)
-#elif defined(PCBX10)
-    KEY_CASE(KEY_PGDN, KEYS_GPIO_REG_PGDN, KEYS_GPIO_PIN_PGDN)
-    KEY_CASE(KEY_ENTER, KEYS_GPIO_REG_ENTER, KEYS_GPIO_PIN_ENTER)
-    KEY_CASE(KEY_TELEM, KEYS_GPIO_REG_RIGHT, KEYS_GPIO_PIN_RIGHT)
-    KEY_CASE(KEY_RADIO, KEYS_GPIO_REG_LEFT, KEYS_GPIO_PIN_LEFT)
-    KEY_CASE(KEY_MODEL, KEYS_GPIO_REG_UP, KEYS_GPIO_PIN_UP)
-    KEY_CASE(KEY_EXIT, KEYS_GPIO_REG_DOWN, KEYS_GPIO_PIN_DOWN)
-#elif defined(PCBXLITE)
-    KEY_CASE(KEY_SHIFT, KEYS_GPIO_REG_SHIFT, KEYS_GPIO_PIN_SHIFT)
-    KEY_CASE(KEY_EXIT, KEYS_GPIO_REG_EXIT, KEYS_GPIO_PIN_EXIT)
-    KEY_CASE(KEY_ENTER, KEYS_GPIO_REG_ENTER, KEYS_GPIO_PIN_ENTER)
-    KEY_CASE(KEY_RIGHT, KEYS_GPIO_REG_RIGHT, KEYS_GPIO_PIN_RIGHT)
-    KEY_CASE(KEY_LEFT, KEYS_GPIO_REG_LEFT, KEYS_GPIO_PIN_LEFT)
-    KEY_CASE(KEY_UP, KEYS_GPIO_REG_UP, KEYS_GPIO_PIN_UP)
-    KEY_CASE(KEY_DOWN, KEYS_GPIO_REG_DOWN, KEYS_GPIO_PIN_DOWN)
-#elif defined(PCBTARANIS)
-    KEY_CASE(KEY_MENU, KEYS_GPIO_REG_MENU, KEYS_GPIO_PIN_MENU)
-    KEY_CASE(KEY_EXIT, KEYS_GPIO_REG_EXIT, KEYS_GPIO_PIN_EXIT)
-    KEY_CASE(KEY_ENTER, KEYS_GPIO_REG_ENTER, KEYS_GPIO_PIN_ENTER)
-    KEY_CASE(KEY_PAGE, KEYS_GPIO_REG_PAGE, KEYS_GPIO_PIN_PAGE)
-  #if defined(KEYS_GPIO_REG_MINUS)
-    KEY_CASE(KEY_MINUS, KEYS_GPIO_REG_MINUS, KEYS_GPIO_PIN_MINUS)
-    KEY_CASE(KEY_PLUS, KEYS_GPIO_REG_PLUS, KEYS_GPIO_PIN_PLUS)
-  #endif
-#else
-    KEY_CASE(KEY_MENU, KEYS_GPIO_REG_MENU, KEYS_GPIO_PIN_MENU)
-    KEY_CASE(KEY_EXIT, KEYS_GPIO_REG_EXIT, KEYS_GPIO_PIN_EXIT)
-    KEY_CASE(KEY_RIGHT, KEYS_GPIO_REG_RIGHT, KEYS_GPIO_PIN_RIGHT)
-    KEY_CASE(KEY_LEFT, KEYS_GPIO_REG_LEFT, KEYS_GPIO_PIN_LEFT)
-    KEY_CASE(KEY_UP, KEYS_GPIO_REG_UP, KEYS_GPIO_PIN_UP)
-    KEY_CASE(KEY_DOWN, KEYS_GPIO_REG_DOWN, KEYS_GPIO_PIN_DOWN)
-#endif
-#if defined(PCBSKY9X) && !defined(REVX) && !defined(AR9X) && defined(ROTARY_ENCODERS)
-    KEY_CASE(BTN_REa, PIOB->PIO_PDSR, 0x40)
-#endif
-  }
+   //TRACE("simuSetKey(%d, %d)", key, state);
+  assert(key < DIM(keysStates));
+  keysStates[key] = state;
 }
 
+bool trimsStates[NUM_TRIMS_KEYS] = { false };
 void simuSetTrim(uint8_t trim, bool state)
 {
-  // TRACE_SIMPGMSPACE("trim=%d state=%d", trim, state);
-
-  switch (trim) {
-    TRIM_CASE(0, TRIMS_GPIO_REG_LHL, TRIMS_GPIO_PIN_LHL)
-    TRIM_CASE(1, TRIMS_GPIO_REG_LHR, TRIMS_GPIO_PIN_LHR)
-    TRIM_CASE(2, TRIMS_GPIO_REG_LVD, TRIMS_GPIO_PIN_LVD)
-    TRIM_CASE(3, TRIMS_GPIO_REG_LVU, TRIMS_GPIO_PIN_LVU)
-  #if defined(TRIMS_GPIO_REG_RVD)
-    TRIM_CASE(4, TRIMS_GPIO_REG_RVD, TRIMS_GPIO_PIN_RVD)
-    TRIM_CASE(5, TRIMS_GPIO_REG_RVU, TRIMS_GPIO_PIN_RVU)
-    TRIM_CASE(6, TRIMS_GPIO_REG_RHL, TRIMS_GPIO_PIN_RHL)
-    TRIM_CASE(7, TRIMS_GPIO_REG_RHR, TRIMS_GPIO_PIN_RHR)
-  #endif
-#if defined(PCBHORUS)
-    TRIM_CASE(8, TRIMS_GPIO_REG_LSD, TRIMS_GPIO_PIN_LSD)
-    TRIM_CASE(9, TRIMS_GPIO_REG_LSU, TRIMS_GPIO_PIN_LSU)
-    TRIM_CASE(10, TRIMS_GPIO_REG_RSD, TRIMS_GPIO_PIN_RSD)
-    TRIM_CASE(11, TRIMS_GPIO_REG_RSU, TRIMS_GPIO_PIN_RSU)
-#endif
-  }
+   //TRACE("simuSetTrim(%d, %d)", trim, state);
+  assert(trim < DIM(trimsStates));
+  trimsStates[trim] = state;
 }
 
-// TODO use a better numbering to allow google tests to work on Taranis
+int8_t switchesStates[NUM_SWITCHES] = { -1 };
 void simuSetSwitch(uint8_t swtch, int8_t state)
 {
-  // TRACE_SIMPGMSPACE("simuSetSwitch(%d, %d)", swtch, state);
-
-  switch (swtch) {
-#if defined(PCBTARANIS)
-  #if defined(SWITCHES_GPIO_REG_A_L)
-    SWITCH_3_CASE(0,  SWITCHES_GPIO_REG_A_L, SWITCHES_GPIO_REG_A_H, SWITCHES_GPIO_PIN_A_L, SWITCHES_GPIO_PIN_A_H)
-    SWITCH_3_CASE(1,  SWITCHES_GPIO_REG_B_L, SWITCHES_GPIO_REG_B_H, SWITCHES_GPIO_PIN_B_L, SWITCHES_GPIO_PIN_B_H)
-  #endif
-  #if defined(SWITCHES_GPIO_REG_C_L)
-    SWITCH_3_CASE(2,  SWITCHES_GPIO_REG_C_L, SWITCHES_GPIO_REG_C_H, SWITCHES_GPIO_PIN_C_L, SWITCHES_GPIO_PIN_C_H)
-    SWITCH_3_CASE(3,  SWITCHES_GPIO_REG_D_L, SWITCHES_GPIO_REG_D_H, SWITCHES_GPIO_PIN_D_L, SWITCHES_GPIO_PIN_D_H)
-  #endif
-  #if defined(PCBX7)
-    SWITCH_CASE  (4,  SWITCHES_GPIO_REG_F, SWITCHES_GPIO_PIN_F)
-    SWITCH_CASE  (5,  SWITCHES_GPIO_REG_H, SWITCHES_GPIO_PIN_H)
-  #elif !defined(PCBXLITE)
-    SWITCH_3_CASE(4,  SWITCHES_GPIO_REG_E_L, SWITCHES_GPIO_REG_E_H, SWITCHES_GPIO_PIN_E_L, SWITCHES_GPIO_PIN_E_H)
-    SWITCH_CASE  (5,  SWITCHES_GPIO_REG_F, SWITCHES_GPIO_PIN_F)
-    SWITCH_3_CASE(6,  SWITCHES_GPIO_REG_G_L, SWITCHES_GPIO_REG_G_H, SWITCHES_GPIO_PIN_G_L, SWITCHES_GPIO_PIN_G_H)
-    SWITCH_CASE  (7,  SWITCHES_GPIO_REG_H, SWITCHES_GPIO_PIN_H)
-  #endif
-  #if defined(SWITCHES_GPIO_REG_I_L)
-    SWITCH_3_CASE(8,  SWITCHES_GPIO_REG_I_L, SWITCHES_GPIO_REG_I_H, SWITCHES_GPIO_PIN_I_L, SWITCHES_GPIO_PIN_I_H)
-    SWITCH_3_CASE(9,  SWITCHES_GPIO_REG_J_L, SWITCHES_GPIO_REG_J_H, SWITCHES_GPIO_PIN_J_L, SWITCHES_GPIO_PIN_J_H)
-    SWITCH_3_CASE(10, SWITCHES_GPIO_REG_K_L, SWITCHES_GPIO_REG_K_H, SWITCHES_GPIO_PIN_K_L, SWITCHES_GPIO_PIN_K_H)
-    SWITCH_3_CASE(11, SWITCHES_GPIO_REG_L_L, SWITCHES_GPIO_REG_L_H, SWITCHES_GPIO_PIN_L_L, SWITCHES_GPIO_PIN_L_H)
-    SWITCH_3_CASE(12, SWITCHES_GPIO_REG_M_L, SWITCHES_GPIO_REG_M_H, SWITCHES_GPIO_PIN_M_L, SWITCHES_GPIO_PIN_M_H)
-    SWITCH_3_CASE(13, SWITCHES_GPIO_REG_N_L, SWITCHES_GPIO_REG_N_H, SWITCHES_GPIO_PIN_N_L, SWITCHES_GPIO_PIN_N_H)
-    SWITCH_3_CASE(14, SWITCHES_GPIO_REG_O_L, SWITCHES_GPIO_REG_O_H, SWITCHES_GPIO_PIN_O_L, SWITCHES_GPIO_PIN_O_H)
-    SWITCH_3_CASE(15, SWITCHES_GPIO_REG_P_L, SWITCHES_GPIO_REG_P_H, SWITCHES_GPIO_PIN_P_L, SWITCHES_GPIO_PIN_P_H)
-    SWITCH_3_CASE(16, SWITCHES_GPIO_REG_Q_L, SWITCHES_GPIO_REG_Q_H, SWITCHES_GPIO_PIN_Q_L, SWITCHES_GPIO_PIN_Q_H)
-    SWITCH_3_CASE(17, SWITCHES_GPIO_REG_R_L, SWITCHES_GPIO_REG_R_H, SWITCHES_GPIO_PIN_R_L, SWITCHES_GPIO_PIN_R_H)
-  #endif
-#elif defined(PCBHORUS)
-    SWITCH_3_CASE(0,  SWITCHES_GPIO_REG_A_L, SWITCHES_GPIO_REG_A_H, SWITCHES_GPIO_PIN_A_L, SWITCHES_GPIO_PIN_A_H)
-  #if defined(PCBX10)
-    SWITCH_3_INV (1,  SWITCHES_GPIO_REG_B_L, SWITCHES_GPIO_REG_B_H, SWITCHES_GPIO_PIN_B_L, SWITCHES_GPIO_PIN_B_H)
-    SWITCH_3_CASE(2,  SWITCHES_GPIO_REG_C_L, SWITCHES_GPIO_REG_C_H, SWITCHES_GPIO_PIN_C_L, SWITCHES_GPIO_PIN_C_H)
-    SWITCH_3_INV (3,  SWITCHES_GPIO_REG_D_L, SWITCHES_GPIO_REG_D_H, SWITCHES_GPIO_PIN_D_L, SWITCHES_GPIO_PIN_D_H)
-    SWITCH_3_INV (4,  SWITCHES_GPIO_REG_E_L, SWITCHES_GPIO_REG_E_H, SWITCHES_GPIO_PIN_E_L, SWITCHES_GPIO_PIN_E_H)
-    SWITCH_CASE  (5,  SWITCHES_GPIO_REG_F, SWITCHES_GPIO_PIN_F)
-  #else  // X12
-    SWITCH_3_CASE(1,  SWITCHES_GPIO_REG_B_L, SWITCHES_GPIO_REG_B_H, SWITCHES_GPIO_PIN_B_L, SWITCHES_GPIO_PIN_B_H)
-    SWITCH_3_CASE(2,  SWITCHES_GPIO_REG_C_L, SWITCHES_GPIO_REG_C_H, SWITCHES_GPIO_PIN_C_L, SWITCHES_GPIO_PIN_C_H)
-    SWITCH_3_CASE(3,  SWITCHES_GPIO_REG_D_L, SWITCHES_GPIO_REG_D_H, SWITCHES_GPIO_PIN_D_L, SWITCHES_GPIO_PIN_D_H)
-    SWITCH_3_CASE(4,  SWITCHES_GPIO_REG_E_L, SWITCHES_GPIO_REG_E_H, SWITCHES_GPIO_PIN_E_L, SWITCHES_GPIO_PIN_E_H)
-    SWITCH_INV   (5,  SWITCHES_GPIO_REG_F, SWITCHES_GPIO_PIN_F)
-  #endif
-    SWITCH_3_CASE(6,  SWITCHES_GPIO_REG_G_L, SWITCHES_GPIO_REG_G_H, SWITCHES_GPIO_PIN_G_L, SWITCHES_GPIO_PIN_G_H)
-    SWITCH_CASE  (7,  SWITCHES_GPIO_REG_H, SWITCHES_GPIO_PIN_H)
-#elif defined(PCBSKY9X)
-    SWITCH_3_CASE(0, PIOC->PIO_PDSR, PIOC->PIO_PDSR, 0x00004000, 0x00000800)
-    SWITCH_CASE(1, PIOC->PIO_PDSR, 1<<20)
-    SWITCH_CASE(2, PIOA->PIO_PDSR, 1<<15)
-    SWITCH_CASE(3, PIOC->PIO_PDSR, 1<<31)
-    SWITCH_CASE(4, PIOA->PIO_PDSR, 1<<2)
-    SWITCH_CASE(5, PIOC->PIO_PDSR, 1<<16)
-    SWITCH_CASE(6, PIOC->PIO_PDSR, 1<<8)
-#endif
-
-    default:
-      break;
-  }
+  TRACE("simuSetSwitch(%d, %d)", swtch, state);
+  assert(swtch < DIM(switchesStates));
+  switchesStates[swtch] = state;
 }
 
 void StartSimu(bool tests, const char * sdPath, const char * settingsPath)
@@ -327,13 +199,16 @@ void StartSimu(bool tests, const char * sdPath, const char * settingsPath)
   if (simu_running)
     return;
 
-  s_current_protocol[0] = 255;
+  //stopPulses();
   menuLevel = 0;
 
-  simu_start_mode = (tests ? 0 : 0x02 /* OPENTX_START_NO_CHECKS */);
+  simu_start_mode = (tests ? 0 : OPENTX_START_NO_SPLASH | OPENTX_START_NO_CALIBRATION | OPENTX_START_NO_CHECKS);
+  //simu_start_mode = (OPENTX_START_NO_SPLASH | OPENTX_START_NO_CALIBRATION | OPENTX_START_NO_CHECKS);
   simu_shutdown = false;
 
+#if defined(SDCARD)
   simuFatfsSetPaths(sdPath, settingsPath);
+#endif
 
   /*
     g_tmr10ms must be non-zero otherwise some SF functions (that use this timer as a marker when it was last executed)
@@ -351,7 +226,25 @@ void StartSimu(bool tests, const char * sdPath, const char * settingsPath)
   }
 
 #if defined(RTCLOCK)
-  g_rtcTime = time(0);
+  time_t rawtime;
+  struct tm * timeinfo;
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+
+  if (timeinfo != nullptr) {
+    struct gtm gti;
+    gti.tm_sec  = timeinfo->tm_sec;
+    gti.tm_min  = timeinfo->tm_min;
+    gti.tm_hour = timeinfo->tm_hour;
+    gti.tm_mday = timeinfo->tm_mday;
+    gti.tm_mon  = timeinfo->tm_mon;
+    gti.tm_year = timeinfo->tm_year;
+    gti.tm_wday = timeinfo->tm_wday;
+    gti.tm_yday = timeinfo->tm_yday;
+    g_rtcTime = gmktime(&gti);
+  } else {
+    g_rtcTime = rawtime;
+  }
 #endif
 
 #if defined(SIMU_EXCEPTIONS)
@@ -377,13 +270,16 @@ void StopSimu()
     return;
 
   simu_shutdown = true;
-
+  //TRACE("StopSimu() 1");
   pthread_join(mixerTaskId, nullptr);
+  //TRACE("StopSimu() 2 %d", menusTaskId);
   pthread_join(menusTaskId, nullptr);
+  //TRACE("StopSimu() 3");
 
   simu_running = false;
 }
 
+#if defined(SIMU_AUDIO)
 struct SimulatorAudio {
   int volumeGain;
   int currentVolume;
@@ -392,6 +288,7 @@ struct SimulatorAudio {
   bool threadRunning;
   pthread_t threadPid;
 } simuAudio;
+#endif
 
 bool simuIsRunning()
 {
@@ -412,11 +309,13 @@ void audioConsumeCurrentBuffer()
 {
 }
 
+#if defined(SIMU_AUDIO)
 void setScaledVolume(uint8_t volume)
 {
   simuAudio.currentVolume = 127 * volume * simuAudio.volumeGain / VOLUME_LEVEL_MAX / 10;
   // TRACE_SIMPGMSPACE("setVolume(): in: %u, out: %u", volume, simuAudio.currentVolume);
 }
+#endif
 
 void setVolume(uint8_t volume)
 {
@@ -514,7 +413,7 @@ void * audioThread(void *)
   */
   if ( SDL_OpenAudio(&wanted, &have) < 0 ) {
     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-    return 0;
+    return nullptr;
   }
   SDL_PauseAudio(0);
 
@@ -523,7 +422,7 @@ void * audioThread(void *)
     sleep(1);
   }
   SDL_CloseAudio();
-  return 0;
+  return nullptr;
 }
 
 void StartAudioThread(int volumeGain)
@@ -539,8 +438,10 @@ void StartAudioThread(int volumeGain)
   struct sched_param sp;
   sp.sched_priority = SCHED_RR;
   pthread_attr_setschedparam(&attr, &sp);
-  pthread_create(&simuAudio.threadPid, &attr, &audioThread, NULL);
-  return;
+  pthread_create(&simuAudio.threadPid, &attr, &audioThread, nullptr);
+#ifdef __linux__
+  pthread_setname_np(simuAudio.threadPid, "audio");
+#endif
 }
 
 void StopAudioThread()
@@ -553,15 +454,11 @@ void StopAudioThread()
 bool simuLcdRefresh = true;
 display_t simuLcdBuf[DISPLAY_BUFFER_SIZE];
 
-#if !defined(PCBHORUS)
+#if !defined(COLORLCD)
 void lcdSetRefVolt(uint8_t val)
 {
 }
 #endif
-
-void adcPrepareBandgap()
-{
-}
 
 #if defined(PCBTARANIS)
 void lcdOff()
@@ -580,11 +477,72 @@ void lcdRefresh()
   }
 }
 
+#if defined(TRAINER_SPORT_SBUS)
+Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryNoDMAFifo;
+#endif
+
 void telemetryPortInit(uint8_t baudrate)
 {
 }
 
 void telemetryPortInit()
+{
+}
+
+void sportUpdatePowerOn()
+{
+}
+
+void sportUpdatePowerOff()
+{
+}
+
+void sportUpdatePowerInit()
+{
+}
+
+inline void telemetryPortSetDirectionInput()
+{
+}
+
+inline void telemetryPortSetDirectionOutput()
+{
+}
+
+void rxPdcUsart( void (*pChProcess)(uint8_t x) )
+{
+}
+
+inline void telemetryPortInit(uint32_t baudrate, uint8_t mode)
+{
+}
+
+inline uint8_t telemetryGetByte(uint8_t * byte)
+{
+  return false;
+}
+
+void telemetryClearFifo()
+{
+}
+
+void telemetryPortInvertedInit(uint32_t baudrate)
+{
+}
+
+void sportSendByte(uint8_t byte)
+{
+}
+
+void sportSendBuffer(const uint8_t * buffer, uint32_t count)
+{
+}
+
+void check_telemetry_exti()
+{
+}
+
+inline void boardInit()
 {
 }
 
@@ -606,10 +564,6 @@ uint32_t pwrCheck()
   return simu_shutdown ? e_power_off : e_power_on;
 }
 
-void pwrOff()
-{
-}
-
 uint32_t pwrPressed()
 {
   // TODO: simulate power button
@@ -622,12 +576,184 @@ uint32_t pwrPressed()
 #endif
 }
 
+void pwrInit()
+{
+}
+
+void pwrOn()
+{
+}
+
+void pwrOff()
+{
+}
+
+void readKeysAndTrims()
+{
+  //TRACE("readKeysAndTrims() called");
+  uint8_t index = 0;
+  auto keysInput = readKeys();
+  for (auto mask = (1 << 0); mask < (1 << TRM_BASE); mask <<= 1) {
+    keys[index++].input(keysInput & mask);
+  }
+
+  auto trimsInput = readTrims();
+  for (auto mask = (1 << 0); mask < (1 << NUM_TRIMS_KEYS); mask <<= 1) {
+    keys[index++].input(trimsInput & mask);
+  }
+
+  if (keysInput || trimsInput) {
+    resetBacklightTimeout();
+  }
+}
+
+bool keyDown()
+{
+  return readKeys();
+}
+
+uint8_t trimDown(uint8_t idx)
+{
+  return readTrims() & (1 << idx);
+}
+
+uint32_t readKeys()
+{
+  uint32_t result = 0;
+
+  for (int i = 0; i < NUM_KEYS; i++) {
+    if (keysStates[i]) {
+       //TRACE("key pressed %d", i);
+      result |= 1 << i;
+    }
+  }
+
+  return result;
+}
+
+uint32_t readTrims()
+{
+  uint32_t result = 0;
+
+  for (int i=0; i<NUM_TRIMS_KEYS; i++) {
+    if (trimsStates[i]) {
+      // TRACE("trim pressed %d", i);
+      result |= 1 << i;
+    }
+  }
+
+#if defined(PCBXLITE)
+  if (IS_SHIFT_PRESSED())
+    result = ((result & 0x03) << 6) | ((result & 0x0c) << 2);
+#elif !defined(HARDWARE_TRIMS)
+  result = g_trimState;
+  g_trimState = 0;
+#endif
+
+  return result;
+}
+
+uint32_t switchState(uint8_t index)
+{
+#if defined(PCBSKY9X)
+  switch(index) {
+    case 0:
+      return switchesStates[0] < 0;
+    case 1:
+      return switchesStates[0] == 0;
+    case 2:
+      return switchesStates[0] > 0;
+    default:
+      return switchesStates[index - 2] > 0;
+  }
+#else
+  div_t qr = div(index, 3);
+  int state = switchesStates[qr.quot];
+  switch (qr.rem) {
+    case 0:
+      return state < 0;
+    case 2:
+      return state > 0;
+    default:
+      return state == 0;
+  }
+#endif
+}
+
 #if defined(STM32)
-void pwrInit() { }
 int usbPlugged() { return false; }
 int getSelectedUsbMode() { return USB_JOYSTICK_MODE; }
 void setSelectedUsbMode(int mode) {}
+void delay_ms(uint32_t ms) { }
+void delay_us(uint16_t us) { }
+
+// GPIO fake functions
+void GPIO_PinAFConfig(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinSource, uint8_t GPIO_AF) { }
+
+// PWR fake functions
+void PWR_BackupAccessCmd(FunctionalState NewState) { }
+void PWR_BackupRegulatorCmd(FunctionalState NewState) { }
+
+// USART fake functions
 void USART_DeInit(USART_TypeDef* ) { }
+void USART_Init(USART_TypeDef* USARTx, USART_InitTypeDef* USART_InitStruct) { }
+void USART_Cmd(USART_TypeDef* USARTx, FunctionalState NewState) { }
+void USART_ClearITPendingBit(USART_TypeDef*, unsigned short) { }
+void USART_SendData(USART_TypeDef* USARTx, uint16_t Data) { }
+void USART_OverSampling8Cmd(USART_TypeDef* USARTx, FunctionalState NewState) { }
+uint16_t USART_ReceiveData(USART_TypeDef*) { return 0; }
+void USART_DMACmd(USART_TypeDef* USARTx, uint16_t USART_DMAReq, FunctionalState NewState) { }
+void USART_ITConfig(USART_TypeDef* USARTx, uint16_t USART_IT, FunctionalState NewState) { }
+FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG) { return SET; }
+
+// TIM fake functions
+void TIM_DMAConfig(TIM_TypeDef* TIMx, uint16_t TIM_DMABase, uint16_t TIM_DMABurstLength) { }
+void TIM_DMACmd(TIM_TypeDef* TIMx, uint16_t TIM_DMASource, FunctionalState NewState) { }
+void TIM_CtrlPWMOutputs(TIM_TypeDef* TIMx, FunctionalState NewState) { }
+
+// I2C fake functions
+void I2C_DeInit(I2C_TypeDef*) { }
+void I2C_Init(I2C_TypeDef*, I2C_InitTypeDef*) { }
+void I2C_Cmd(I2C_TypeDef*, FunctionalState) { }
+void I2C_Send7bitAddress(I2C_TypeDef*, unsigned char, unsigned char) { }
+void I2C_SendData(I2C_TypeDef*, unsigned char) { }
+void I2C_GenerateSTART(I2C_TypeDef*, FunctionalState) { }
+void I2C_GenerateSTOP(I2C_TypeDef*, FunctionalState) { }
+void I2C_AcknowledgeConfig(I2C_TypeDef*, FunctionalState) { }
+uint8_t I2C_ReceiveData(I2C_TypeDef*) { return 0; }
+ErrorStatus I2C_CheckEvent(I2C_TypeDef*, unsigned int) { return (ErrorStatus) ERROR; }
+
+// I2S fake functions
+void I2S_Init(SPI_TypeDef* SPIx, I2S_InitTypeDef* I2S_InitStruct) { }
+void I2S_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState) { }
+
+// SPI fake functions
+void SPI_I2S_DeInit(SPI_TypeDef* SPIx) { }
+void SPI_I2S_ITConfig(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT, FunctionalState NewState) { }
+
+// RCC fake functions
+void RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource) { }
+void RCC_APB1PeriphClockCmd(uint32_t RCC_APB1Periph, FunctionalState NewState) { }
+void RCC_RTCCLKCmd(FunctionalState NewState) { }
+void RCC_PLLI2SConfig(uint32_t PLLI2SN, uint32_t PLLI2SR) { }
+void RCC_PLLI2SCmd(FunctionalState NewState) { }
+void RCC_I2SCLKConfig(uint32_t RCC_I2SCLKSource) { }
+void RCC_LSEConfig(uint8_t RCC_LSE) { }
+void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks) { };
+FlagStatus RCC_GetFlagStatus(uint8_t RCC_FLAG) { return SET; }
+
+// EXTI fake functions
+void SYSCFG_EXTILineConfig(uint8_t EXTI_PortSourceGPIOx, uint8_t EXTI_PinSourcex) { }
+void EXTI_StructInit(EXTI_InitTypeDef* EXTI_InitStruct) { }
+ITStatus EXTI_GetITStatus(uint32_t EXTI_Line) { return RESET; }
+void EXTI_Init(EXTI_InitTypeDef* EXTI_InitStruct) { }
+void EXTI_ClearITPendingBit(uint32_t EXTI_Line) { }
+
+// RTC fake functions
+ErrorStatus RTC_Init(RTC_InitTypeDef* RTC_InitStruct) { return SUCCESS; }
+void RTC_TimeStructInit(RTC_TimeTypeDef* RTC_TimeStruct) { }
+void RTC_DateStructInit(RTC_DateTypeDef* RTC_DateStruct) { }
+ErrorStatus RTC_WaitForSynchro(void) { return SUCCESS; }
 ErrorStatus RTC_SetTime(uint32_t RTC_Format, RTC_TimeTypeDef* RTC_TimeStruct) { return SUCCESS; }
 ErrorStatus RTC_SetDate(uint32_t RTC_Format, RTC_DateTypeDef* RTC_DateStruct) { return SUCCESS; }
 void RTC_GetTime(uint32_t RTC_Format, RTC_TimeTypeDef * RTC_TimeStruct)
@@ -650,49 +776,181 @@ void RTC_GetDate(uint32_t RTC_Format, RTC_DateTypeDef * RTC_DateStruct)
   RTC_DateStruct->RTC_Date = timeinfo->tm_mday;
 }
 
-void RTC_TimeStructInit(RTC_TimeTypeDef* RTC_TimeStruct) { }
-void RTC_DateStructInit(RTC_DateTypeDef* RTC_DateStruct) { }
-void PWR_BackupAccessCmd(FunctionalState NewState) { }
-void PWR_BackupRegulatorCmd(FunctionalState NewState) { }
-void RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource) { }
-void RCC_APB1PeriphClockCmd(uint32_t RCC_APB1Periph, FunctionalState NewState) { }
-void RCC_RTCCLKCmd(FunctionalState NewState) { }
-ErrorStatus RTC_Init(RTC_InitTypeDef* RTC_InitStruct) { return SUCCESS; }
-void USART_SendData(USART_TypeDef* USARTx, uint16_t Data) { }
-FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG) { return SET; }
-void GPIO_PinAFConfig(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinSource, uint8_t GPIO_AF) { }
-void USART_Init(USART_TypeDef* USARTx, USART_InitTypeDef* USART_InitStruct) { }
-void USART_Cmd(USART_TypeDef* USARTx, FunctionalState NewState) { }
-void USART_ClearITPendingBit(USART_TypeDef*, unsigned short) { }
-uint16_t USART_ReceiveData(USART_TypeDef*) { return 0; }
-void USART_DMACmd(USART_TypeDef* USARTx, uint16_t USART_DMAReq, FunctionalState NewState) { }
-void USART_ITConfig(USART_TypeDef* USARTx, uint16_t USART_IT, FunctionalState NewState) { }
-// void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct) { }
-// void TIM_OC1Init(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct) { }
-void TIM_DMAConfig(TIM_TypeDef* TIMx, uint16_t TIM_DMABase, uint16_t TIM_DMABurstLength) { }
-void TIM_DMACmd(TIM_TypeDef* TIMx, uint16_t TIM_DMASource, FunctionalState NewState) { }
-void TIM_CtrlPWMOutputs(TIM_TypeDef* TIMx, FunctionalState NewState) { }
-void RCC_PLLI2SConfig(uint32_t PLLI2SN, uint32_t PLLI2SR) { }
-void RCC_PLLI2SCmd(FunctionalState NewState) { }
-void RCC_I2SCLKConfig(uint32_t RCC_I2SCLKSource) { }
-void SPI_I2S_DeInit(SPI_TypeDef* SPIx) { }
-void I2S_Init(SPI_TypeDef* SPIx, I2S_InitTypeDef* I2S_InitStruct) { }
-void I2S_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState) { }
-void SPI_I2S_ITConfig(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT, FunctionalState NewState) { }
-void RCC_LSEConfig(uint8_t RCC_LSE) { }
-void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks) { };
-FlagStatus RCC_GetFlagStatus(uint8_t RCC_FLAG) { return SET; }
-ErrorStatus RTC_WaitForSynchro(void) { return SUCCESS; }
-void unlockFlash() { }
-void lockFlash() { }
-void flashWrite(uint32_t *address, uint32_t *buffer) { simuSleep(100); }
-uint32_t isBootloaderStart(const uint8_t * block) { return 1; }
+void unlockFlash()
+{
+}
+
+void lockFlash()
+{
+}
+
+void flashWrite(uint32_t *address, const uint32_t *buffer)
+{
+  simuSleep(100);
+}
+
+uint32_t isBootloaderStart(const uint8_t * block)
+{
+  return 1;
+}
 #endif // defined(STM32)
 
-#if defined(PCBHORUS)
-void LCD_ControlLight(uint16_t dutyCycle) { }
+#if defined(PCBXLITES)
+bool isJackPlugged()
+{
+  return false;
+}
 #endif
 
 void serialPrintf(const char * format, ...) { }
 void serialCrlf() { }
 void serialPutc(char c) { }
+
+inline uint16_t getBatteryVoltage()
+{
+  return (g_eeGeneral.vBatWarn * 10) + 50; // 0.5 volt above alerm (value is PREC1)
+}
+
+inline void boardOff()
+{
+}
+
+#if defined(RADIO_FAMILY_TBS) || defined(PCBI6X)
+void intmoduleStop()
+{
+    //TRACE("intmoduleStop SIMU");
+}
+void extmoduleStop()
+{
+    //TRACE("extmoduleStop SIMU");
+}
+
+void intmoduleNoneStart()
+{
+    //TRACE("intmoduleNoneStart SIMU");
+};
+void intmoduleAfhds2aStart()
+{
+    //TRACE("intmoduleAfhds2aStart SIMU");
+}
+
+void extmodulePpmStart() {}
+void extmoduleTimerStart(uint32_t period, uint8_t state){}
+#endif
+
+#if defined(PCBHORUS) || defined(PCBTARANIS)
+HardwareOptions hardwareOptions;
+#endif
+
+uint32_t Master_frequency = 0;
+uint32_t Current_used = 0;
+uint16_t Current_max = 0;
+
+void setSticksGain(uint8_t)
+{
+}
+
+uint16_t getCurrent()
+{
+  return 10;
+}
+
+void calcConsumption()
+{
+}
+
+#if defined(HEADPHONE_TRAINER_SWITCH_GPIO)
+void enableHeadphone()
+{
+}
+
+void enableTrainer()
+{
+}
+
+void enableSpeaker()
+{
+}
+
+void disableSpeaker()
+{
+}
+#endif
+
+#if defined(COPROCESSOR)
+CoprocData coprocData;
+
+inline void coprocReadData(bool)
+{
+}
+#endif
+
+inline void rtcInit()
+{
+}
+
+inline void rtcGetTime(struct gtm * t)
+{
+}
+
+inline void rtcSetTime(const struct gtm * t)
+{
+}
+
+inline void pushPrompt(uint16_t prompt) {}
+
+#if defined(USB_SERIAL)
+inline void usbSerialPutc(uint8_t c)
+{
+}
+#endif
+
+#if defined(AUX_SERIAL)
+//AuxSerialRxFifo auxSerialRxFifo(nullptr);
+//uint8_t auxSerialMode;
+
+static inline void auxSerialSetup(unsigned int baudrate, bool dma, uint16_t length, uint16_t parity, uint16_t stop)
+{
+}
+
+inline void auxSerialInit(unsigned int mode, unsigned int protocol)
+{
+}
+
+inline void auxSerialPutc(char c)
+{
+}
+
+inline void auxSerialSbusInit()
+{
+}
+
+inline void auxSerialStop()
+{
+}
+#endif
+
+#if defined(AUX2_SERIAL)
+AuxSerialRxFifo aux2SerialRxFifo(nullptr);
+uint8_t aux2SerialMode;
+
+inline void aux2SerialSetup(unsigned int baudrate, bool dma, uint16_t length, uint16_t parity, uint16_t stop)
+{
+}
+
+inline void aux2SerialInit(unsigned int mode, unsigned int protocol)
+{
+}
+
+inline void aux2SerialPutc(char c)
+{
+}
+
+inline void aux2SerialSbusInit()
+{
+}
+
+inline void aux2SerialStop()
+{
+}
+#endif

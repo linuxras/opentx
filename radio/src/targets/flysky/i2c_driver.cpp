@@ -25,6 +25,7 @@ void eepromWaitEepromStandbyState(void);
 
 void i2cInit()
 {
+#if !defined(SIMU)
   I2C_DeInit(I2C);
 
   I2C_InitTypeDef I2C_InitStructure;
@@ -48,24 +49,29 @@ void i2cInit()
   GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_Init(I2C_GPIO, &GPIO_InitStructure);
+#endif
 }
 
 #define I2C_TIMEOUT_MAX 1000
 bool I2C_WaitEvent(uint32_t event)
 {
+#if !defined(SIMU)
   uint32_t timeout = I2C_TIMEOUT_MAX;
   while (!I2C_GetFlagStatus(I2C, event)) {
     if ((timeout--) == 0) return false;
   }
+#endif
   return true;
 }
 
 bool I2C_WaitEventCleared(uint32_t event)
 {
+#if !defined(SIMU)
   uint32_t timeout = I2C_TIMEOUT_MAX;
   while (I2C_GetFlagStatus(I2C, event)) {
     if ((timeout--) == 0) return false;
   }
+#endif
   return true;
 }
 
@@ -79,6 +85,7 @@ bool I2C_WaitEventCleared(uint32_t event)
   */
 bool I2C_EE_ReadBlock(uint8_t* pBuffer, uint16_t ReadAddr, uint16_t NumByteToRead)
 {
+#if !defined(SIMU)
   if (!I2C_WaitEventCleared(I2C_FLAG_BUSY))
     return false;
 
@@ -106,10 +113,11 @@ bool I2C_EE_ReadBlock(uint8_t* pBuffer, uint16_t ReadAddr, uint16_t NumByteToRea
 
   if (!I2C_WaitEvent(I2C_FLAG_STOPF))
     return false;
-
+#endif
   return true;
 }
 
+#if !defined(SIMU)
 void eepromReadBlock(uint8_t * buffer, size_t address, size_t size)
 {
   const uint8_t maxSize = 255; // I2C_TransferHandling can handle up to 255 bytes at once
@@ -160,6 +168,7 @@ uint8_t eepromIsTransferComplete()
 {
   return 1;
 }
+#endif
 
 /**
   * @brief  Writes more than one byte to the EEPROM with a single WRITE cycle.
@@ -172,6 +181,7 @@ uint8_t eepromIsTransferComplete()
   */
 bool I2C_EE_PageWrite(uint8_t* pBuffer, uint16_t WriteAddr, uint8_t NumByteToWrite)
 {
+#if !defined(SIMU)
   if (!I2C_WaitEventCleared(I2C_FLAG_BUSY))
     return false;
 
@@ -200,15 +210,17 @@ bool I2C_EE_PageWrite(uint8_t* pBuffer, uint16_t WriteAddr, uint8_t NumByteToWri
 
   if (!I2C_WaitEvent(I2C_FLAG_STOPF))
     return false;
-
+#endif
   return true;
 }
 
 void eepromPageWrite(uint8_t* pBuffer, uint16_t WriteAddr, uint8_t NumByteToWrite)
 {
+#if !defined(SIMU)
   while (!I2C_EE_PageWrite(pBuffer, WriteAddr, NumByteToWrite)) {
     i2cInit();
   }
+#endif
 }
 
 /**
@@ -220,6 +232,7 @@ void eepromPageWrite(uint8_t* pBuffer, uint16_t WriteAddr, uint8_t NumByteToWrit
 #define I2C_STANDBY_WAIT_MAX 100
 bool I2C_EE_WaitEepromStandbyState(void)
 {
+#if !defined(SIMU)
 #if defined(I2C_PROPER_WAIT)
   __IO uint32_t trials = 0;
   I2C_TransferHandling(I2C, I2C_ADDRESS_EEPROM, 0, I2C_AutoEnd_Mode, I2C_No_StartStop);
@@ -236,6 +249,7 @@ bool I2C_EE_WaitEepromStandbyState(void)
 #else
   delay_ms(5);
 #endif
+#endif //#if !defined(SIMU)
   return true;
 }
 

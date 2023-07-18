@@ -25,7 +25,7 @@
   #define MAX_LOGICAL_SWITCHES    NUM_CSW
 #endif
 
-  #define GET_SWITCH_BOOL(sw__)    getSwitch((sw__), 0);
+#define GET_SWITCH_BOOL(sw__)    getSwitch((sw__), 0);
 
 #define OTXS_DBG    qDebug() << "(" << simuTimerMicros() << "us)"
 
@@ -93,6 +93,7 @@ void OpenTxSimulator::init()
 {
   if (isRunning())
     return;
+
   OTXS_DBG;
 
   if (!m_timer10ms) {
@@ -109,6 +110,11 @@ void OpenTxSimulator::init()
 
   QMutexLocker lckr(&m_mtxSimuMain);
   memset(g_anas, 0, sizeof(g_anas));
+
+#if defined(PCBTARANIS)
+  g_anas[TX_RTC_VOLTAGE] = 800;  // 2,34V
+#endif
+
   simuInit();
 }
 
@@ -137,9 +143,13 @@ void OpenTxSimulator::stop()
   setStopRequested(true);
 
   QMutexLocker lckr(&m_mtxSimuMain);
+  //OTXS_DBG << "After mutex locker";
   StopSimu();
+  //OTXS_DBG << "After StopSimu()";
   StopAudioThread();
+  //OTXS_DBG << "After StopAudioThread()";
   StopEepromThread();
+  //OTXS_DBG << "After StopEepromThread()";
 
   emit stopped();
 }
@@ -161,6 +171,7 @@ void OpenTxSimulator::setRadioData(const QByteArray & data)
 {
 #if defined(EEPROM_SIZE)
   QMutexLocker lckr(&m_mtxRadioData);
+  eeprom = (uint8_t *)malloc(qMin<int>(EEPROM_SIZE, data.size()));
   memcpy(eeprom, data.data(), qMin<int>(EEPROM_SIZE, data.size()));
 #endif
 }
@@ -206,17 +217,7 @@ void OpenTxSimulator::setTrim(unsigned int idx, int value)
   if (i < 4)  // swap axes
     i = modn12x3[4 * getStickMode() + idx];
   uint8_t phase = getTrimFlightMode(getFlightMode(), i);
-
-  if (!setTrimValue(phase, i, value)) {
-    QTimer *timer = new QTimer(this);
-    timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, [=]() {
-      emit trimValueChange(idx, 0);
-      emit outputValueChange(OUTPUT_SRC_TRIM_VALUE, idx, 0);
-      timer->deleteLater();
-    });
-    timer->start(350);
-  }
+  setTrimValue(phase, i, value);
 }
 
 void OpenTxSimulator::setTrainerInput(unsigned int inputNumber, int16_t value)
@@ -362,9 +363,6 @@ const int OpenTxSimulator::getCapability(Capability cap)
       break;
 
     case CAP_ROTARY_ENC :
-      #ifdef ROTARY_ENCODERS
-        ret = ROTARY_ENCODERS;
-      #endif
       break;
 
     case CAP_ROTARY_ENC_NAV :
@@ -433,6 +431,7 @@ void OpenTxSimulator::run()
 
   ++loops;
 
+  //OTXS_DBG << "Run Called";
   per10ms();
 
   checkLcdChanged();
@@ -612,15 +611,21 @@ class OpenTxSimulatorFactory: public SimulatorFactory
     virtual Board::Type type()
     {
 #if defined(PCBX12S)
-      return Board::BOARD_X12S;
+      return Board::BOARD_HORUS_X12S;
 #elif defined(PCBX10)
       return Board::BOARD_X10;
+#elif defined(PCBX7ACCESS)
+      return Board::BOARD_TARANIS_X7_ACCESS;
 #elif defined(PCBX7)
       return Board::BOARD_TARANIS_X7;
-#elif defined(PCBTARANIS)
-      return Board::BOARD_TARANIS_X9D;
+#elif defined(PCBX9LITES)
+      return Board::BOARD_TARANIS_X9LITES;
+#elif defined(PCBX9LITE)
+      return Board::BOARD_TARANIS_X9LITE;
+#elif defined(PCBI6X)
+      return Board::BOARD_FLYSKY_I6X;
 #else
-      return Board::BOARD_STOCK;
+      return Board::BOARD_TARANIS_X9D;
 #endif
     }
 };

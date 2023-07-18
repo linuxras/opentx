@@ -108,6 +108,8 @@ const char * OpenTxEepromInterface::getName()
       return "OpenTX for FrSky X10";
     case BOARD_X10_EXPRESS:
       return "OpenTX for FrSky X10 Express";
+    case BOARD_FLYSKY_I6X:
+      return "OpenTX for FlySky I6X";
     default:
       return "OpenTX for an unknown board";
   }
@@ -284,7 +286,9 @@ unsigned long OpenTxEepromInterface::load(RadioData &radioData, const uint8_t * 
 
 uint8_t OpenTxEepromInterface::getLastDataVersion(Board::Type board)
 {
-  return 219;
+  //TODO: Change this for openi6x support
+  //return 219;
+  return 222;
 }
 
 void OpenTxEepromInterface::showErrors(const QString & title, const QStringList & errors)
@@ -952,6 +956,8 @@ EepromLoadErrors OpenTxEepromInterface::checkVersion(unsigned int version)
 
     case 219:
       break;
+    case 221: //For Openi6X support
+      break;
 
     default:
       return NOT_OPENTX;
@@ -1441,6 +1447,16 @@ void registerOpenTxFirmwares()
   firmware = new OpenTxFirmware("opentx-sky9x", Firmware::tr("9X with Sky9x board"), BOARD_SKY9X);
   addOpenTxArm9xOptions(firmware);
   registerOpenTxFirmware(firmware);
+
+  /* FlySky FS-I6X board */
+  firmware = new OpenTxFirmware("opentx-i6x", QCoreApplication::translate("Firmware", "Flysky FS-I6X"), BOARD_FLYSKY_I6X);
+  addOpenTxCommonOptions(firmware);
+  firmware->addOption("heli", Firmware::tr("Enable HELI menu and cyclic mix support"));
+  firmware->addOption("elrsv3", Firmware::tr("Enable Express LRS support"));
+  firmware->addOption("backlight_mod", Firmware::tr("Enable custom backlight levels"));
+  addOpenTxFontOptions(firmware);
+  registerOpenTxFirmware(firmware);
+  //addOpenTxRfOptions(firmware, AFHDS2A);
 
   Firmware::setDefaultVariant(Firmware::getFirmwareForId("opentx-x9d+"));
   Firmware::setCurrentVariant(Firmware::getDefaultVariant());

@@ -197,14 +197,19 @@ ChannelsPanel::ChannelsPanel(QWidget * parent, ModelData & model, GeneralSetting
 ChannelsPanel::~ChannelsPanel()
 {
   // compiler warning if delete[]
+  int ppmCenterMax = firmware->getCapability(PPMCenter);
+  bool isTaranis = IS_HORUS_OR_TARANIS(firmware->getBoard());
   for (int i = 0; i < CPN_MAX_CHNOUT; i++) {
     delete name[i];
     delete chnOffset[i];
     delete chnMin[i];
     delete chnMax[i];
     delete invCB[i];
-    delete curveCB[i];
-    delete centerSB[i];
+    if (isTaranis) {
+      delete curveCB[i];
+    }
+    if(ppmCenterMax)
+        delete centerSB[i];
     delete symlimitsChk[i];
   }
   delete dialogFilteredItemModels;

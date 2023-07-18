@@ -29,6 +29,7 @@
 #define EESIZE_TARANIS                 (32*1024)
 #define EESIZE_SKY9X                   (128*4096)
 #define EESIZE_9XRPRO                  (128*4096)
+#define EESIZE_FSI6X                   (16*1024)
 #define EESIZE_MAX                     EESIZE_9XRPRO
 
 // getFlashSize() (and these macros) is only used by radiointerface::getDfuArgs (perhaps can find a better way?)
@@ -37,6 +38,7 @@
 #define FSIZE_SKY9X                    (256*1024)
 #define FSIZE_9XRPRO                   (512*1024)
 #define FSIZE_HORUS                    (2048*1024)
+#define FSIZE_FSI6X                    (128*1024)
 #define FSIZE_MAX                      FSIZE_HORUS
 
 using namespace Board;
@@ -135,6 +137,8 @@ int Boards::getEEpromSize(Board::Type board)
     case BOARD_JUMPER_T18:
     case BOARD_RADIOMASTER_TX16S:
       return 0;
+    case BOARD_FLYSKY_I6X:
+      return EESIZE_FSI6X;
     default:
       return 0;
   }
@@ -172,6 +176,8 @@ int Boards::getFlashSize(Type board)
     case BOARD_JUMPER_T18:
     case BOARD_RADIOMASTER_TX16S:
       return FSIZE_HORUS;
+    case BOARD_FLYSKY_I6X:
+      return FSIZE_FSI6X;
     case BOARD_UNKNOWN:
       return FSIZE_MAX;
     default:
@@ -323,6 +329,16 @@ SwitchInfo Boards::getSwitchInfo(Board::Type board, int index)
     if (index < DIM(switches))
       return switches[index];
   }
+  else if (IS_FLYSKY_I6X(board)) {
+    const Board::SwitchInfo switches[] = {
+      {SWITCH_2POS,   "SA"},
+      {SWITCH_2POS,   "SB"},
+      {SWITCH_3POS,   "SC"},
+      {SWITCH_2POS,   "SD"}
+    };
+    if (index < DIM(switches))
+      return switches[index];
+  }
   else {
     const Board::SwitchInfo switches[] = {
       {SWITCH_3POS,   "3POS"},
@@ -359,6 +375,8 @@ int Boards::getCapability(Board::Type board, Board::Capability capability)
         return 5;
       else if (IS_HORUS_X12S(board))
         return 3;
+      else if (IS_FLYSKY_I6X(board))
+          return 2;
       else
         return 3;
 
@@ -420,6 +438,8 @@ int Boards::getCapability(Board::Type board, Board::Capability capability)
         return 8;
       else if (IS_FAMILY_HORUS_OR_T16(board))
         return 10;
+      else if (IS_FLYSKY_I6X(board))
+        return 4;
       else
         return 7;
 
@@ -574,6 +594,14 @@ QString Boards::getAnalogInputName(Board::Type board, int index)
     if (index < DIM(pots))
       return pots[index];
   }
+  else if (IS_FLYSKY_I6X(board)) {
+    const QString pots[] = {
+      "VRA",
+      "VRB"
+    };
+    if (index < DIM(pots))
+      return pots[index];
+  }
 
   return CPN_STR_UNKNOWN_ITEM;
 }
@@ -636,6 +664,8 @@ QString Boards::getBoardName(Board::Type board)
       return "Radiomaster Zorro";
     case BOARD_RADIOMASTER_T8:
       return "Radiomaster T8";
+    case BOARD_FLYSKY_I6X:
+      return "FlySky FS-I6X";
     default:
       return CPN_STR_UNKNOWN_ITEM;
   }

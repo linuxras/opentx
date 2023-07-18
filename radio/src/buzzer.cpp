@@ -20,10 +20,11 @@
 
 #include "opentx.h"
 
-#define pushPrompt(value)
+//#define pushPrompt(value)
 #define pushCustomPrompt(value)
 #define pushNumberPrompt(value)
 
+void pushPrompt(unsigned short value) {}
 void audioEvent(unsigned int index){
 //  TRACE("audioEvent %u", index);
 }

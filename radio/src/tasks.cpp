@@ -18,8 +18,8 @@
  * GNU General Public License for more details.
  */
 
-#include "mixer_scheduler.h"
 #include "opentx.h"
+#include "mixer_scheduler.h"
 
 RTOS_TASK_HANDLE menusTaskId;
 RTOS_DEFINE_STACK(menusStack, MENUS_STACK_SIZE);
@@ -73,12 +73,14 @@ bool isModuleSynchronous(uint8_t moduleIdx) {
 }
 
 void sendSynchronousPulses(uint8_t runMask) {
+#if !defined(SIMU)
   if ((runMask & (1 << EXTERNAL_MODULE)) && isModuleSynchronous(EXTERNAL_MODULE)) {
     // Only for CRSF currently (guarded by returned value)
     if (setupPulses(EXTERNAL_MODULE)) {
       extmoduleSendNextFrame();
     }
   }
+#endif
 }
 
 constexpr uint8_t MIXER_FREQUENT_ACTIONS_PERIOD = 5 /*ms*/;
@@ -234,6 +236,13 @@ TASK_FUNCTION(menusTask) {
 #endif
 
 #if !defined(PCBI6X) // no software controlled power on i6X
+  drawSleepBitmap();
+  opentxClose();
+  boardOff();  // Only turn power off if necessary
+
+  TASK_RETURN();
+#endif
+#if defined(SIMU) && defined(PCBI6X) //We need to do this in simulator or it hangs
   drawSleepBitmap();
   opentxClose();
   boardOff();  // Only turn power off if necessary

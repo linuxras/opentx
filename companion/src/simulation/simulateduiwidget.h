@@ -120,6 +120,7 @@ namespace Ui {
   class SimulatedUIWidgetTX12;
   class SimulatedUIWidgetZorro;
   class SimulatedUIWidgetT8;
+  class SimulatedUIWidgetI6X;
 }
 
 class SimulatedUIWidget9X: public SimulatedUIWidget
@@ -341,6 +342,18 @@ class SimulatedUIWidgetTX16S: public SimulatedUIWidget
 
   private:
     Ui::SimulatedUIWidgetTX16S * ui;
+};
+
+class SimulatedUIWidgetI6X: public SimulatedUIWidget
+{
+  Q_OBJECT
+
+  public:
+    explicit SimulatedUIWidgetI6X(SimulatorInterface * simulator, QWidget * parent = nullptr);
+    virtual ~SimulatedUIWidgetI6X();
+
+  private:
+    Ui::SimulatedUIWidgetI6X * ui;
 };
 
 

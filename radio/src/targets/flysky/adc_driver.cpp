@@ -50,6 +50,7 @@ static void adc_dma_arm(void)
   ADC_StartOfConversion(ADC1);
 }
 
+#if !defined(SIMU)
 void adcInit()
 {
   // -- init rcc --
@@ -136,8 +137,8 @@ void adcInit()
   // chunk of data to be transfered
   dma_init.DMA_BufferSize = NUM_ANALOGS;
   // source and destination start addresses
-  dma_init.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-  dma_init.DMA_MemoryBaseAddr = (uint32_t)adcValues;
+  dma_init.DMA_PeripheralBaseAddr = CONVERT_PTR_UINT(&ADC1->DR);
+  dma_init.DMA_MemoryBaseAddr = CONVERT_PTR_UINT(adcValues);
   // send values to DMA registers
   DMA_Init(ADC_DMA_CHANNEL, &dma_init);
 
@@ -164,6 +165,7 @@ void adcRead()
     adc_dma_arm();
   }
 }
+#endif // #if !defined(SIMU)
 
 // TODO
 void adcStop()

@@ -40,6 +40,7 @@ inline void DisablePPMOut(void) {
   CLEAR_BIT(EXTMODULE_TIMER->CCER, TIM_CCER_CC2E);
 }
 
+#if !defined(SIMU)
 void extmoduleStop() {
   TRACE("extmoduleStop");
   DisablePPMOut();
@@ -124,6 +125,7 @@ void extmodulePpmStart() {
 
   EXTMODULE_TIMER->CCER |= TIM_CCER_CC2E;
 }
+#endif //#if !defined(SIMU)
 
 inline void extmoduleSendNextFrame() {
   static bool delay = true;

@@ -22,11 +22,14 @@
 
 Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryFifo;
 uint32_t telemetryErrors = 0;
+#if !defined(SIMU)
 static USART_InitTypeDef USART_InitStructure;
+#endif
 void uartSetDirection(bool tx);
 
 void telemetryPortInit(uint32_t baudrate, uint8_t mode) {
   TRACE("telemetryPortInit %d", baudrate);
+#if !defined(SIMU)
 
   if (baudrate == 0) {
     USART_DeInit(TELEMETRY_USART);
@@ -107,6 +110,7 @@ void telemetryPortInit(uint32_t baudrate, uint8_t mode) {
   // gpio_init.GPIO_PuPd = GPIO_PuPd_NOPULL;
   // gpio_init.GPIO_Pin = GPIO_Pin_15;
   // GPIO_Init(GPIOA, &gpio_init);
+#endif //SIMU
 }
 
 void telemetryPortSetDirectionOutput() {
@@ -139,6 +143,7 @@ void telemetryPortSetDirectionInput() {
 // }
 
 void sportSendBuffer(const uint8_t* buffer, unsigned long count) {
+#if !defined(SIMU)
   telemetryPortSetDirectionOutput();
 
   DMA_InitTypeDef DMA_InitStructure;
@@ -171,8 +176,9 @@ void sportSendBuffer(const uint8_t* buffer, unsigned long count) {
   // enable interrupt and set it's priority
   NVIC_EnableIRQ(TELEMETRY_DMA_TX_IRQn);
   NVIC_SetPriority(TELEMETRY_DMA_TX_IRQn, 7);
+#endif
 }
-
+#if !defined(SIMU)
 extern "C" void TELEMETRY_DMA_TX_IRQHandler(void) {
   DEBUG_INTERRUPT(INT_TELEM_DMA);
   if (DMA_GetITStatus(TELEMETRY_DMA_TX_FLAG_TC)) {
@@ -230,6 +236,7 @@ extern "C" void TELEMETRY_USART_IRQHandler(void) {
     status = TELEMETRY_USART->ISR;
   }
 }
+#endif //SIMU
 
 // TODO we should have telemetry in an higher layer, functions above should move to a sport_driver.cpp
 uint8_t telemetryGetByte(uint8_t* byte) {

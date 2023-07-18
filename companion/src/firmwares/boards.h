@@ -63,6 +63,7 @@ namespace Board {
     BOARD_JUMPER_TLITE,
     BOARD_JUMPER_TPRO,
     BOARD_RADIOMASTER_ZORRO,
+    BOARD_FLYSKY_I6X,
     BOARD_TYPE_COUNT,
     BOARD_TYPE_MAX = BOARD_TYPE_COUNT - 1
   };
@@ -370,9 +371,14 @@ inline bool IS_HORUS_OR_TARANIS(Board::Type board)
   return IS_FAMILY_HORUS_OR_T16(board) || IS_TARANIS(board);
 }
 
+inline bool IS_FLYSKY_I6X(Board::Type board)
+{
+  return (board == Board::BOARD_FLYSKY_I6X);
+}
+
 inline bool IS_STM32(Board::Type board)
 {
-  return IS_TARANIS(board) || IS_FAMILY_HORUS_OR_T16(board);
+  return IS_TARANIS(board) || IS_FAMILY_HORUS_OR_T16(board) || IS_FLYSKY_I6X(board);
 }
 
 inline bool IS_ARM(Board::Type board)

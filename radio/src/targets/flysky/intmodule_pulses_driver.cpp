@@ -19,8 +19,8 @@
  */
 
 #include "iface_a7105.h"
-#include "mixer_scheduler.h"
 #include "opentx.h"
+#include "mixer_scheduler.h"
 
 static bool ahfds2aEnabled = false;
 /*----------------------PRT Timer----------------------------------------------*/
@@ -31,8 +31,9 @@ inline void DisablePRTTim(void) {
   CLEAR_BIT(TIM16->CR1, TIM_CR1_CEN);
 }
 
+#if !defined(SIMU)
 void intmoduleStop() {
-  TRACE("intmoduleStop");
+  //TRACE("intmoduleStop flysky");
   DisablePRTTim();
   if (ahfds2aEnabled) {
     A7105_Sleep();
@@ -41,7 +42,7 @@ void intmoduleStop() {
 }
 
 void intmoduleNoneStart() {
-  TRACE("intmoduleNoneStart");
+  //TRACE("intmoduleNoneStart");
     __IO uint32_t tmpreg;
   SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM16EN);
 
@@ -151,6 +152,7 @@ void intmoduleAfhds2aStart() {
   initAFHDS2A();
   EnablePRTTim();
 }
+#endif //#if !defined(SIMU)
 
 /*-------------handler for RADIO GIO2 (FALLING AGE)---------------------------*/
 void EXTI2_3_IRQHandler(void) {

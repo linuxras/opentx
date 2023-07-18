@@ -139,7 +139,9 @@
 /*--------------interrupt handlers-------------------------------------------*/ 
 
 // PPM
+#if !defined(SIMU)
 void TIM15_IRQHandler(void);
+#endif
 
 // Internal RF
 void EXTI2_3_IRQHandler(void);

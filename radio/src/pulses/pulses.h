@@ -73,5 +73,14 @@ enum ModuleSettingsMode
   #define IS_SBUS_PROTOCOL(protocol)         (protocol == PROTOCOL_CHANNELS_SBUS)
 
   #include "pulses_arm.h"
+void intmoduleStop();
+void intmoduleStop();
+void extmoduleStop();
+
+void intmoduleNoneStart();
+void intmoduleAfhds2aStart();
+
+void extmodulePpmStart();
+void extmoduleTimerStart(uint32_t period, uint8_t state);
 
 #endif // _PULSES_H_

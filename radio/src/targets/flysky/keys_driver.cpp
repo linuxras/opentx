@@ -71,6 +71,7 @@ uint32_t scanMatrix(uint32_t columnStart, uint32_t columnEnd)
   return result;
 }
 
+#if !defined(SIMU)
 uint32_t readKeys()
 {
   uint32_t result = scanMatrix(2, 2);
@@ -117,6 +118,7 @@ bool keyDown()
 /* TODO common to ARM */
 void readKeysAndTrims()
 {
+  //TRACE("readKeysAndTrims() flysky");
   uint8_t i;
   uint8_t index = 0;
   uint32_t keys_input = readKeys();
@@ -138,6 +140,7 @@ void readKeysAndTrims()
     resetBacklightTimeout();
   }
 }
+#endif
 
 uint8_t keyState(uint8_t index)
 {
@@ -145,6 +148,7 @@ uint8_t keyState(uint8_t index)
 }
 
 #if !defined(BOOT)
+#if !defined(SIMU)
 uint32_t switchState(uint8_t index)
 {
   uint32_t xxx = 0;
@@ -165,6 +169,7 @@ uint32_t switchState(uint8_t index)
   //TRACE("switch idx %d sw_num %d value %d pos %d xxx %d", index, sw_num, value, pos, xxx);
   return xxx;
 }
+#endif
 #endif
 
 void keysInit()

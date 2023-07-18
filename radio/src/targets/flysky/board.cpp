@@ -29,7 +29,7 @@ extern "C"
 #if defined(__cplusplus) && !defined(SIMU)
 }
 #endif
-
+#if !defined(SIMU)
 extern "C"
 {
   __attribute__((naked)) __attribute__((used)) void HardFault_HandlerAsm(void)
@@ -98,6 +98,7 @@ extern "C"
     __asm("BKPT #0\n"); // Break into the debugger
   }
 }
+#endif
 
 #if defined(STM32F0) && defined(BOOT)
 volatile uint32_t __attribute__((section(".ram_vector,\"aw\",%nobits @"))) ram_vector[VECTOR_TABLE_SIZE];
@@ -126,6 +127,7 @@ void referenceSystemAudioFiles()
                                              SYSCFG->CFGR1 |= SYSCFG_CFGR1_MEM_MODE_0;  \
                                             }while(0)
 
+#if !defined(SIMU)
 void SystemBootloaderJump() {
     typedef void (*pFunction)(void);
     pFunction JumpToApplication;
@@ -151,6 +153,7 @@ void SystemBootloaderJump() {
 
     JumpToApplication();
 }
+#endif
 
 void watchdogInit(unsigned int duration)
 {
@@ -202,13 +205,16 @@ void boardInit()
   RCC_AHBPeriphClockCmd(RCC_AHB1_LIST, ENABLE);
   RCC_APB1PeriphClockCmd(RCC_APB1_LIST, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2_LIST, ENABLE);
+#endif
 
   pwrInit();
   keysInit();
 
+#if !defined(SIMU)
   if (readTrims() == BOOTLOADER_KEYS) {
     SystemBootloaderJump();
   }
+#endif
 
 #if defined(DEBUG) && defined(AUX_SERIAL_GPIO)
   auxSerialInit(UART_MODE_DEBUG, 0); // default serial mode (None if DEBUG not defined)
@@ -216,6 +222,7 @@ void boardInit()
   // TRACE("RCC->CSR = %08x", RCC->CSR);
 #endif
 
+#if !defined(SIMU)
   crcInit();
   adcInit();
   delaysInit();
@@ -227,6 +234,7 @@ void boardInit()
   buzzerInit();
   i2cInit();
   usbInit();
+#endif
 
   //storageEraseAll(false);
   //TRACE("i2c test");
@@ -239,7 +247,7 @@ void boardInit()
 
   backlightInit();
 
-#endif // !defined(SIMU)
+//#endif // !defined(SIMU)
 }
 
 void boardOff()
