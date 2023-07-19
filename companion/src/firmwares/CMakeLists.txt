@@ -25,6 +25,7 @@ set(firmwares_SRCS
   telem_data.cpp
   timerdata.cpp
   afhds3.cpp
+  afhds2a.cpp
   ersky9x/ersky9xeeprom.cpp
   ersky9x/ersky9xinterface.cpp
   opentx/opentxeeprom.cpp

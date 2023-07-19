@@ -113,6 +113,7 @@ class ProtocolsConversionTable: public ConversionTable
       if (version >= 219) {
         addConversion(PULSES_AFHDS3, val++);
       }
+      addConversion(PULSES_AFHDS2A, val++);
     }
 };
 

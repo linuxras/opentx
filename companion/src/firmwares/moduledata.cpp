@@ -22,6 +22,7 @@
 #include "eeprominterface.h"
 #include "multiprotocols.h"
 #include "afhds3.h"
+#include "afhds2a.h"
 #include "radiodataconversionstate.h"
 
 void ModuleData::convert(RadioDataConversionState & cstate)
@@ -87,6 +88,7 @@ bool ModuleData::supportRxNum() const
     case PULSES_LP45:
     case PULSES_DSM2:
     case PULSES_DSMX:
+    case PULSES_AFHDS2A:
       return true;
     default:
       return false;
@@ -122,6 +124,8 @@ QString ModuleData::subTypeToString(int type) const
       return CHECK_IN_ARRAY(strings, type);
     case PULSES_AFHDS3:
       return Afhds3Data::protocolToString(type);
+    case PULSES_AFHDS2A:
+      return Afhds2aData::protocolToString(type);
     default:
       return CPN_STR_UNKNOWN_ITEM;
   }
@@ -171,7 +175,8 @@ QString ModuleData::protocolToString(unsigned protocol)
     "FrSky ACCESS R9M Lite Pro",
     "FrSky XJT lite (D16)", "FrSky XJT lite (D8)", "FrSky XJT lite (LR12)",
     "AFHDS3",
-    "ImmersionRC Ghost"
+    "ImmersionRC Ghost",
+    "AFHDS2A"
   };
 
   return CHECK_IN_ARRAY(strings, protocol);
@@ -215,7 +220,8 @@ bool ModuleData::hasFailsafes(Firmware * fw) const
     protocol == PULSES_ACCESS_R9M_LITE_PRO ||
     protocol == PULSES_XJT_LITE_X16 ||
     protocol == PULSES_MULTIMODULE ||
-    protocol == PULSES_AFHDS3
+    protocol == PULSES_AFHDS3 ||
+    protocol == PULSES_AFHDS2A
     );
 }
 
@@ -255,6 +261,8 @@ int ModuleData::getMaxChannelCount()
       break;
     case PULSES_AFHDS3:
       return 18;
+    case PULSES_AFHDS2A:
+      return 16;
     case PULSES_OFF:
       break;
     default:

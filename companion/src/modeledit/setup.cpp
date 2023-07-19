@@ -440,6 +440,9 @@ void ModulePanel::update()
         mask |= MASK_CHANNELS_RANGE| MASK_CHANNELS_COUNT | MASK_FAILSAFES;
         mask |= MASK_SUBTYPES | MASK_RX_FREQ | MASK_RF_POWER;
         break;
+      case PULSES_AFHDS2A:
+        module.channelsCount = 16;
+        mask |= MASK_SUBTYPES | MASK_FAILSAFES | MASK_RX_NUMBER;
       default:
         break;
     }
@@ -540,6 +543,9 @@ void ModulePanel::update()
       break;
     case PULSES_AFHDS3:
         numEntries = 4;
+        break;
+    case PULSES_AFHDS2A:
+        numEntries = 8;
         break;
     default:
       break;

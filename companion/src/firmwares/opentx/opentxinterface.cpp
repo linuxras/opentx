@@ -879,6 +879,40 @@ bool OpenTxFirmware::isAvailable(PulsesProtocol proto, int port)
         return false;
     }
   }
+  if (IS_FLYSKY_I6X(board)) {
+    switch (port) {
+      case 0:
+        switch (proto) {
+          case PULSES_OFF:
+          case PULSES_AFHDS2A:
+            return true;
+          default:
+            return false;
+        }
+
+      case 1:
+        switch (proto) {
+          case PULSES_OFF:
+          case PULSES_PPM:
+          case PULSES_CROSSFIRE:
+            return true;
+          default:
+            return false;
+        }
+
+      case -1: //Trainer port???
+        switch (proto) {
+          case PULSES_PPM:
+          case PULSES_SBUS:
+            return true;
+          default:
+            return false;
+        }
+
+      default:
+        return false;
+    }
+  }
   else {
     switch (proto) {
       case PULSES_PPM:
